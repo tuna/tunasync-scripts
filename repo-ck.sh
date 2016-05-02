@@ -6,7 +6,7 @@ function sync_repo_ck() {
 
 	[ ! -d "$repo_dir" ] && mkdir -p "$repo_dir"
 	cd $repo_dir
-	lftp "${repo_url}/" -e 'mirror -v -P 5 --delete --only-missing --only-newer --no-recursion; bye'
+	lftp "${repo_url}/" -e 'mirror -v -P 5 --delete --no-recursion; bye'
 	wget "${repo_url}/repo-ck.db" -O "repo-ck.db"
 	wget "${repo_url}/repo-ck.files" -O "repo-ck.files"
 }

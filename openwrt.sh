@@ -6,8 +6,8 @@ function sync_openwrt() {
 
 	[ ! -d "$repo_dir" ] && mkdir -p "$repo_dir"
 	cd $repo_dir
-	lftp "${repo_url}/" -e "mirror --verbose -P 5 --delete --only-newer; bye"
+	lftp "${repo_url}/" -e "mirror --verbose -P 5 --delete --only-missing; bye"
+	lftp "${repo_url}/" -e "mirror --verbose -P 5 --only-newer --exclude-glob *.ipk; bye"
 }
 
-sync_openwrt "http://downloads.openwrt.org/chaos_calmer/15.05/" "${TUNASYNC_WORKING_DIR}/chaos_calmer/15.05"
-sync_openwrt "http://downloads.openwrt.org/snapshots/trunk/" "${TUNASYNC_WORKING_DIR}/snapshots/trunk"
+sync_openwrt "http://downloads.openwrt.org/chaos_calmer/15.05.1" "${TUNASYNC_WORKING_DIR}/chaos_calmer/15.05.1" 

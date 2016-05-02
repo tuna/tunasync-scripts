@@ -6,7 +6,6 @@ function sync_nodesource() {
 
 	[ ! -d "$repo_dir" ] && mkdir -p "$repo_dir"
 	cd $repo_dir
-	# lftp "${repo_url}/" -e "mirror --verbose --exclude-glob='*/SRPMS/*' -P 5 --delete --only-newer; bye"
 	lftp "${repo_url}/" -e "mirror --verbose  -P 5 --delete --only-newer; bye"
 }
 
