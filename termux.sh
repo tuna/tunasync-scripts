@@ -7,10 +7,13 @@ _here=`dirname $(realpath $0)`
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
-base_url="http://apt.termux.com"
+base_url=${TUNASYNC_UPSTREAM_URL:-"http://termux.net"}
+
 ARCHES=("aarch64" "all" "arm" "i686")
+
 for arch in ${ARCHES[@]}; do
 	echo "start syncing: ${arch}"
 	apt-download-binary "${base_url}" "stable" "main" "${arch}" "${BASE_PATH}" || true
 done
+
 echo "finished"
