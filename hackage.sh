@@ -1,5 +1,7 @@
 #!/bin/bash
+# requires: wget, axel
 set -e
+set -o pipefail
 
 function remove_broken() {
 	interval=$1
@@ -8,16 +10,19 @@ function remove_broken() {
 
 	if [[ -f ${interval_file} ]]; then
 		lastcheck=`cat ${interval_file}`
-		between=$(echo "${now}-${lastcheck}" | bc)
-		[[ $between -lt $interval ]] && echo "skip checking"; return 0
+		((between = now - lastcheck))
+		if ((between < interval)); then
+			echo "skip checking"
+			return 0
+		fi
 	fi
 	echo "start checking"
 
 	mkdir -p "${TUNASYNC_WORKING_DIR}/package"
 	cd "${TUNASYNC_WORKING_DIR}/package"
-
-	ls | while read line; do 
-		echo -n "$line\t\t"
+	
+	for line in *; do
+		printf '%s\t\t' "$line"
 		tar -tzf $line >/dev/null || (echo "FAIL"; rm $line) && echo "OK"
 	done
 	
@@ -29,28 +34,33 @@ function must_download() {
 	dst=$2
 	while true; do
 		echo "downloading: $name"
-		wget "$src" -O "$dst" &>/dev/null || true
+		wget "$src" -O "$dst" &>/dev/null
 		tar -tzf package/$name >/dev/null || rm package/$name && break 
 	done
+	return 0
 }
 
 function hackage_mirror() {
 	local_pklist="/tmp/hackage_local_pklist_$$.list"
 	remote_pklist="/tmp/hackage_remote_pklist_$$.list"
+	base_url="https://hackage.haskell.org"
 	
 	cd ${TUNASYNC_WORKING_DIR}
 	mkdir -p package
 
 	echo "Downloading index..."
 	rm index.tar.gz || true
-	axel http://hdiff.luite.com/packages/archive/index.tar.gz -o index.tar.gz > /dev/null
+	axel "${base_url}/packages/index.tar.gz" -o index.tar.gz > /dev/null
 	
 	echo "building local package list"
-	ls package | sed "s/\.tar\.gz$//" > $local_pklist
+	local tmp
+	tmp=(package/*)
+	tmp=(${tmp[@]#package/})
+	printf '%s\n' "${tmp[@]%.tar.gz}" > "${local_pklist}"
 	echo "preferred-versions" >> $local_pklist  # ignore preferred-versions
 	
 	echo "building remote package list"
-	tar ztf index.tar.gz | (cut -d/ -f 1,2 2>/dev/null) | sed 's|/|-|' > $remote_pklist
+	tar -ztf index.tar.gz | (cut -d/ -f 1,2 2>/dev/null) | sed 's|/|-|' > $remote_pklist
 	
 	echo "building download list"
 	# substract local list from remote list
@@ -64,7 +74,7 @@ function hackage_mirror() {
 		
 		name="$pk.tar.gz"
 		if [ ! -a package/$name ]; then
-			must_download "http://hackage.haskell.org/package/$pk/$name" "package/$name" &
+			must_download "${base_url}/package/$pk/$name" "package/$name" &
 		else
 			echo "skip existed: $name"
 		fi
@@ -72,7 +82,10 @@ function hackage_mirror() {
 	
 	# delete redundanty files
 	comm <(sort $remote_pklist) <(sort $local_pklist) -13 | while read pk; do
-		name="$pk.tar.gz"
+		if [[ $pk == "preferred-versions" ]]; then
+			continue
+		fi
+		name="${pk}.tar.gz"
 		echo "deleting ${name}"
 		rm "package/$name"
 	done
