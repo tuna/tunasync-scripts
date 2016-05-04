@@ -1,5 +1,5 @@
 #!/bin/bash
-# requires: wget, axel
+# requires: wget
 set -e
 set -o pipefail
 
@@ -22,8 +22,7 @@ function remove_broken() {
 	cd "${TUNASYNC_WORKING_DIR}/package"
 	
 	for line in *; do
-		printf '%s\t\t' "$line"
-		tar -tzf $line >/dev/null || (echo "FAIL"; rm $line) && echo "OK"
+		tar -tzf $line &>/dev/null || (printf 'FAIL %s\n' "$line"; rm $line) # && echo "OK"
 	done
 	
 	echo `date +%s` > $interval_file
@@ -50,21 +49,27 @@ function hackage_mirror() {
 
 	echo "Downloading index..."
 	rm index.tar.gz || true
-	axel "${base_url}/packages/index.tar.gz" -o index.tar.gz > /dev/null
+	wget "${base_url}/packages/index.tar.gz" -O index.tar.gz &> /dev/null
 	
 	echo "building local package list"
 	local tmp
 	tmp=(package/*)
 	tmp=(${tmp[@]#package/})
 	printf '%s\n' "${tmp[@]%.tar.gz}" > "${local_pklist}"
-	echo "preferred-versions" >> $local_pklist  # ignore preferred-versions
 	
 	echo "building remote package list"
 	tar -ztf index.tar.gz | (cut -d/ -f 1,2 2>/dev/null) | sed 's|/|-|' > $remote_pklist
 	
 	echo "building download list"
 	# substract local list from remote list
-	comm <(sort $remote_pklist) <(sort $local_pklist) -23 | while read pk; do
+	# this cannot use pipe, or the `wait` afterwards cannot wait
+	# because pipe spawns a subshell
+	while read pk; do
+		# ignore package suffix "preferred-versions"
+		# echo $pk
+		if [[ $pk = *-preferred-versions ]]; then
+			continue
+		fi
 		# limit concurrent level
 		bgcount=`jobs | wc -l`
 		while [[ $bgcount -ge 5 ]]; do
@@ -78,7 +83,9 @@ function hackage_mirror() {
 		else
 			echo "skip existed: $name"
 		fi
-	done
+	done < <(comm <(sort $remote_pklist) <(sort $local_pklist) -23)
+	
+	wait
 	
 	# delete redundanty files
 	comm <(sort $remote_pklist) <(sort $local_pklist) -13 | while read pk; do
