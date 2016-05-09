@@ -10,7 +10,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 YUM_PATH="${BASE_PATH}/yum"
 
-UBUNTU_VERSIONS=("trusty" "wily")
+UBUNTU_VERSIONS=("trusty" "wily" "xenial")
 DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
