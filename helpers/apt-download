@@ -1,14 +1,15 @@
 #!/bin/bash
 set -e
+set -o pipefail
 LOADED_APT_DOWNLOAD="yes"
 
 function check-and-download() {
 	remote_file=$1
 	local_file=$2
-	wget -q --spider ${remote_file}
+	timeout -s INT 60 wget -q --spider ${remote_file}
 	if [ $? -eq 0 ]; then
 		echo "downloading ${remote_file}"
-		wget -q -N -O ${local_file} ${remote_file}
+		timeout -s INT 300 wget -q -N -O ${local_file} ${remote_file}
 		return
 	fi
 	return 0
@@ -25,6 +26,7 @@ function apt-download-binary() {
 		echo "Destination directory is empty, cannot continue"
 		return 1
 	fi
+	echo "Started mirroring ${base_url} ${dist}, ${repo}, ${arch}!"
 	
 	dest_dir="${dest_base_dir}/dists/${dist}"
 	[ ! -d "$dest_dir" ] && mkdir -p "$dest_dir"

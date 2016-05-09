@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
 _here=`dirname $(realpath $0)`
 . ${_here}/helpers/apt-download
@@ -42,7 +43,7 @@ gpgkey=https://packages.gitlab.com/gpg.key
 sslverify=0
 EOF
 
-reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
+reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
 createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6 ${YUM_PATH}/el6
 createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7 ${YUM_PATH}/el7
 rm $cfg
