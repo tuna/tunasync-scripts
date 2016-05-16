@@ -1,18 +1,15 @@
 #!/bin/bash
 set -e
+set -u
 set -o pipefail
 LOADED_APT_DOWNLOAD="yes"
 
 function check-and-download() {
 	remote_file=$1
 	local_file=$2
-	timeout -s INT 60 wget -q --spider ${remote_file}
-	if [ $? -eq 0 ]; then
-		echo "downloading ${remote_file}"
-		timeout -s INT 300 wget -q -N -O ${local_file} ${remote_file}
-		return
-	fi
-	return 0
+	echo "downloading ${remote_file}"
+	timeout -s INT 300 wget -q -N -O ${local_file} ${remote_file}
+	return
 }
 
 
@@ -28,17 +25,25 @@ function apt-download-binary() {
 	fi
 	echo "Started mirroring ${base_url} ${dist}, ${repo}, ${arch}!"
 	
-	dest_dir="${dest_base_dir}/dists/${dist}"
-	[ ! -d "$dest_dir" ] && mkdir -p "$dest_dir"
-	check-and-download "${base_url}/dists/${dist}/Contents-${arch}.gz" "${dest_dir}/Contents-${arch}.gz" || true
-	check-and-download "${base_url}/dists/${dist}/InRelease"  "${dest_dir}/InRelease" || true
-	check-and-download "${base_url}/dists/${dist}/Release" "${dest_dir}/Release"
-	check-and-download "${base_url}/dists/${dist}/Release.gpg" "${dest_dir}/Release.gpg" || true
+	dist_dir="${dest_base_dir}/dists/${dist}"
+	[ ! -d "$dist_dir" ] && mkdir -p "$dist_dir"
+	dist_tmp_dir="${dist_dir}/.tmp"
+	[ ! -d "$dist_tmp_dir" ] && mkdir -p "$dist_tmp_dir"
+	rm -rf ${dist_tmp_dir}/*
+	
+	check-and-download "${base_url}/dists/${dist}/Contents-${arch}.gz" "${dist_tmp_dir}/Contents-${arch}.gz" || true
+	check-and-download "${base_url}/dists/${dist}/InRelease"  "${dist_tmp_dir}/InRelease" || true
+	check-and-download "${base_url}/dists/${dist}/Release" "${dist_tmp_dir}/Release"
+	check-and-download "${base_url}/dists/${dist}/Release.gpg" "${dist_tmp_dir}/Release.gpg" || true
 	
 	# Load Package Index URLs from Release file
-	release_file="${dest_dir}/Release"
-	dest_dir="${dest_base_dir}/dists/${dist}/${repo}/binary-${arch}"
-	[ ! -d "$dest_dir" ] && mkdir -p "$dest_dir"
+	release_file="${dist_tmp_dir}/Release"
+
+	pkgidx_dir="${dest_base_dir}/dists/${dist}/${repo}/binary-${arch}"
+	pkgidx_tmp_dir="${pkgidx_dir}/.tmp"
+	[ ! -d "$pkgidx_dir" ] && mkdir -p "$pkgidx_dir"
+	[ ! -d "$pkgidx_tmp_dir" ] && mkdir -p "$pkgidx_tmp_dir"
+	rm -rf ${pkgidx_tmp_dir}/*
 
 	declare pkgidx_content=""
 	declare cnt_start=false
@@ -62,11 +67,16 @@ function apt-download-binary() {
 			filename=${tokens[2]}
 			if [[ "$filename" =~ ${repo}/binary-${arch} ]]; then
 				# Load package list from Packages file
-				pkgidx_file="${dest_base_dir}/dists/${dist}/${filename}"
-				dest_dir=`dirname ${pkgidx_file}`
-				[ ! -d "$dest_dir" ] && mkdir -p "$dest_dir"
+				pkgidx_filename=`basename $filename`
+				pkgidx_file="${pkgidx_tmp_dir}/${pkgidx_filename}" 
+				# dest_dir=`dirname ${pkgidx_file}`
+				# [ ! -d "$dest_dir" ] && mkdir -p "$dest_dir"
+
 				pkglist_url="${base_url}/dists/${dist}/${filename}"
-				check-and-download "${pkglist_url}" ${pkgidx_file} || true
+				check-and-download "${pkglist_url}" ${pkgidx_file} || {
+					printf "Failed to download: %s\n" ${pkglist_url}
+					return 1
+				}
 				echo "${checksum}  ${pkgidx_file}" | ${checksum_cmd} -c -
 				if [ -z "${pkgidx_content}" -a -f ${pkgidx_file} ]; then
 					echo "getting packages index content"
@@ -126,6 +136,11 @@ function apt-download-binary() {
 			}
 		done
 	done
+
+	mv ${pkgidx_tmp_dir}/* ${pkgidx_dir}
+	mv ${dist_tmp_dir}/* ${dist_dir}
+
+	rmdir ${pkgidx_tmp_dir} ${dist_tmp_dir}
 
 	echo "Mirroring ${base_url} ${dist}, ${repo}, ${arch} done!"
 
