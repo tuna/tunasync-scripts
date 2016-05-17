@@ -8,7 +8,10 @@ function check-and-download() {
 	remote_file=$1
 	local_file=$2
 	echo "downloading ${remote_file}"
-	timeout -s INT 300 wget -q -N -O ${local_file} ${remote_file}
+	timeout -s INT 300 wget -q -N -O ${local_file} ${remote_file} || {
+		rm ${local_file}
+		return 1
+	}
 	return
 }
 
@@ -131,9 +134,10 @@ function apt-download-binary() {
 		fi
 		while [ $downloaded != true ]; do
 			echo "downloading ${pkg_url}"
-			wget -q -O ${dest_filename} ${pkg_url} && {
-				echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
-			}
+			downloaded=true
+			# wget -q -O ${dest_filename} ${pkg_url} && {
+			# 	echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
+			# }
 		done
 	done
 
