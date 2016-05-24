@@ -134,10 +134,9 @@ function apt-download-binary() {
 		fi
 		while [ $downloaded != true ]; do
 			echo "downloading ${pkg_url}"
-			downloaded=true
-			# wget -q -O ${dest_filename} ${pkg_url} && {
-			# 	echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
-			# }
+			wget -q -O ${dest_filename} ${pkg_url} && {
+				echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
+			}
 		done
 	done
 
