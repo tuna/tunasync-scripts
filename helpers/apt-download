@@ -17,11 +17,11 @@ function check-and-download() {
 
 
 function apt-download-binary() {
-	base_url=$1
-	dist=$2
-	repo=$3
-	arch=$4
-	dest_base_dir=$5
+	local base_url=$1
+	local dist=$2
+	local repo=$3
+	local arch=$4
+	local dest_base_dir=$5
 	if [ -z $dest_base_dir ]; then
 		echo "Destination directory is empty, cannot continue"
 		return 1
@@ -36,7 +36,10 @@ function apt-download-binary() {
 	
 	check-and-download "${base_url}/dists/${dist}/Contents-${arch}.gz" "${dist_tmp_dir}/Contents-${arch}.gz" || true
 	check-and-download "${base_url}/dists/${dist}/InRelease"  "${dist_tmp_dir}/InRelease" || true
-	check-and-download "${base_url}/dists/${dist}/Release" "${dist_tmp_dir}/Release"
+	check-and-download "${base_url}/dists/${dist}/Release" "${dist_tmp_dir}/Release" || {
+		echo "Invalid Repository"
+		return 1
+	}
 	check-and-download "${base_url}/dists/${dist}/Release.gpg" "${dist_tmp_dir}/Release.gpg" || true
 	
 	# Load Package Index URLs from Release file
@@ -133,10 +136,14 @@ function apt-download-binary() {
 			fi
 		fi
 		while [ $downloaded != true ]; do
-			echo "downloading ${pkg_url}"
-			wget -q -O ${dest_filename} ${pkg_url} && {
-				echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
-			}
+			echo "downloading ${pkg_url} to ${dest_filename}"
+			if [[ -z ${APT_DRY_RUN} ]]; then
+				wget -q -O ${dest_filename} ${pkg_url} && {
+					echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
+				}
+			else
+				downloaded=true
+			fi
 		done
 	done
 
