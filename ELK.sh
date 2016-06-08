@@ -14,7 +14,7 @@ YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
 declare -A REPO_VERSIONS=(
-	["elasticsearch"]="2.3"
+	["elasticsearch"]="2.x"
 	["logstash"]="2.3 5.0"
 	["kibana"]="4.5"
 )
