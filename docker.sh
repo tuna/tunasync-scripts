@@ -49,7 +49,7 @@ createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos6 ${YUM_PATH}/centos7
 rm $cfg
 
 # APT mirror 
-base_url="http://apt.dockerproject.org/repo"
+base_url="https://apt.dockerproject.org/repo"
 for version in ${APT_VERSIONS[@]}; do
 	apt-download-binary ${base_url} "$version" "main" "amd64" "${APT_PATH}" || true
 	apt-download-binary ${base_url} "$version" "main" "i386" "${APT_PATH}" || true
