@@ -63,12 +63,12 @@ echo "Debian and ubuntu finished"
 
 # === download standalone packages ====
 
-timeout -s INT 300 wget -O "${BASE_PATH}/LATEST.TXT" "${BASE_URL}/LATEST.TXT"
+timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${BASE_PATH}/LATEST.TXT" "${BASE_URL}/LATEST.TXT"
 LATEST_VERSION=`cat "${BASE_PATH}/LATEST.TXT"`
 LATEST_PATH="${BASE_PATH}/${LATEST_VERSION}"
 
 mkdir -p ${LATEST_PATH}
-timeout -s INT 300 wget -O "${LATEST_PATH}/MD5SUMS" "${BASE_URL}/${LATEST_VERSION}/MD5SUMS"
+timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/MD5SUMS" "${BASE_URL}/${LATEST_VERSION}/MD5SUMS"
 
 while read line; do
 	read -a tokens <<< $line
