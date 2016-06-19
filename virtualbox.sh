@@ -84,7 +84,7 @@ while read line; do
 	if [ -f ${dest_filename} ]; then
 		echo "${pkg_checksum}  ${dest_filename}" | md5sum -c - && {
 			downloaded=true
-			echo "Skipping ${pkg_filename}"
+			echo "Skipping ${filename}"
 		}
 	fi
 	while [ $downloaded != true ]; do
