@@ -98,5 +98,15 @@ while read line; do
 			downloaded=true
 		fi
 	done
+	
+	case $filename in
+		*Win.exe)
+			ln -sf ${dest_filename} ${BASE_PATH}/virtualbox-Win-latest.exe
+			;;
+		*OSX.dmg)
+			ln -sf ${dest_filename} ${BASE_PATH}/virtualbox-osx-latest.dmg
+			;;
+	esac
+
 done < "${LATEST_PATH}/MD5SUMS"
 echo "Virtualbox ${LATEST_VERSION} finished"
