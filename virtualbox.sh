@@ -69,6 +69,7 @@ LATEST_PATH="${BASE_PATH}/${LATEST_VERSION}"
 
 mkdir -p ${LATEST_PATH}
 timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/MD5SUMS" "${BASE_URL}/${LATEST_VERSION}/MD5SUMS"
+timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/SHA256SUMS" "${BASE_URL}/${LATEST_VERSION}/SHA256SUMS"
 
 while read line; do
 	read -a tokens <<< $line
