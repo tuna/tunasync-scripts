@@ -63,9 +63,10 @@ echo "Debian and ubuntu finished"
 
 # === download standalone packages ====
 
-LATEST_VERSION=`curl -s ${BASE_URL}/LATEST.TXT`
+timeout -s INT 300 wget -O "${BASE_PATH}/LATEST.TXT" "${BASE_URL}/LATEST.TXT"
+LATEST_VERSION=`cat "${BASE_PATH}/LATEST.TXT"`
 LATEST_PATH="${BASE_PATH}/${LATEST_VERSION}"
-echo ${LATEST_VERSION} > ${PATH_PATH}/LATEST.TXT
+
 mkdir -p ${LATEST_PATH}
 timeout -s INT 300 wget -O "${LATEST_PATH}/MD5SUMS" "${BASE_URL}/${LATEST_VERSION}/MD5SUMS"
 
