@@ -1,4 +1,7 @@
 #!/bin/bash
+# requires: lftp wget
+
+BASE_URL="${TUNASYNC_UPSTREAM_URL:-"http://images.linuxcontainers.org/"}"
 
 function sync_lxc_images() {
 	repo_url="$1"
@@ -10,5 +13,8 @@ function sync_lxc_images() {
 	lftp "${repo_url}/" -e "mirror --verbose -P 5 --delete --only-newer; bye"
 }
 
-sync_lxc_images "http://images.linuxcontainers.org/images" "${TUNASYNC_WORKING_DIR}/images"
-sync_lxc_images "http://images.linuxcontainers.org/meta" "${TUNASYNC_WORKING_DIR}/meta" || true
+sync_lxc_images "${BASE_URL}/images" "${TUNASYNC_WORKING_DIR}/images"
+
+mkdir -p "${TUNASYNC_WORKING_DIR}/meta/1.0"
+wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-system" "${BASE_URL}/meta/1.0/index-system"
+wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-user" "${BASE_URL}/meta/1.0/index-user"
