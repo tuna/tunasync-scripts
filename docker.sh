@@ -45,7 +45,7 @@ EOF
 [ ! -d ${YUM_PATH}/centos7 ] && mkdir -p ${YUM_PATH}/centos7
 reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
 createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos6 ${YUM_PATH}/centos7
-createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos6 ${YUM_PATH}/centos7
+createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos7 ${YUM_PATH}/centos7
 rm $cfg
 
 # APT mirror 
