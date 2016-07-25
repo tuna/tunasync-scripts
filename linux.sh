@@ -13,7 +13,7 @@ function update_linux_git() {
 	echo "==== SYNC linux.git DONE ===="
 }
 
-if [[ ! -d "$TUNASYNC_WORKING_DIR" ]]; then
+if [[ ! -f "$TUNASYNC_WORKING_DIR/HEAD" ]]; then
 	echo "Initializing Linux.git mirror"
 	repo_init
 fi
