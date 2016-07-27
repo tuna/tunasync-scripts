@@ -21,6 +21,10 @@ stop-on-error = true
 delete-packages = true
 EOF
 	/usr/bin/timeout -s INT 7200 $BANDERSNATCH -c $CONF mirror 
+	if [[ $? == 124 ]]; then
+		echo 'Sync timeout (/_\\)'
+		exit 1
+	fi
 else
 	cat > $CONF << EOF
 [mirror]
@@ -37,7 +41,7 @@ fi
 
 TODOFILE="${TUNASYNC_WORKING_DIR}/todo"
 if [[ -f $TODOFILE ]]; then
-	rsize=`stat -c "%s" ${dest_filename}`
+	rsize=`stat -c "%s" ${TODOFILE}`
 	if [[ "$rsize" != "0" ]]; then
 		echo "Sync Failed T_T"
 		exit 1
