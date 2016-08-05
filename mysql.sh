@@ -42,7 +42,7 @@ base_url="${BASE_URL}/apt/debian"
 for version in ${DEBIAN_VERSIONS[@]}; do
 	for repo in ${MYSQL_APT_REPOS[@]}; do
 		for arch in "amd64" "i386"; do
-			apt-download-binary ${base_url} "$version" "$repo" "$arch" "${UBUNTU_PATH}" || true
+			apt-download-binary ${base_url} "$version" "$repo" "$arch" "${DEBIAN_PATH}" || true
 		done
 	done
 done
