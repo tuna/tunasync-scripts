@@ -25,7 +25,7 @@ mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
 
 
 # =================== APT repos ===============================
-export APT_DRY_RUN=0
+# export APT_DRY_RUN=0
 MYSQL_APT_REPOS=("mysql-5.6" "mysql-5.7" "mysql-tools" "connector-python-2.1")
  
 base_url="${BASE_URL}/apt/ubuntu"
