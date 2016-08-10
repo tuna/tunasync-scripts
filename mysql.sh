@@ -1,5 +1,5 @@
 #!/bin/bash
-# requires: createrepo reposync wget curl
+# requires: createrepo reposync wget curl rsync
 set -e
 set -o pipefail
 
@@ -8,9 +8,16 @@ _here=`dirname $(realpath $0)`
 
 [ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
 
-
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}
+
+MYSQL_DEV_PATH="${BASE_PATH}/dev.mysql.com/"
+MYSQL_RSYNC_UPSTREAM="rsync://mysql.he.net/mysql/"
+RSYNC_OPTS="-aHvh --no-o --no-g --stats --exclude .~tmp~/ --delete --delete-after --delay-updates --safe-links --timeout=120 --contimeout=120"
+USE_IPV6=${USE_IPV6:-"0"}
+if [[ $USE_IPV6 == "1" ]]; then
+	RSYNC_OPTS="-6 ${RSYNC_OPTS}"
+fi
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
@@ -90,3 +97,8 @@ for repo in "mysql-connectors-community" "mysql-tools-community" "mysql56-commun
 		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${repo}-el${elver}/ ${YUM_PATH}/${repo}-el${elver}/
 	done
 done
+
+# --------- dev.mysql.com --------
+
+rsync ${RSYNC_OPTS} "${MYSQL_RSYNC_UPSTREAM}" "${MYSQL_DEV_PATH}"
+mv "${MYSQL_DEV_PATH}/index.html" "${MYSQL_DEV_PATH}/_index.html"
