@@ -11,8 +11,8 @@ _here=`dirname $(realpath $0)`
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}
 
-MYSQL_DEV_PATH="${BASE_PATH}/dev.mysql.com/"
-MYSQL_RSYNC_UPSTREAM="rsync://mysql.he.net/mysql/"
+MYSQL_DOWNLOAD_PATH="${BASE_PATH}/downloads/"
+MYSQL_RSYNC_UPSTREAM="rsync://mysql.he.net/mysql/Downloads/"
 RSYNC_OPTS="-aHvh --no-o --no-g --stats --exclude .~tmp~/ --delete --delete-after --delay-updates --safe-links --timeout=120 --contimeout=120"
 USE_IPV6=${USE_IPV6:-"0"}
 if [[ $USE_IPV6 == "1" ]]; then
@@ -100,5 +100,4 @@ done
 
 # --------- dev.mysql.com --------
 
-rsync ${RSYNC_OPTS} "${MYSQL_RSYNC_UPSTREAM}" "${MYSQL_DEV_PATH}"
-mv "${MYSQL_DEV_PATH}/index.html" "${MYSQL_DEV_PATH}/_index.html"
+rsync ${RSYNC_OPTS} "${MYSQL_RSYNC_UPSTREAM}" "${MYSQL_DOWNLOAD_PATH}"
