@@ -3,6 +3,7 @@ set -e
 set -u
 set -o pipefail
 LOADED_APT_DOWNLOAD="yes"
+MAX_RETRY=${MAX_RETRY:-"3"}
 
 function check-and-download() {
 	remote_file=$1
@@ -119,6 +120,8 @@ function apt-download-binary() {
 	elif (echo -e "${pkgidx_content}" | grep -e '^MD5sum' &>/dev/null); then
 		checksum_cmd="md5sum"; checksum_regex="^MD5sum"
 	fi
+	
+	ERROR=0
 
 	# Download packages
 	(echo -e "${pkgidx_content}" | grep -e '^Filename' -e '^Size' -e ${checksum_regex} | cut -d' ' -f 2) | \
@@ -135,7 +138,7 @@ function apt-download-binary() {
 				echo "Skipping ${pkg_filename}, size ${pkg_size}"
 			fi
 		fi
-		while [ $downloaded != true ]; do
+		for retry in `seq ${MAX_RETRY}`; do
 			echo "downloading ${pkg_url} to ${dest_filename}"
 			if [[ -z ${APT_DRY_RUN:-} ]]; then
 				wget ${WGET_OPTIONS:-} -q -O ${dest_filename} ${pkg_url} && {
@@ -144,7 +147,9 @@ function apt-download-binary() {
 			else
 				downloaded=true
 			fi
+			[[ $downloaded == true ]] && break
 		done
+		[[ $downloaded == false ]] && ERROR=1
 	done
 
 	mv ${pkgidx_tmp_dir}/* ${pkgidx_dir}
@@ -154,6 +159,7 @@ function apt-download-binary() {
 
 	echo "Mirroring ${base_url} ${dist}, ${repo}, ${arch} done!"
 
+	return $ERROR
 }
 
 # vim: ts=4 sts=4 sw=4
