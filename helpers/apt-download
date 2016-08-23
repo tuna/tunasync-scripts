@@ -138,6 +138,8 @@ function apt-download-binary() {
 				echo "Skipping ${pkg_filename}, size ${pkg_size}"
 			fi
 		fi
+		[[ $downloaded == true ]] && continue
+
 		for retry in `seq ${MAX_RETRY}`; do
 			echo "downloading ${pkg_url} to ${dest_filename}"
 			if [[ -z ${APT_DRY_RUN:-} ]]; then
