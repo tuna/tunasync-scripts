@@ -72,7 +72,7 @@ function apt-download-binary() {
 			fi
 			filesize=${tokens[1]}
 			filename=${tokens[2]}
-			if [[ "$filename" =~ ${repo}/binary-${arch} ]]; then
+			if [[ "$filename" =~ ^${repo}/binary-${arch} ]]; then
 				# Load package list from Packages file
 				pkgidx_filename=`basename $filename`
 				pkgidx_file="${pkgidx_tmp_dir}/${pkgidx_filename}" 
