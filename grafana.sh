@@ -12,33 +12,23 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packagecloud.io/grafana/stable"}
 
 YUM_PATH="${BASE_PATH}/yum"
-UBUNTU_PATH="${BASE_PATH}/ubuntu"
-DEBIAN_PATH="${BASE_PATH}/debian"
+APT_PATH="${BASE_PATH}/apt"
 
-UBUNTU_VERSIONS=("trusty" "xenial")
-DEBIAN_VERSIONS=("wheezy" "jessie")
+APT_VERSIONS=("wheezy" "jessie")
 EL_VERSIONS=("6" "7")
 
-mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
+mkdir -p ${YUM_PATH} ${APT_PATH}
 
 
 # =================== APT repos ===============================
 # export APT_DRY_RUN=0
-base_url="${BASE_URL}/ubuntu"
-for version in ${UBUNTU_VERSIONS[@]}; do
-	for arch in "amd64" "i386"; do
-		apt-download-binary ${base_url} "$version" "main" "$arch" "${UBUNTU_PATH}" || true
-	done
-done
-echo "Ubuntu finished"
-
 base_url="${BASE_URL}/debian"
-for version in ${DEBIAN_VERSIONS[@]}; do
+for version in ${APT_VERSIONS[@]}; do
 	for arch in "amd64" "i386"; do
-		apt-download-binary ${base_url} "$version" "main" "$arch" "${DEBIAN_PATH}" || true
+		apt-download-binary ${base_url} "$version" "main" "$arch" "${APT_PATH}" || true
 	done
 done
-echo "Debian finished"
+echo "APT finished"
 
 
 # =================== YUM/DNF repos ==========================
