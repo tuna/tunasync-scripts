@@ -49,16 +49,23 @@ sslverify=0
 EOF
 done
 
-reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-for mgver in ${MONGO_VERSIONS[@]}; do
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6-$mgver/ ${YUM_PATH}/el6-$mgver/
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7-$mgver/ ${YUM_PATH}/el7-$mgver/
-done
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
+	for mgver in ${MONGO_VERSIONS[@]}; do
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6-$mgver/ ${YUM_PATH}/el6-$mgver/
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7-$mgver/ ${YUM_PATH}/el7-$mgver/
+	done
+fi
 
 [ -e ${YUM_PATH}/el6 ] || (cd ${YUM_PATH}; ln -s el6-${STABLE_VERSION} el6)
 [ -e ${YUM_PATH}/el7 ] || (cd ${YUM_PATH}; ln -s el7-${STABLE_VERSION} el7)
 
 rm $cfg
+
+
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
 
 base_url="http://repo.mongodb.org/apt/ubuntu"
 for ubver in ${UBUNTU_VERSIONS[@]}; do

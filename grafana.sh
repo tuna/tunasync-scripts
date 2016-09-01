@@ -21,7 +21,9 @@ mkdir -p ${YUM_PATH} ${APT_PATH}
 
 
 # =================== APT repos ===============================
-# export APT_DRY_RUN=0
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
 base_url="${BASE_URL}/debian"
 for version in ${APT_VERSIONS[@]}; do
 	for arch in "amd64" "i386"; do
@@ -50,7 +52,10 @@ enabled=1
 EOF
 done
 
-reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-for elver in ${EL_VERSIONS[@]}; do
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el${elver}/ ${YUM_PATH}/el${elver}/
-done
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
+	for elver in ${EL_VERSIONS[@]}; do
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el${elver}/ ${YUM_PATH}/el${elver}/
+	done
+fi
+rm $cfg

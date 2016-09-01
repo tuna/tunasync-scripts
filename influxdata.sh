@@ -24,7 +24,9 @@ mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
 wget -O ${BASE_PATH}/influxdb.key ${BASE_URL}/influxdb.key
 
 # =================== APT repos ===============================
-# export APT_DRY_RUN=0
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
 base_url="${BASE_URL}/ubuntu"
 for version in ${UBUNTU_VERSIONS[@]}; do
 	for arch in "amd64" "i386" "armhf" "arm64"; do
@@ -61,7 +63,10 @@ enabled=1
 EOF
 done
 
-reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-for elver in ${EL_VERSIONS[@]}; do
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el${elver}-x86_64/ ${YUM_PATH}/el${elver}-x86_64/
-done
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
+	for elver in ${EL_VERSIONS[@]}; do
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el${elver}-x86_64/ ${YUM_PATH}/el${elver}-x86_64/
+	done
+fi
+rm $cfg

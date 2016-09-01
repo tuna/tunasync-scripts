@@ -44,12 +44,18 @@ gpgkey=https://packages.gitlab.com/gpg.key
 sslverify=0
 EOF
 
-reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
-[ ! -d ${YUM_PATH}/el6 ] && mkdir -p ${YUM_PATH}/el6
-[ ! -d ${YUM_PATH}/el7 ] && mkdir -p ${YUM_PATH}/el7
-createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6 ${YUM_PATH}/el6
-createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7 ${YUM_PATH}/el7
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
+	[ ! -d ${YUM_PATH}/el6 ] && mkdir -p ${YUM_PATH}/el6
+	[ ! -d ${YUM_PATH}/el7 ] && mkdir -p ${YUM_PATH}/el7
+	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6 ${YUM_PATH}/el6
+	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7 ${YUM_PATH}/el7
+fi
 rm $cfg
+
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
 
 base_url="https://packages.gitlab.com/runner/gitlab-ci-multi-runner/ubuntu"
 for version in ${UBUNTU_VERSIONS[@]}; do

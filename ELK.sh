@@ -22,7 +22,9 @@ declare -A REPO_VERSIONS=(
 mkdir -p ${YUM_PATH} ${APT_PATH}
 
 # =================== APT repos ===============================
-# export APT_DRY_RUN=1
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
  
 for repo in "${!REPO_VERSIONS[@]}"; do
 	# magic here, don't quote ${REPO_VERSIONS[$repo][@]}
@@ -64,9 +66,12 @@ EOF
 done
 done
 
-reposync -c $cfg -d -p ${YUM_PATH} -e ${cache_dir}
-for repo in "${!REPO_VERSIONS[@]}"; do
-	for version in ${REPO_VERSIONS[$repo]}; do
-		createrepo --update -v -c ${cache_dir} -o ${YUM_PATH}/${repo}-${version}/ ${YUM_PATH}/${repo}-${version}/
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH} -e ${cache_dir}
+	for repo in "${!REPO_VERSIONS[@]}"; do
+		for version in ${REPO_VERSIONS[$repo]}; do
+			createrepo --update -v -c ${cache_dir} -o ${YUM_PATH}/${repo}-${version}/ ${YUM_PATH}/${repo}-${version}/
+		done
 	done
-done
+fi
+rm $cfg

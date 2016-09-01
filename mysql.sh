@@ -32,7 +32,9 @@ mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
 
 
 # =================== APT repos ===============================
-# export APT_DRY_RUN=0
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
 MYSQL_APT_REPOS=("mysql-5.6" "mysql-5.7" "mysql-tools" "connector-python-2.1")
  
 base_url="${BASE_URL}/apt/ubuntu"
@@ -91,13 +93,18 @@ enabled=1
 EOF
 done
 
-reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-for repo in "mysql-connectors-community" "mysql-tools-community" "mysql56-community" "mysql57-community"; do
-	for elver in "6" "7"; do
-		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${repo}-el${elver}/ ${YUM_PATH}/${repo}-el${elver}/
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
+	for repo in "mysql-connectors-community" "mysql-tools-community" "mysql56-community" "mysql57-community"; do
+		for elver in "6" "7"; do
+			createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${repo}-el${elver}/ ${YUM_PATH}/${repo}-el${elver}/
+		done
 	done
-done
+fi
+rm $cfg
 
 # --------- dev.mysql.com --------
 
-rsync ${RSYNC_OPTS} "${MYSQL_RSYNC_UPSTREAM}" "${MYSQL_DOWNLOAD_PATH}"
+if [[ -z ${DRY_RUN:-} ]]; then
+	rsync ${RSYNC_OPTS} "${MYSQL_RSYNC_UPSTREAM}" "${MYSQL_DOWNLOAD_PATH}"
+fi

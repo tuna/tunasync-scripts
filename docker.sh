@@ -43,12 +43,18 @@ EOF
 
 [ ! -d ${YUM_PATH}/centos6 ] && mkdir -p ${YUM_PATH}/centos6
 [ ! -d ${YUM_PATH}/centos7 ] && mkdir -p ${YUM_PATH}/centos7
-reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
-createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos6 ${YUM_PATH}/centos7
-createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos7 ${YUM_PATH}/centos7
+
+if [[ -z ${DRY_RUN:-} ]]; then
+	reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
+	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos6 ${YUM_PATH}/centos7
+	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/centos7 ${YUM_PATH}/centos7
+fi
 rm $cfg
 
 # APT mirror 
+if [[ ! -z ${DRY_RUN:-} ]]; then
+	export APT_DRY_RUN=1
+fi
 base_url="https://apt.dockerproject.org/repo"
 for version in ${APT_VERSIONS[@]}; do
 	apt-download-binary ${base_url} "$version" "main" "amd64" "${APT_PATH}" || true
