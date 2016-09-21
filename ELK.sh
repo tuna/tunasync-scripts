@@ -15,8 +15,8 @@ APT_PATH="${BASE_PATH}/apt"
 
 declare -A REPO_VERSIONS=(
 	["elasticsearch"]="2.x"
-	["logstash"]="2.3 5.0"
-	["kibana"]="4.5"
+	["logstash"]="2.3 2.4 5.0"
+	["kibana"]="4.5 4.6"
 )
 
 mkdir -p ${YUM_PATH} ${APT_PATH}
