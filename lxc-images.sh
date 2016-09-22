@@ -23,6 +23,6 @@ mkdir -p "${TUNASYNC_WORKING_DIR}/streams/v1"
 wget -c -T5 -O "${TUNASYNC_WORKING_DIR}/streams/v1/index.json" "${BASE_URL}/streams/v1/index.json"
 
 jq -r '.index.images.path' "${TUNASYNC_WORKING_DIR}/streams/v1/index.json" | while read line; do
-    [ ! -d "$(dirname $line)" ] && mkdir -p "$(dirname $line)"
+    [ ! -d "${TUNASYNC_WORKING_DIR}/$(dirname $line)" ] && mkdir -p "${TUNASYNC_WORKING_DIR}/$(dirname $line)"
     wget -c -T5 -O "${TUNASYNC_WORKING_DIR}/${line}" "${BASE_URL}/${line}"
 done
