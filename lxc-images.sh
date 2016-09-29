@@ -16,13 +16,13 @@ function sync_lxc_images() {
 sync_lxc_images "${BASE_URL}/images" "${TUNASYNC_WORKING_DIR}/images"
 
 mkdir -p "${TUNASYNC_WORKING_DIR}/meta/1.0"
-wget -c -T5 -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-system" "${BASE_URL}/meta/1.0/index-system"
-wget -c -T5 -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-user" "${BASE_URL}/meta/1.0/index-user"
+wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-system" "${BASE_URL}/meta/1.0/index-system"
+wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-user" "${BASE_URL}/meta/1.0/index-user"
 
 mkdir -p "${TUNASYNC_WORKING_DIR}/streams/v1"
-wget -c -T5 -O "${TUNASYNC_WORKING_DIR}/streams/v1/index.json" "${BASE_URL}/streams/v1/index.json"
+wget -O "${TUNASYNC_WORKING_DIR}/streams/v1/index.json" "${BASE_URL}/streams/v1/index.json"
 
 jq -r '.index[].path' "${TUNASYNC_WORKING_DIR}/streams/v1/index.json" | while read line; do
     [ ! -d "${TUNASYNC_WORKING_DIR}/$(dirname $line)" ] && mkdir -p "${TUNASYNC_WORKING_DIR}/$(dirname $line)"
-    wget -c -T5 -O "${TUNASYNC_WORKING_DIR}/${line}" "${BASE_URL}/${line}"
+    wget -O "${TUNASYNC_WORKING_DIR}/${line}" "${BASE_URL}/${line}"
 done
