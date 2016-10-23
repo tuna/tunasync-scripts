@@ -16,8 +16,9 @@ function sync_lxc_images() {
 sync_lxc_images "${BASE_URL}/images" "${TUNASYNC_WORKING_DIR}/images"
 
 mkdir -p "${TUNASYNC_WORKING_DIR}/meta/1.0"
-wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-system" "${BASE_URL}/meta/1.0/index-system"
-wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/index-user" "${BASE_URL}/meta/1.0/index-user"
+for i in index-system index-system.asc index-user index-user.asc; do
+  wget -O "${TUNASYNC_WORKING_DIR}/meta/1.0/"$i "${BASE_URL}/meta/1.0/"$i
+done
 
 mkdir -p "${TUNASYNC_WORKING_DIR}/streams/v1"
 wget -O "${TUNASYNC_WORKING_DIR}/streams/v1/index.json" "${BASE_URL}/streams/v1/index.json"
