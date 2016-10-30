@@ -7,7 +7,7 @@ _here=`dirname $(realpath $0)`
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
-base_url=${TUNASYNC_UPSTREAM_URL:-"http://termux.net"}
+base_url=${TUNASYNC_UPSTREAM_URL:-"https://termux.net"}
 
 ARCHES=("aarch64" "all" "arm" "i686")
 
