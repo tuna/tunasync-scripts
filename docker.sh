@@ -6,7 +6,7 @@ set -o pipefail
 
 _here=`dirname $(realpath $0)`
 . ${_here}/helpers/apt-download
-APT_VERSIONS=("debian-wheezy" "debian-jessie" "ubuntu-precise" "ubuntu-trusty" "ubuntu-xenial")
+APT_VERSIONS=("debian-wheezy" "debian-jessie" "debian-stretch" "ubuntu-precise" "ubuntu-trusty" "ubuntu-xenial")
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 APT_PATH="${BASE_PATH}/apt/repo"
