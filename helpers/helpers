@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+set -u
+set -o pipefail
+
+function check-and-download() {
+	remote_file=$1
+	local_file=$2
+	timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -N -O ${local_file} ${remote_file} || {
+		rm ${local_file}
+		return 1
+	}
+	return
+}
+
+LOADED_HELPERS="yes"
+

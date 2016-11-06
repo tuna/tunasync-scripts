@@ -2,20 +2,14 @@
 set -e
 set -u
 set -o pipefail
+
+_here=`dirname $(realpath $0)`
+if [[ -z ${LOADED_HELPERS:-} ]]; then
+	. ${_here}/helpers
+fi
+
 LOADED_APT_DOWNLOAD="yes"
 MAX_RETRY=${MAX_RETRY:-"3"}
-
-function check-and-download() {
-	remote_file=$1
-	local_file=$2
-	echo "downloading ${remote_file}"
-	timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -N -O ${local_file} ${remote_file} || {
-		rm ${local_file}
-		return 1
-	}
-	return
-}
-
 
 function apt-download-binary() {
 	local base_url=$1
