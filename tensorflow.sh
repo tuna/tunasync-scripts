@@ -4,6 +4,7 @@ set -u
 set -e
 set -o pipefail
 
+_here=`dirname $(realpath $0)`
 XMLPARSE="${_here}/helpers/tf-xml-filelist.py"
 
 TF_UPSTREAM_BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://storage.googleapis.com/tensorflow"}
