@@ -51,8 +51,6 @@ EOF
 
 for repo in "${!REPO_VERSIONS[@]}"; do
 for version in ${REPO_VERSIONS[$repo]}; do
-yum_url=
-dest_path="${APT_PATH}/${repo}/${version}"
 cat <<EOF >> ${cfg}
 [${repo}-${version}]
 name=${repo} ${version} packages
