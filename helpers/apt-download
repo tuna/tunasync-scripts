@@ -3,7 +3,7 @@ set -e
 set -u
 set -o pipefail
 
-_here=`dirname $(realpath $0)`
+_here=`dirname $(realpath ${BASH_SOURCE})`
 if [[ -z ${LOADED_HELPERS:-} ]]; then
 	. ${_here}/helpers
 fi
