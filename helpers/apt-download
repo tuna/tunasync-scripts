@@ -37,6 +37,16 @@ function apt-download-binary() {
 	}
 	check-and-download "${base_url}/dists/${dist}/Release.gpg" "${dist_tmp_dir}/Release.gpg" || true
 	
+	# download Contents file
+	comp_dir="${dest_base_dir}/dists/${dist}/${repo}"
+	comp_tmp_dir="${comp_dir}/.tmp"
+	[ ! -d "${comp_tmp_dir}" ] && mkdir -p "${comp_tmp_dir}"
+	rm -rf ${comp_tmp_dir}/*
+	check-and-download "${base_url}/dists/${dist}/${repo}/Contents-${arch}" "${comp_tmp_dir}/Contents-${arch}" || true
+	check-and-download "${base_url}/dists/${dist}/${repo}/Contents-${arch}.gz" "${comp_tmp_dir}/Contents-${arch}.gz" || true
+	check-and-download "${base_url}/dists/${dist}/${repo}/Contents-${arch}.bz2" "${comp_tmp_dir}/Contents-${arch}.bz2" || true
+
+	
 	# Load Package Index URLs from Release file
 	release_file="${dist_tmp_dir}/Release"
 
@@ -147,11 +157,12 @@ function apt-download-binary() {
 		done
 		[[ $downloaded == false ]] && ERROR=1
 	done
-
+	
 	mv ${pkgidx_tmp_dir}/* ${pkgidx_dir}
+	mv ${comp_tmp_dir}/* ${comp_dir}
 	mv ${dist_tmp_dir}/* ${dist_dir}
 
-	rmdir ${pkgidx_tmp_dir} ${dist_tmp_dir}
+	rmdir ${pkgidx_tmp_dir} ${dist_tmp_dir} ${comp_tmp_dir}
 
 	echo "Mirroring ${base_url} ${dist}, ${repo}, ${arch} done!"
 
