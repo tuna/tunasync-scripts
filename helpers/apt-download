@@ -161,9 +161,9 @@ function apt-download-binary() {
 		[[ $downloaded == false ]] && ERROR=1
 	done
 	
-	mv ${pkgidx_tmp_dir}/* ${pkgidx_dir}
-	mv ${comp_tmp_dir}/* ${comp_dir}
-	mv ${dist_tmp_dir}/* ${dist_dir}
+	dir-not-empty ${pkgidx_tmp_dir} && mv ${pkgidx_tmp_dir}/* ${pkgidx_dir}
+	dir-not-empty ${dist_tmp_dir} && mv ${dist_tmp_dir}/* ${dist_dir}
+	dir-not-empty ${comp_tmp_dir} && mv ${comp_tmp_dir}/* ${comp_dir}
 
 	rmdir ${pkgidx_tmp_dir} ${dist_tmp_dir} ${comp_tmp_dir}
 

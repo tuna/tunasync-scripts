@@ -13,5 +13,15 @@ function check-and-download() {
 	return
 }
 
+function dir-not-empty() {
+	local dir=$1
+	[[ ! -d "$dir" ]] && return 1
+	nfiles=$(ls -a "$dir" | wc -l)
+	if (( ${nfiles} > 2 )); then
+		return 0
+	fi
+	return 1
+}
+
 LOADED_HELPERS="yes"
 
