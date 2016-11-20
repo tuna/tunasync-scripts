@@ -69,7 +69,7 @@ mkdir -p ${APT_BACKUP_PATH}
 (cd ${APT_PATH}; find . -type f -iname "*.deb") | sed 's+^\./++' > ${local_filelist}
 comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
 	echo "deleting ${file}"
-	mv $file ${APT_BACKUP_PATH}
+	mv "${APT_PATH}/$file" ${APT_BACKUP_PATH}
 done
 
 rm ${remote_filelist} ${local_filelist}
