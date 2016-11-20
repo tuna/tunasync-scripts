@@ -17,6 +17,8 @@ function apt-download-binary() {
 	local repo=$3
 	local arch=$4
 	local dest_base_dir=$5
+	local filelist="${6:-"/dev/null"}"
+
 	if [ -z $dest_base_dir ]; then
 		echo "Destination directory is empty, cannot continue"
 		return 1
@@ -130,6 +132,7 @@ function apt-download-binary() {
 	# Download packages
 	(echo -e "${pkgidx_content}" | grep -e '^Filename' -e '^Size' -e ${checksum_regex} | cut -d' ' -f 2) | \
 	while read pkg_filename; read pkg_size; read pkg_checksum; do
+		echo ${pkg_filename} >> $filelist
 		dest_filename="${dest_base_dir}/${pkg_filename}"
 		dest_dir=`dirname ${dest_filename}`
 		[ ! -d "$dest_dir" ] && mkdir -p "$dest_dir"
