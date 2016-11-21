@@ -55,24 +55,17 @@ rm $cfg
 if [[ ! -z ${DRY_RUN:-} ]]; then
 	export APT_DRY_RUN=1
 fi
+
 base_url="https://apt.dockerproject.org/repo"
-remote_filelist="${APT_PATH}/filelist.remote"
-local_filelist="${APT_PATH}/filelist.local"
+remote_filelist="${APT_PATH}/filelist"
+[[ -f $remote_filelist ]] && rm $remote_filelist
 
 for version in ${APT_VERSIONS[@]}; do
 	apt-download-binary ${base_url} "$version" "main" "amd64" "${APT_PATH}" ${remote_filelist} || true
 	apt-download-binary ${base_url} "$version" "main" "i386" "${APT_PATH}"  ${remote_filelist} || true
 done
 
-APT_BACKUP_PATH="${BASE_PATH}/backup/apt"
-mkdir -p ${APT_BACKUP_PATH}
-(cd ${APT_PATH}; find . -type f -iname "*.deb") | sed 's+^\./++' > ${local_filelist}
-comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
-	echo "deleting ${file}"
-	mv "${APT_PATH}/$file" ${APT_BACKUP_PATH}
-done
-
-rm ${remote_filelist} ${local_filelist}
+apt-delete-old-debs ${APT_PATH} $remote_filelist
 
 # sync_docker "http://apt.dockerproject.org/" "${TUNASYNC_WORKING_DIR}/apt"
 # sync_docker "http://yum.dockerproject.org/" "${TUNASYNC_WORKING_DIR}/yum"

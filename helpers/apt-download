@@ -172,4 +172,20 @@ function apt-download-binary() {
 	return $ERROR
 }
 
+function apt-delete-old-debs {
+	local base_dir=$1
+	local remote_filelist=$2
+
+	[[ ! -d ${base_dir} ]] && return 1
+	[[ ! -f ${remote_filelist} ]] && return 1
+	
+	local_filelist="${base_dir}/filelist.local"
+	(cd ${base_dir}; find . -type f -iname "*.deb") | sed 's+^\./++' > ${local_filelist}
+	comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
+		echo "deleting ${file}"
+		rm ${file}
+	done
+	rm $local_filelist
+}
+
 # vim: ts=4 sts=4 sw=4

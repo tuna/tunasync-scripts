@@ -11,20 +11,14 @@ base_url=${TUNASYNC_UPSTREAM_URL:-"https://termux.net"}
 
 ARCHES=("aarch64" "all" "arm" "i686")
 
-remote_filelist="${BASE_PATH}/filelist.remote"
-local_filelist="${BASE_PATH}/filelist.local"
+remote_filelist="${BASE_PATH}/filelist"
+[[ -f $remote_filelist ]] && rm $remote_filelist
 
 for arch in ${ARCHES[@]}; do
 	echo "start syncing: ${arch}"
 	apt-download-binary "${base_url}" "stable" "main" "${arch}" "${BASE_PATH}" ${remote_filelist} || true
 done
 
-BACKUP_PATH="${BASE_PATH}/backup/"
-mkdir -p ${BACKUP_PATH}
-(cd ${BASE_PATH}; find . -type f -iname "*.deb") | sed 's+^\./++' > ${local_filelist}
-comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
-	echo "deleting ${file}"
-	mv "${BASE_PATH}/$file" ${BACKUP_PATH}
-done
+apt-delete-old-debs ${BASE_PATH} $remote_filelist
 
 echo "finished"
