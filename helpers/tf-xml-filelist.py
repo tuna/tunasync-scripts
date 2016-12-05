@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import argparse
 import xml.etree.ElementTree as ET
+
 
 def get_filelist(xmlstring):
     r = ET.fromstring(xmlstring)

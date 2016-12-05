@@ -1,11 +1,14 @@
 #!/bin/bash
-# requires: wget, lftp, jq
-#
+# requires: wget, lftp, jq, python3.5, lxml, pyquery
 
 set -e
+set -u
 set -o pipefail
 
-CONDA_REPO_BASE=${CONDA_REPO_BASE:-"http://repo.continuum.io"}
+_here=`dirname $(realpath $0)`
+HTMLPARSE="${_here}/helpers/anaconda-filelist.py"
+
+CONDA_REPO_BASE="${CONDA_REPO_BASE:-"https://repo.continuum.io"}"
 LOCAL_DIR_BASE="${TUNASYNC_WORKING_DIR}/pkgs"
 TMP_DIR=$(mktemp -d)
 
@@ -37,6 +40,44 @@ trap cleanup EXIT
 
 echo ${TMP_DIR}
 
+
+function sync_installer() {
+	repo_url="$1"
+	repo_dir="$2"
+
+	[[ ! -d "$repo_dir" ]] && mkdir -p "$repo_dir"
+	cd $repo_dir
+	# lftp "${repo_url}/" -e "mirror --verbose -P 5; bye"
+	
+	while read -a tokens; do
+		fname=${tokens[0]}
+		pkgmd5=${tokens[2]}
+
+		dest_file="${repo_dir}${fname}"
+		pkg_url="${repo_url}${fname}"
+		pkgsize=`curl --head -s ${pkg_url} | grep 'Content-Length' | awk '{print $2}' | tr -d '\r'`
+		
+		declare downloaded=false
+		if [[ -f ${dest_file} ]]; then
+			rsize=`stat -c "%s" ${dest_file}`
+			if (( ${rsize} == ${pkgsize} )); then
+				downloaded=true
+				echo "Skipping ${fname}, size ${pkgsize}"
+			fi
+		fi
+		while [[ $downloaded != true ]]; do
+			echo "downloading ${pkg_url}"
+			wget -q -O ${dest_file} ${pkg_url} && {
+				# two space for md5sum check format
+				{ md5sum -c - < <(echo "${pkgmd5} ${dest_file}"); } && downloaded=true
+			}
+		done
+	done < <(wget -O- ${repo_url} | $HTMLPARSE)
+}
+
+sync_installer "${CONDA_REPO_BASE}/archive/" "${TUNASYNC_WORKING_DIR}/archive/"
+sync_installer "${CONDA_REPO_BASE}/miniconda/" "${TUNASYNC_WORKING_DIR}/miniconda/"
+
 for repo in ${CONDA_REPOS[@]}; do
 	for arch in ${CONDA_ARCHES[@]}; do
 		PKG_REPO_BASE="${CONDA_REPO_BASE}/pkgs/$repo/$arch"
@@ -62,18 +103,18 @@ for repo in ${CONDA_REPOS[@]}; do
 			dest_file="${LOCAL_DIR}/${pkgfile}"
 			
 			declare downloaded=false
-			if [ -f ${dest_file} ]; then
+			if [[ -f ${dest_file} ]]; then
 				rsize=`stat -c "%s" ${dest_file}`
-				if [ ${rsize} -eq ${pkgsize} ]; then
+				if (( ${rsize} == ${pkgsize} )); then
 					downloaded=true
 					echo "Skipping ${pkgfile}, size ${pkgsize}"
 				fi
 			fi
-			while [ $downloaded != true ]; do
+			while [[ $downloaded != true ]]; do
 				echo "downloading ${pkg_url}"
 				wget -q -O ${dest_file} ${pkg_url} && {
 					# two space for md5sum check format
-					echo "${pkgmd5}  ${dest_file}" | md5sum -c - && downloaded=true 
+					{ md5sum -c - < <(echo "${pkgmd5} ${dest_file}"); } && downloaded=true
 				}
 			done
 		done
@@ -83,14 +124,3 @@ for repo in ${CONDA_REPOS[@]}; do
 	done
 done
 
-function sync_installer() {
-	repo_url="$1"
-	repo_dir="$2"
-
-	[ ! -d "$repo_dir" ] && mkdir -p "$repo_dir"
-	cd $repo_dir
-	lftp "${repo_url}/" -e "mirror --verbose -P 5; bye"
-}
-
-sync_installer "${CONDA_REPO_BASE}/archive/" "${TUNASYNC_WORKING_DIR}/archive/"
-sync_installer "${CONDA_REPO_BASE}/miniconda/" "${TUNASYNC_WORKING_DIR}/miniconda/"
