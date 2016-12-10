@@ -6,7 +6,7 @@ set -o pipefail
 _here=`dirname $(realpath $0)`
 . ${_here}/helpers/apt-download
 
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+[[ -z "${LOADED_APT_DOWNLOAD}" ]] && { echo "failed to load apt-download"; exit 1; }
 
 
 BASE_URL="http://download.virtualbox.org/virtualbox"
@@ -82,13 +82,14 @@ while read line; do
 	
 	declare downloaded=false
 
-	if [ -f ${dest_filename} ]; then
+	if [[ -f ${dest_filename} ]]; then
 		echo "${pkg_checksum}  ${dest_filename}" | md5sum -c - && {
 			downloaded=true
 			echo "Skipping ${filename}"
 		}
 	fi
-	while [ $downloaded != true ]; do
+	while [[ $downloaded != true ]]; do
+		rm ${dest_filename} || true
 		echo "downloading ${pkg_url} to ${dest_filename}"
 		if [[ -z ${DRY_RUN:-} ]]; then
 			wget ${WGET_OPTIONS:-} -N -c -q -O ${dest_filename} ${pkg_url} && {
