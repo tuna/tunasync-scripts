@@ -13,9 +13,14 @@ function update_repo_git() {
 	echo "==== SYNC repo.git DONE ===="
 }
 
+function checkout_repo() {
+    git -C $TUNASYNC_WORKING_DIR show HEAD:repo > $TUNASYNC_WORKING_DIR/repo
+}
+
 if [[ ! -f "$TUNASYNC_WORKING_DIR/HEAD" ]]; then
 	echo "Initializing repo.git mirror"
 	repo_init
 fi
 
 update_repo_git
+checkout_repo
