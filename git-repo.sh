@@ -14,7 +14,7 @@ function update_repo_git() {
 }
 
 function checkout_repo() {
-    git -C $TUNASYNC_WORKING_DIR show HEAD:repo > $TUNASYNC_WORKING_DIR/repo
+    git -C $TUNASYNC_WORKING_DIR show HEAD:repo > $TUNASYNC_WORKING_DIR/git-repo
 }
 
 if [[ ! -f "$TUNASYNC_WORKING_DIR/HEAD" ]]; then
