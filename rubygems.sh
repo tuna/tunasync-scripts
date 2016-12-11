@@ -18,14 +18,14 @@ echo "Syncing to $TUNASYNC_WORKING_DIR"
 cat > $CONF << EOF
 ---
 - from: https://rubygems.org
-to: ${TUNASYNC_WORKING_DIR}
-parallelism: 10
-retries: 2
-delete: true
-skiperror: true
+  to: ${TUNASYNC_WORKING_DIR}
+  parallelism: 10
+  retries: 2
+  delete: true
+  skiperror: true
 EOF
 
-if [[ $INT == "0" ]]; then
+if [[ $INIT == "0" ]]; then
 	if [[ $BUSYBOX == "0" ]]; then
 		timeout -t 7200 -s INT $GEM mirror -V
 	else
