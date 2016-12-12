@@ -9,7 +9,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 base_url=${TUNASYNC_UPSTREAM_URL:-"https://termux.net"}
 
-ARCHES=("aarch64" "all" "arm" "i686")
+ARCHES=("aarch64" "all" "arm" "i686" "x86_64")
 
 remote_filelist="${BASE_PATH}/filelist"
 [[ -f $remote_filelist ]] && rm $remote_filelist
