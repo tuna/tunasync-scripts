@@ -27,9 +27,9 @@ EOF
 
 if [[ $INIT == "0" ]]; then
 	if [[ $BUSYBOX == "0" ]]; then
-		timeout -t 7200 -s INT $GEM mirror -V
-	else
 		timeout -s INT 7200 $GEM mirror -V
+	else
+		timeout -t 7200 -s INT $GEM mirror -V
 	fi
 else
 	$GEM mirror -V
