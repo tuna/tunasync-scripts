@@ -16,4 +16,5 @@ RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
 RUN chmod a+x /usr/local/bin/aosp-repo
 
+ENV HOME=/tmp
 CMD /bin/bash
