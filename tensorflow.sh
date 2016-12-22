@@ -6,6 +6,7 @@ set -o pipefail
 
 _here=`dirname $(realpath $0)`
 XMLPARSE="${_here}/helpers/tf-xml-filelist.py"
+INDEXGEN="${_here}/helpers/tf-gen-index.py"
 
 TF_UPSTREAM_BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://storage.googleapis.com/tensorflow"}
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
@@ -41,14 +42,7 @@ wget -O - "${TF_UPSTREAM_BASE_URL}/" | ${XMLPARSE} | while read -a tokens; do
 	fi
 done
 
+find ${BASE_PATH} -type f -name '*.whl' -printf '%P\n' | \
+	${INDEXGEN} > "${BASE_PATH}/releases.json"
+
 exit $failed
-
-
-
-
-
-
-
-
-
-
