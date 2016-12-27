@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-GIT=${GIT:-"/bin/repo"}
 USE_BITMAP_INDEX=${USE_BITMAP_INDEX:-"0"}
 MANIFEST_URL=$TUNASYNC_UPSTREAM_URL/weave/manifest
 MANIFEST_DIR=$TUNASYNC_WORKING_DIR/.manifest
