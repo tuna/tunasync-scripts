@@ -21,8 +21,12 @@ def main():
     parser.add_argument("remote", nargs='+',
                         help='remotes whose projects should be included')
     args = parser.parse_args()
+    present = set()
     for repo in get_repolist(args.manifest, args.remote):
-        print(repo.get('name'))
+        name = repo.get('name')
+        if name not in present:
+            print(name)
+            present.add(name)
 
 
 if __name__ == "__main__":
