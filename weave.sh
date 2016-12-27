@@ -38,7 +38,6 @@ function git_clone_or_pull {
 function git_repack() {
 	echo "Start writing bitmap index"
 	while read repo; do 
-        echo $repo
 		cd $repo
 		size=$(du -sm .|cut -f1)
 		if [[ "$size" -gt "100" ]]; then
@@ -52,9 +51,13 @@ git_clone_or_pull $MANIFEST_URL $MANIFEST_DIR
 
 for repo in $($MANIFEST_XML_REPOLIST $MANIFEST_DIR/default.xml weave); do
     contains $repo ${IGNORED_REPO[@]} && continue
-    git_clone_or_pull $TUNASYNC_UPSTREAM_URL/$repo $TUNASYNC_WORKING_DIR/$repo yes
+    if [[ -z ${DRY_RUN:-} ]]; then
+        echo $TUNASYNC_UPSTREAM_URL/$repo
+        git_clone_or_pull $TUNASYNC_UPSTREAM_URL/$repo $TUNASYNC_WORKING_DIR/$repo yes
+        if [[ "$USE_BITMAP_INDEX" == "1" ]]; then
+            git_repack
+        fi
+    else
+        echo $TUNASYNC_UPSTREAM_URL/$repo
+    fi
 done
-
-if [[ "$USE_BITMAP_INDEX" == "1" ]]; then
-	git_repack
-fi
