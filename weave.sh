@@ -6,7 +6,10 @@ MANIFEST_URL=$TUNASYNC_UPSTREAM_URL/weave/manifest
 MANIFEST_DIR=$TUNASYNC_WORKING_DIR/.manifest
 MANIFEST_XML_REPOLIST=$(dirname $0)/helpers/manifest-xml-repolist.py
 IGNORED_REPO=(
-    "weave/tests"  # this is a private repo
+    # these are a private repos
+    "weave/tests"
+    "weave/libuweave"
+    "weave/cocoapods"
 )
 
 export GIT_TERMINAL_PROMPT=0
