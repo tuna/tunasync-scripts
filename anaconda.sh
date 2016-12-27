@@ -15,6 +15,9 @@ TMP_DIR=$(mktemp -d)
 CONDA_REPOS=("free" "r" "mro" "pro")
 CONDA_ARCHES=("linux-64" "linux-32" "linux-armv6l" "linux-armv7l" "linux-ppc64le" "osx-64" "osx-32" "win-64" "win-32")
 
+EXIT_STATUS=0
+EXIT_MSG=""
+
 function check-and-download() {
 	remote_file=$1
 	local_file=$2
@@ -34,6 +37,27 @@ function cleanup () {
 		[ -f ${TMP_DIR}/repodata.json.bz2 ] && rm ${TMP_DIR}/repodata.json.bz2
 		rmdir ${TMP_DIR}
 	}
+}
+
+function download-with-checksum() {
+	local pkg_url=$1
+	local dest_file=$2
+	local pkgmd5=$3
+
+	local declare downloaded=false
+	local trials=0
+
+	while [[ $downloaded != true ]]; do
+		echo "downloading ${pkg_url}"
+		wget -q -O ${dest_file} ${pkg_url} && {
+			# two space for md5sum check format
+			{ md5sum -c - < <(echo "${pkgmd5} ${dest_file}"); } && downloaded=true || trials=$((trials + 1))
+		}
+		if (( $trials > 3 )); then
+			return 1
+		fi
+	done
+	return 0
 }
 
 trap cleanup EXIT
@@ -57,21 +81,18 @@ function sync_installer() {
 		pkg_url="${repo_url}${fname}"
 		pkgsize=`curl --head -s ${pkg_url} | grep 'Content-Length' | awk '{print $2}' | tr -d '\r'`
 		
-		declare downloaded=false
 		if [[ -f ${dest_file} ]]; then
 			rsize=`stat -c "%s" ${dest_file}`
 			if (( ${rsize} == ${pkgsize} )); then
-				downloaded=true
 				echo "Skipping ${fname}, size ${pkgsize}"
+				continue
 			fi
 		fi
-		while [[ $downloaded != true ]]; do
-			echo "downloading ${pkg_url}"
-			wget -q -O ${dest_file} ${pkg_url} && {
-				# two space for md5sum check format
-				{ md5sum -c - < <(echo "${pkgmd5} ${dest_file}"); } && downloaded=true
-			}
-		done
+		download-with-checksum ${pkg_url} ${dest_file} ${pkgmd5} || {
+			echo "Failed to download ${pkg_url}: checksum mismatch"
+			EXIT_STATUS=2
+			EXIT_MSG="some files has bad checksum."
+		}
 	done < <(wget -O- ${repo_url} | $HTMLPARSE)
 }
 
@@ -92,8 +113,8 @@ for repo in ${CONDA_REPOS[@]}; do
 		check-and-download ${bz2_repodata_url} ${tmp_bz2_repodata}
 
 		jq_cmd='.packages | to_entries[] | [.key, .value.size, .value.md5] | map(tostring) | join(" ")'
-		bzip2 -c -d ${tmp_bz2_repodata} | jq -r "${jq_cmd}" | while read line;
-		do
+
+		while read line; do
 			read -a tokens <<< $line
 			pkgfile=${tokens[0]}
 			pkgsize=${tokens[1]}
@@ -102,25 +123,25 @@ for repo in ${CONDA_REPOS[@]}; do
 			pkg_url="${PKG_REPO_BASE}/${pkgfile}"
 			dest_file="${LOCAL_DIR}/${pkgfile}"
 			
-			declare downloaded=false
 			if [[ -f ${dest_file} ]]; then
 				rsize=`stat -c "%s" ${dest_file}`
 				if (( ${rsize} == ${pkgsize} )); then
-					downloaded=true
 					echo "Skipping ${pkgfile}, size ${pkgsize}"
+					continue
 				fi
 			fi
-			while [[ $downloaded != true ]]; do
-				echo "downloading ${pkg_url}"
-				wget -q -O ${dest_file} ${pkg_url} && {
-					# two space for md5sum check format
-					{ md5sum -c - < <(echo "${pkgmd5} ${dest_file}"); } && downloaded=true
-				}
-			done
-		done
+			download-with-checksum ${pkg_url} ${dest_file} ${pkgmd5} || {
+				echo "Failed to download ${pkg_url}: checksum mismatch"
+				EXIT_STATUS=2
+				EXIT_MSG="some files has bad checksum."
+			}
+
+		done < <(bzip2 -c -d ${tmp_bz2_repodata} | jq -r "${jq_cmd}")
 		
 		mv -f "${TMP_DIR}/repodata.json" "${LOCAL_DIR}/repodata.json"
 		mv -f "${TMP_DIR}/repodata.json.bz2" "${LOCAL_DIR}/repodata.json.bz2"
 	done
 done
 
+[[ -z $EXIT_MSG ]] || echo $EXIT_MSG
+exit $EXIT_STATUS

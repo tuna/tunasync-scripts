@@ -15,6 +15,7 @@ RUN pip install --upgrade pip setuptools && \
 RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
 RUN chmod a+x /usr/local/bin/aosp-repo
+RUN apt-get install -y python3-lxml && pip3 install pyquery
 
 ENV HOME=/tmp
 CMD /bin/bash
