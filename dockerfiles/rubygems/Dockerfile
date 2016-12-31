@@ -1,4 +1,4 @@
 FROM cybercode/alpine-ruby:2.3
 RUN gem install rubygems-mirror
 ENV BUSYBOX=1
-volume /data
+ENV HOME=/tmp

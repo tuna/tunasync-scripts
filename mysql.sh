@@ -9,7 +9,7 @@ _here=`dirname $(realpath $0)`
 [ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}
+BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}"
 
 MYSQL_DOWNLOAD_PATH="${BASE_PATH}/downloads/"
 MYSQL_RSYNC_UPSTREAM="rsync://mysql.he.net/mysql/Downloads/"
