@@ -49,7 +49,7 @@ keepcache=0
 
 EOF
 
-for elver in ${EL_VERSIONS}; do
+for elver in ${EL_VERSIONS[@]}; do
 cat << EOF >> $cfg 
 [$elver]
 name=Elang for el-${elver}
@@ -60,6 +60,8 @@ done
 
 if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${elver}/ ${YUM_PATH}/${elver}/
+	for elver in ${EL_VERSIONS[@]}; do
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${elver}/ ${YUM_PATH}/${elver}/
+	done
 fi
 rm $cfg
