@@ -63,6 +63,7 @@ remote_filelist="${APT_PATH}/filelist"
 for version in ${APT_VERSIONS[@]}; do
 	apt-download-binary ${base_url} "$version" "main" "amd64" "${APT_PATH}" ${remote_filelist} || true
 	apt-download-binary ${base_url} "$version" "main" "i386" "${APT_PATH}"  ${remote_filelist} || true
+	apt-download-binary ${base_url} "$version" "main" "armhf" "${APT_PATH}"  ${remote_filelist} || true
 done
 
 apt-delete-old-debs ${APT_PATH} $remote_filelist
