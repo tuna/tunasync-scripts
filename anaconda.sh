@@ -35,6 +35,7 @@ function cleanup () {
 	[ -d ${TMP_DIR} ] && {
 		[ -f ${TMP_DIR}/repodata.json ] && rm ${TMP_DIR}/repodata.json
 		[ -f ${TMP_DIR}/repodata.json.bz2 ] && rm ${TMP_DIR}/repodata.json.bz2
+		[ -f ${TMP_DIR}/failed ] && rm ${TMP_DIR}/failed
 		rmdir ${TMP_DIR}
 	}
 }
@@ -61,8 +62,6 @@ function download-with-checksum() {
 }
 
 trap cleanup EXIT
-
-echo ${TMP_DIR}
 
 
 function sync_installer() {
@@ -108,6 +107,7 @@ for repo in ${CONDA_REPOS[@]}; do
 		[ ! -d ${LOCAL_DIR} ] && mkdir -p ${LOCAL_DIR}
 		tmp_repodata="${TMP_DIR}/repodata.json"
 		tmp_bz2_repodata="${TMP_DIR}/repodata.json.bz2"
+		tmp_failed_files="${TMP_DIR}/failed"
 
 		check-and-download ${repodata_url} ${tmp_repodata}
 		check-and-download ${bz2_repodata_url} ${tmp_bz2_repodata}
@@ -132,7 +132,7 @@ for repo in ${CONDA_REPOS[@]}; do
 			fi
 			download-with-checksum ${pkg_url} ${dest_file} ${pkgmd5} || {
 				echo "Failed to download ${pkg_url}: checksum mismatch"
-				EXIT_STATUS=2
+				echo ${pkg_url} >> ${tmp_failed_files}
 				EXIT_MSG="some files has bad checksum."
 			}
 
@@ -140,6 +140,7 @@ for repo in ${CONDA_REPOS[@]}; do
 		
 		mv -f "${TMP_DIR}/repodata.json" "${LOCAL_DIR}/repodata.json"
 		mv -f "${TMP_DIR}/repodata.json.bz2" "${LOCAL_DIR}/repodata.json.bz2"
+		mv -f "${tmp_failed_files}" "${TUNASYNC_WORKING_DIR}/failed_packages.txt"
 	done
 done
 
