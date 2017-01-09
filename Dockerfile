@@ -17,5 +17,10 @@ ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-r
 RUN chmod a+x /usr/local/bin/aosp-repo
 RUN apt-get install -y python3-lxml && pip3 install pyquery
 
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && apt-get install -y locales -qq && locale-gen
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
 ENV HOME=/tmp
 CMD /bin/bash
