@@ -1,24 +1,34 @@
-#!/bin/bash
-# requires: wget, lftp, jq, python3.5, lxml, pyquery
-
-set -e
-set -u
+#!/bin/bash 
+# requires: wget, lftp, jq, python3.5, lxml, pyquery 
+set -e 
+set -u 
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
 HTMLPARSE="${_here}/helpers/anaconda-filelist.py"
 
-CONDA_REPO_BASE="${CONDA_REPO_BASE:-"https://repo.continuum.io"}"
-LOCAL_DIR_BASE="${TUNASYNC_WORKING_DIR}/pkgs"
+DEFAULT_CONDA_REPO_BASE="https://repo.continuum.io"
+DEFAULT_CONDA_CLOUD_BASE="https://conda.anaconda.org"
+
+CONDA_REPO_BASE="${CONDA_REPO_BASE:-$DEFAULT_CONDA_REPO_BASE}"
+CONDA_CLOUD_BASE="${CONDA_CLOUD_BASE:-$DEFAULT_CONDA_CLOUD_BASE}"
+
+LOCAL_DIR_BASE="${TUNASYNC_WORKING_DIR}"
+
 TMP_DIR=$(mktemp -d)
 
 CONDA_REPOS=("free" "r" "mro" "pro")
 CONDA_ARCHES=("linux-64" "linux-32" "linux-armv6l" "linux-armv7l" "linux-ppc64le" "osx-64" "osx-32" "win-64" "win-32")
 
+CONDA_CLOUD_REPOS=(
+	"conda-forge/linux-64" "conda-forge/osx-64" "conda-forge/win-64"
+	"msys2/win-64" "r/linux-64" "r/osx-64" "r/osx-64"
+)
+
 EXIT_STATUS=0
 EXIT_MSG=""
 
-function check-and-download() {
+function check-and-download () {
 	remote_file=$1
 	local_file=$2
 	wget -q --spider ${remote_file}
@@ -32,15 +42,15 @@ function check-and-download() {
 
 function cleanup () {
 	echo "cleaning up"
-	[ -d ${TMP_DIR} ] && {
-		[ -f ${TMP_DIR}/repodata.json ] && rm ${TMP_DIR}/repodata.json
-		[ -f ${TMP_DIR}/repodata.json.bz2 ] && rm ${TMP_DIR}/repodata.json.bz2
-		[ -f ${TMP_DIR}/failed ] && rm ${TMP_DIR}/failed
+	[[ -d ${TMP_DIR} ]] && {
+		[[ -f ${TMP_DIR}/repodata.json ]] && rm ${TMP_DIR}/repodata.json
+		[[ -f ${TMP_DIR}/repodata.json.bz2 ]] && rm ${TMP_DIR}/repodata.json.bz2
+		[[ -f ${TMP_DIR}/failed ]] && rm ${TMP_DIR}/failed
 		rmdir ${TMP_DIR}
 	}
 }
 
-function download-with-checksum() {
+function download-with-checksum () {
 	local pkg_url=$1
 	local dest_file=$2
 	local pkgmd5=$3
@@ -53,6 +63,8 @@ function download-with-checksum() {
 		wget -q -O ${dest_file} ${pkg_url} && {
 			# two space for md5sum check format
 			{ md5sum -c - < <(echo "${pkgmd5} ${dest_file}"); } && downloaded=true || trials=$((trials + 1))
+		} || {
+			trials=$((trials + 1))
 		}
 		if (( $trials > 3 )); then
 			return 1
@@ -64,13 +76,12 @@ function download-with-checksum() {
 trap cleanup EXIT
 
 
-function sync_installer() {
+function sync_installer () {
 	repo_url="$1"
 	repo_dir="$2"
 
 	[[ ! -d "$repo_dir" ]] && mkdir -p "$repo_dir"
 	cd $repo_dir
-	# lftp "${repo_url}/" -e "mirror --verbose -P 5; bye"
 	
 	while read -a tokens; do
 		fname=${tokens[0]}
@@ -89,60 +100,84 @@ function sync_installer() {
 		fi
 		download-with-checksum ${pkg_url} ${dest_file} ${pkgmd5} || {
 			echo "Failed to download ${pkg_url}: checksum mismatch"
+			echo ${pkg_url} >> ${TMP_DIR}/failed
 			EXIT_STATUS=2
 			EXIT_MSG="some files has bad checksum."
 		}
 	done < <(wget -O- ${repo_url} | $HTMLPARSE)
 }
 
-sync_installer "${CONDA_REPO_BASE}/archive/" "${TUNASYNC_WORKING_DIR}/archive/"
-sync_installer "${CONDA_REPO_BASE}/miniconda/" "${TUNASYNC_WORKING_DIR}/miniconda/"
+function sync_repo () {
+	local repo_url="$1"
+	local local_dir="$2"
+	
+	[[ ! -d ${local_dir} ]] && mkdir -p ${local_dir}
+	
+	repodata_url="${repo_url}/repodata.json"
+	bz2_repodata_url="${repo_url}/repodata.json.bz2"
+
+	tmp_repodata="${TMP_DIR}/repodata.json"
+	tmp_bz2_repodata="${TMP_DIR}/repodata.json.bz2"
+
+	check-and-download ${repodata_url} ${tmp_repodata}
+	check-and-download ${bz2_repodata_url} ${tmp_bz2_repodata}
+
+	jq_cmd='.packages | to_entries[] | [.key, .value.size, .value.md5] | map(tostring) | join(" ")'
+
+	while read line; do
+		read -a tokens <<< $line
+		pkgfile=${tokens[0]}
+		pkgsize=${tokens[1]}
+		pkgmd5=${tokens[2]}
+		
+		pkg_url="${repo_url}/${pkgfile}"
+		dest_file="${local_dir}/${pkgfile}"
+		
+		if [[ -f ${dest_file} ]]; then
+			rsize=`stat -c "%s" ${dest_file}`
+			if (( ${rsize} == ${pkgsize} )); then
+				echo "Skipping ${pkgfile}, size ${pkgsize}"
+				continue
+			fi
+		fi
+
+		download-with-checksum ${pkg_url} ${dest_file} ${pkgmd5} || {
+			echo "Failed to download ${pkg_url}: checksum mismatch"
+			echo ${pkg_url} >> ${TMP_DIR}/failed
+			EXIT_MSG="some files has bad checksum."
+		}
+
+	done < <(bzip2 -c -d ${tmp_bz2_repodata} | jq -r "${jq_cmd}")
+	
+	mv -f "${TMP_DIR}/repodata.json" "${local_dir}/repodata.json"
+	mv -f "${TMP_DIR}/repodata.json.bz2" "${local_dir}/repodata.json.bz2"
+}
+
+sync_installer "${CONDA_REPO_BASE}/archive/" "${LOCAL_DIR_BASE}/archive/"
+sync_installer "${CONDA_REPO_BASE}/miniconda/" "${LOCAL_DIR_BASE}/miniconda/"
 
 for repo in ${CONDA_REPOS[@]}; do
 	for arch in ${CONDA_ARCHES[@]}; do
-		PKG_REPO_BASE="${CONDA_REPO_BASE}/pkgs/$repo/$arch"
-		repodata_url="${PKG_REPO_BASE}/repodata.json"
-		bz2_repodata_url="${PKG_REPO_BASE}/repodata.json.bz2"
-		LOCAL_DIR="${LOCAL_DIR_BASE}/$repo/$arch"
-		[ ! -d ${LOCAL_DIR} ] && mkdir -p ${LOCAL_DIR}
-		tmp_repodata="${TMP_DIR}/repodata.json"
-		tmp_bz2_repodata="${TMP_DIR}/repodata.json.bz2"
-		tmp_failed_files="${TMP_DIR}/failed"
+		remote_url="${CONDA_REPO_BASE}/pkgs/$repo/$arch"
+		local_dir="${LOCAL_DIR_BASE}/pkgs/$repo/$arch"
 
-		check-and-download ${repodata_url} ${tmp_repodata}
-		check-and-download ${bz2_repodata_url} ${tmp_bz2_repodata}
-
-		jq_cmd='.packages | to_entries[] | [.key, .value.size, .value.md5] | map(tostring) | join(" ")'
-
-		while read line; do
-			read -a tokens <<< $line
-			pkgfile=${tokens[0]}
-			pkgsize=${tokens[1]}
-			pkgmd5=${tokens[2]}
-			
-			pkg_url="${PKG_REPO_BASE}/${pkgfile}"
-			dest_file="${LOCAL_DIR}/${pkgfile}"
-			
-			if [[ -f ${dest_file} ]]; then
-				rsize=`stat -c "%s" ${dest_file}`
-				if (( ${rsize} == ${pkgsize} )); then
-					echo "Skipping ${pkgfile}, size ${pkgsize}"
-					continue
-				fi
-			fi
-			download-with-checksum ${pkg_url} ${dest_file} ${pkgmd5} || {
-				echo "Failed to download ${pkg_url}: checksum mismatch"
-				echo ${pkg_url} >> ${tmp_failed_files}
-				EXIT_MSG="some files has bad checksum."
-			}
-
-		done < <(bzip2 -c -d ${tmp_bz2_repodata} | jq -r "${jq_cmd}")
-		
-		mv -f "${TMP_DIR}/repodata.json" "${LOCAL_DIR}/repodata.json"
-		mv -f "${TMP_DIR}/repodata.json.bz2" "${LOCAL_DIR}/repodata.json.bz2"
-		mv -f "${tmp_failed_files}" "${TUNASYNC_WORKING_DIR}/failed_packages.txt"
+		sync_repo "${remote_url}" "${local_dir}" || true
 	done
 done
+
+for repo in ${CONDA_CLOUD_REPOS[@]}; do
+	remote_url="${CONDA_CLOUD_BASE}/${repo}"
+	local_dir="${LOCAL_DIR_BASE}/cloud/${repo}"
+
+	sync_repo "${remote_url}" "${local_dir}" || true
+done
+
+
+[[ -f ${TMP_DIR}/failed ]] && {
+	echo "failed to download following packages:"
+	cat ${TMP_DIR}/failed
+	mv ${TMP_DIR}/failed ${LOCAL_DIR_BASE}/failed_packages.txt
+}
 
 [[ -z $EXIT_MSG ]] || echo $EXIT_MSG
 exit $EXIT_STATUS
