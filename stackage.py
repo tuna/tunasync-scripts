@@ -22,7 +22,10 @@ class StackageSession(object):
         if file_path.is_file():
             print('{} exists, skipping'.format(file_path), flush=True)
         else:
-            args = ['aria2c', url, '--dir={}'.format(dir_path)]
+            args = [
+                'aria2c', url, '--dir={}'.format(dir_path),
+                '--file-allocation=none', '--quiet=true',
+            ]
             if sha1:
                 args.append('--checksum=sha-1={}'.format(sha1))
             if subprocess.run(args).returncode != 0 and file_path.is_file():
