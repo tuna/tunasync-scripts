@@ -6,6 +6,7 @@
 import os
 import pathlib
 import requests
+import shutil
 import subprocess
 import yaml
 
@@ -23,22 +24,20 @@ class StackageSession(object):
             print('{} exists, skipping'.format(file_path), flush=True)
         else:
             args = [
-                'aria2c', url, '--dir={}'.format(dir_path),
-                '--file-allocation=none', '--quiet=true',
+                'aria2c', url, '--dir={}'.format(dir_path), '--out={}.tmp'.format(url.split('/')[-1]),
+                '--file-allocation=none', '--quiet=true'
             ]
             if sha1:
                 args.append('--checksum=sha-1={}'.format(sha1))
-            if subprocess.run(args).returncode != 0 and file_path.is_file():
-                file_path.unlink()
-                raise OSError('Download failed for {}'.format(url))
-            else:
-                print('Downloaded {} to {}'.format(url, file_path), flush=True)
+            subprocess.run(args, check=True)
+            shutil.move('{}.tmp'.format(file_path), file_path)
+            print('Downloaded {} to {}'.format(url, file_path), flush=True)
 
     def load_stack_setup(self):
         d = yaml.load(
             requests
-            .get('https://raw.githubusercontent.com/fpco/stackage-content/master/stack/stack-setup-2.yaml')
-            .content
+                .get('https://raw.githubusercontent.com/fpco/stackage-content/master/stack/stack-setup-2.yaml')
+                .content
         )
         for platform in d['ghc']:
             for ver in d['ghc'][platform]:
@@ -49,7 +48,7 @@ class StackageSession(object):
                 )
                 d['ghc'][platform][ver]['url'] = (
                     'http://mirrors.tuna.tsinghua.edu.cn/stackage/ghc/{}'
-                    .format(d['ghc'][platform][ver]['url'].split('/')[-1])
+                        .format(d['ghc'][platform][ver]['url'].split('/')[-1])
                 )
 
         d['msys2'] = {
