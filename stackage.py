@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -u
 
 # python deps: requests, pyyaml
 # non-python deps: aria2, git
