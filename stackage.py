@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+# python deps: requests, pyyaml
+# non-python deps: aria2, git
+
+import os
+import pathlib
+import requests
+import subprocess
+import yaml
+
+
+class StackageSession(object):
+    def __init__(self):
+        self._base_path = pathlib.Path(os.environ['TUNASYNC_WORKING_DIR'])
+
+    def download(self, dir_, url, sha1=None, force=False):
+        dir_path = self._base_path / dir_
+        file_path = dir_path / url.split('/')[-1]
+        if force and file_path.is_file():
+            file_path.unlink()
+        if file_path.is_file():
+            print('{} exists, skipping'.format(file_path))
+        else:
+            args = ['aria2c', url, '--dir={}'.format(dir_path)]
+            if sha1:
+                args.append('--checksum=sha-1={}'.format(sha1))
+            if subprocess.run(args).returncode != 0 and file_path.is_file():
+                file_path.unlink()
+                raise OSError('Download failed for {}'.format(url))
+            else:
+                print('Downloaded {} to {}'.format(url, file_path))
+
+    def load_stack_setup(self):
+        d = yaml.load(requests.get(
+            'https://raw.githubusercontent.com/fpco/stackage-content/master/stack/stack-setup-2.yaml').content)
+        for platform in d['ghc']:
+            for ver in d['ghc'][platform]:
+                self.download('ghc', d['ghc'][platform][ver]['url'], d['ghc'][platform][ver]['sha1'])
+                d['ghc'][platform][ver]['url'] = 'http://mirrors.tuna.tsinghua.edu.cn/stackage/ghc/{}'.format(
+                    d['ghc'][platform][ver]['url'].split('/')[-1])
+        d['msys2'] = {'windows32': {'version': '20161025',
+                                    'url': 'http://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/i686/msys2-base-i686-20161025.tar.xz',
+                                    'content-length': 47526500,
+                                    'sha1': '5D17FA53077A93A38A9AC0ACB8A03BF6C2FC32AD'},
+                      'windows64': {'version': '20161025',
+                                    'url': 'http://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/x86_64/msys2-base-x86_64-20161025.tar.xz',
+                                    'content-length': 47166584,
+                                    'sha1': '05FD74A6C61923837DFFE22601C9014F422B5460'}}
+        with open(self._base_path / 'stack-setup.yaml', 'w') as f:
+            yaml.dump(d, f)
+        print('Loaded stack-setup.yaml')
+
+    def load_stackage_snapshots(self):
+        for channel in ['lts-haskell', 'stackage-nightly']:
+            if (self._base_path / channel).is_dir():
+                args = ['git', '-C', self._base_path / channel, 'pull']
+            else:
+                args = ['git', '-C', self._base_path, 'clone', '--depth', '1',
+                        'https://github.com/fpco/{}.git'.format(channel)]
+            subprocess.run(args, check=True)
+            print('Loaded {}'.format(channel))
+        self.download('', 'https://www.stackage.org/download/snapshots.json', force=True)
+        print('Loaded snapshots.json')
+
+
+if __name__ == '__main__':
+    s = StackageSession()
+    s.load_stackage_snapshots()
+    s.load_stack_setup()

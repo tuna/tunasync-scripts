@@ -7,10 +7,12 @@ RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie main contrib no
         echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
 
 RUN apt-get update && \
-        apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo python3-dev python3-pip
+        apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo python3-dev python3-pip aria2
 
 RUN pip install --upgrade pip setuptools && \
         pip install bandersnatch==1.11
+        
+RUN pip3 install requests pyyaml
 
 RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
