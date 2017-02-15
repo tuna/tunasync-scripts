@@ -56,15 +56,17 @@ class StackageSession(object):
                 'version': '20161025',
                 'url': 'http://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/i686/msys2-base-i686-20161025.tar.xz',
                 'content-length': 47526500,
-                'sha1': '5D17FA53077A93A38A9AC0ACB8A03BF6C2FC32AD',
+                'sha1': '5d17fa53077a93a38a9ac0acb8a03bf6c2fc32ad',
             },
             'windows64': {
                 'version': '20161025',
                 'url': 'http://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/x86_64/msys2-base-x86_64-20161025.tar.xz',
                 'content-length': 47166584,
-                'sha1': '05FD74A6C61923837DFFE22601C9014F422B5460',
+                'sha1': '05fd74a6c61923837dffe22601c9014f422b5460',
             }
         }
+        for i in ['portable-git', 'stack', 'ghcjs']:
+            del d[i]
         with open(self._base_path / 'stack-setup.yaml', 'w') as f:
             yaml.dump(d, f)
         print('Loaded stack-setup.yaml', flush=True)
