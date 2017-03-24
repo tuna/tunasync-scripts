@@ -11,7 +11,7 @@ def get_filelist(xmlstring):
     for cnt in r.findall('s3:Contents', ns):
         key = cnt.find('s3:Key', ns)
         fname = key.text
-        if fname.endswith('/') or not (fname.startswith('linux') or fname.startswith('mac')):
+        if fname.endswith('/') or not (fname.startswith('linux') or fname.startswith('mac') or fname.startswith('windows')):
             continue
 
         size = cnt.find('s3:Size', ns).text
