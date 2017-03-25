@@ -22,6 +22,7 @@ def generate_fileindex(filelist):
     pythons = {
         'linux': set([]),
         'mac': set([]),
+        'windows': set([])
     }
     pkglist = []
 
