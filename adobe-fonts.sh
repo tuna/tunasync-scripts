@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+git_option="git -c user.email=non-existence@tuna.tsinghua.edu.cn -c user.name=Noname"
+
 function repo_init() {
         UPSTREAM="$1"
         WORKING_DIR="$2"
@@ -22,10 +24,10 @@ function checkout_font_branch() {
 	branch="$3"
 	echo "Checkout branch $branch to $work_tree"
 	if [[ ! -d "$2" ]]; then
-		git clone "$repo_dir" --branch "$branch" --single-branch "$work_tree"
+		$git_option clone "$repo_dir" --branch "$branch" --single-branch "$work_tree"
 	else
 		cd "$work_tree"
-		git pull
+		$git_option pull
 	fi
 }
 
