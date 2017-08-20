@@ -19,7 +19,7 @@ fi
 mkdir -p ${TUNASYNC_WORKING_DIR}/packages
 
 for version in ${VERSIONS[@]}; do
-	upstream=${UPSTREAM}:${version}
+	upstream=${UPSTREAM}/${version}
 	dest=${TUNASYNC_WORKING_DIR}/packages/${version}
 
 	[ ! -d "$dest" ] && mkdir -p "$dest"
