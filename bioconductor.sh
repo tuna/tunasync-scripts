@@ -27,4 +27,4 @@ for version in ${VERSIONS[@]}; do
 	rsync ${RSYNC_OPTS} "$upstream" "$dest"
 done
 
-ln -sfT ${TUNASYNC_WORKING_DIR}/packages/${RELEASE_VERSION} ${TUNASYNC_WORKING_DIR}/packages/release
+ln -sfT ${RELEASE_VERSION} ${TUNASYNC_WORKING_DIR}/packages/release
