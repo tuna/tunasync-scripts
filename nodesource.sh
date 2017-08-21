@@ -13,7 +13,7 @@ function sync_nodesource() {
 DEB_BASE_URL="https://deb.nodesource.com"
 RPM_BASE_URL="https://rpm.nodesource.com"
 
-node_versions=("0.10" "0.12" "4.x" "6.x")
+node_versions=("0.10" "0.12" "4.x" "6.x" "7.x" "8.x")
 declare success=true
 
 for ver in ${node_versions[@]}; do

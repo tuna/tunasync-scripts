@@ -3,11 +3,12 @@ set -e
 
 REPO=${REPO:-"/usr/local/bin/repo"}
 USE_BITMAP_INDEX=${USE_BITMAP_INDEX:-"0"}
+UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://android.googlesource.com/mirror/manifest"}
 
 function repo_init() {
 	mkdir -p $TUNASYNC_WORKING_DIR
 	cd $TUNASYNC_WORKING_DIR
-	$REPO init -u https://android.googlesource.com/mirror/manifest --mirror
+	$REPO init -u $UPSTREAM --mirror
 }
 
 function repo_sync() {
