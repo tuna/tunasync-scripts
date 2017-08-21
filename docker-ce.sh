@@ -8,7 +8,7 @@ set -o pipefail
 _here=`dirname $(realpath $0)`
 GET_FILELIST="${_here}/helpers/docker-ce-filelist.py"
 
-BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://download.docker.com/linux/static/"}"
+BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://download.docker.com/"}"
 
 REMOTE_FILELIST="${TUNASYNC_WORKING_DIR}/.filelist.remote"
 LOCAL_FILELIST="${TUNASYNC_WORKING_DIR}/.filelist.local"
@@ -31,18 +31,26 @@ while read remote_url; do
 
 	echo "${dst_rel_file}" >> $REMOTE_FILELIST
 
-	echo "downloading ${remote_url}"
 	if [[ -f ${dst_file} ]]; then
-		remote_filesize=`curl -sI ${remote_url} | grep -i '^content-length:' | awk '{print $2}' | tr -d '\n\r'`
+		remote_meta=`curl -sI ${remote_url}`
+		remote_filesize=`echo -e "$remote_meta" | grep -i '^content-length:' | awk '{print $2}' | tr -d '\n\r'`
+		remote_date=`echo -e "$remote_meta" | grep -i '^last-modified:' | sed 's/^last-modified: //I' | tr -d '\n\r'`
+		remote_date=`date --date="$remote_date" +%s`
+
 		local_filesize=`stat -c "%s" ${dst_file}`
-		if (( ${remote_filesize} != ${local_filesize} )); then
-			rm ${dst_file}
+		local_date=`stat -c "%Y" ${dst_file}`
+
+		if (( ${remote_filesize} == ${local_filesize} && ${remote_date} == ${local_date} )) ; then
+			echo "skipping ${dst_rel_file}"
+			continue
 		fi
+		rm $dst_file
 	else
 		mkdir -p $dst_dir
 	fi
 	
-	(cd ${dst_dir} && wget -c -N -q ${remote_url} || rm ${dst_file})
+	echo "downloading ${remote_url}"
+	(cd ${dst_dir} && wget -N -q ${remote_url} || rm ${dst_file})
 done < <($GET_FILELIST $BASE_URL)
 
 # remove old files
