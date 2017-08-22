@@ -20,7 +20,7 @@ TMP_DIR=$(mktemp -d)
 CONDA_REPOS=("free" "r" "mro" "pro")
 CONDA_ARCHES=("noarch" "linux-64" "linux-32" "linux-armv6l" "linux-armv7l" "linux-ppc64le" "osx-64" "osx-32" "win-64" "win-32")
 
-CONDA_CLOUD_REPOS=("conda-forge/linux-64" "conda-forge/osx-64" "conda-forge/win-64" "conda-forge/noarch" "msys2/win-64" "msys2/noarch")
+CONDA_CLOUD_REPOS=("conda-forge/linux-64" "conda-forge/osx-64" "conda-forge/win-64" "conda-forge/noarch" "msys2/win-64" "msys2/noarch" "bioconda/linux-64" "bioconda/osx-64")
 
 EXIT_STATUS=0
 EXIT_MSG=""
@@ -31,7 +31,7 @@ function check-and-download () {
 	wget -q --spider ${remote_file}
 	if [ $? -eq 0 ]; then
 		echo "downloading ${remote_file}"
-		wget -q -N -O ${local_file} ${remote_file}
+		wget -q -O ${local_file} ${remote_file}
 		return
 	fi
 	return 1
