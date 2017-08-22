@@ -1,5 +1,5 @@
 #!/bin/bash
-# requires: wget, lftp, jq, python3.5, lxml, pyquery 
+# requires: lftp, jq, python3.5, lxml, pyquery 
 # set -x
 set -e 
 set -u 
@@ -17,8 +17,8 @@ LOCAL_FILELIST="${TUNASYNC_WORKING_DIR}/.filelist.local"
 
 function cleanup () {
 	echo "cleaning up"
-	[[ -f $REMOTE_FILELIST ]] && rm $REMOTE_FILELIST
-	[[ -f $LOCAL_FILELIST ]] && rm $LOCAL_FILELIST
+	[[ -f $REMOTE_FILELIST ]] && rm $REMOTE_FILELIST || true
+	[[ -f $LOCAL_FILELIST ]] && rm $LOCAL_FILELIST || true
 }
 
 trap cleanup EXIT
@@ -32,10 +32,10 @@ while read remote_url; do
 	echo "${dst_rel_file}" >> $REMOTE_FILELIST
 
 	if [[ -f ${dst_file} ]]; then
-		remote_meta=`curl -sI ${remote_url}`
-		remote_filesize=`echo -e "$remote_meta" | grep -i '^content-length:' | awk '{print $2}' | tr -d '\n\r'`
-		remote_date=`echo -e "$remote_meta" | grep -i '^last-modified:' | sed 's/^last-modified: //I' | tr -d '\n\r'`
-		remote_date=`date --date="$remote_date" +%s`
+		remote_meta=`curl -sI "${remote_url}"`
+		remote_filesize=`echo -e "$remote_meta" | grep -i '^content-length:' | awk '{print $2}' | tr -d '\n\r' || echo 0`
+		remote_date=`echo -e "$remote_meta" | grep -i '^last-modified:' | sed 's/^last-modified: //I' | tr -d '\n\r' || echo 0`
+		remote_date=`date --date="${remote_date}" +%s`
 
 		local_filesize=`stat -c "%s" ${dst_file}`
 		local_date=`stat -c "%Y" ${dst_file}`
@@ -50,7 +50,10 @@ while read remote_url; do
 	fi
 	
 	echo "downloading ${remote_url}"
-	(cd ${dst_dir} && wget -N -q ${remote_url} || rm ${dst_file})
+	curl -o ${dst_file} -s -L --remote-time --show-error --fail ${remote_url} || {
+		echo "Failed: ${remote_url}"
+		[[ -f ${dst_file} ]] && rm ${dst_file}
+	}
 done < <($GET_FILELIST $BASE_URL)
 
 # remove old files
