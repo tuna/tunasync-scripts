@@ -20,7 +20,12 @@ TMP_DIR=$(mktemp -d)
 CONDA_REPOS=("free" "r" "mro" "pro")
 CONDA_ARCHES=("noarch" "linux-64" "linux-32" "linux-armv6l" "linux-armv7l" "linux-ppc64le" "osx-64" "osx-32" "win-64" "win-32")
 
-CONDA_CLOUD_REPOS=("conda-forge/linux-64" "conda-forge/osx-64" "conda-forge/win-64" "conda-forge/noarch" "msys2/win-64" "msys2/noarch" "bioconda/noarch" "bioconda/linux-64" "bioconda/osx-64")
+CONDA_CLOUD_REPOS=(
+	"conda-forge/linux-64" "conda-forge/osx-64" "conda-forge/win-64" "conda-forge/noarch"
+	"msys2/win-64" "msys2/noarch"
+	"bioconda/noarch" "bioconda/linux-64" "bioconda/osx-64"
+	"menpo/linux-64" "menpo/osx-64" "menpo/win-64" "menpo/win-32" "menpo/noarch"
+)
 
 EXIT_STATUS=0
 EXIT_MSG=""
