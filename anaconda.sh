@@ -17,7 +17,7 @@ LOCAL_DIR_BASE="${TUNASYNC_WORKING_DIR}"
 
 TMP_DIR=$(mktemp -d)
 
-CONDA_REPOS=("free" "r" "mro" "pro")
+CONDA_REPOS=("main" "free" "r" "mro" "pro")
 CONDA_ARCHES=("noarch" "linux-64" "linux-32" "linux-armv6l" "linux-armv7l" "linux-ppc64le" "osx-64" "osx-32" "win-64" "win-32")
 
 CONDA_CLOUD_REPOS=(
