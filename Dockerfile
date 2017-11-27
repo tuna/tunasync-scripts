@@ -1,10 +1,10 @@
-FROM debian:jessie
+FROM debian:stretch
 MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
-RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie main contrib non-free" > /etc/apt/sources.list && \
-        echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie-backports main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie-updates main contrib non-free" >> /etc/apt/sources.list && \
-        echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security/ jessie/updates main contrib non-free" >> /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch main contrib non-free" > /etc/apt/sources.list && \
+        echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch-backports main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch-updates main contrib non-free" >> /etc/apt/sources.list && \
+        echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security/ stretch/updates main contrib non-free" >> /etc/apt/sources.list
 
 RUN apt-get update && \
         apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo python3-dev python3-pip aria2
