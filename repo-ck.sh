@@ -14,4 +14,4 @@ function sync_repo_ck() {
 UPSTREAM="http://repo-ck.com"
 
 sync_repo_ck "${UPSTREAM}/x86_64" "${TUNASYNC_WORKING_DIR}/x86_64"
-sync_repo_ck "${UPSTREAM}/i686" "${TUNASYNC_WORKING_DIR}/i686"
+#sync_repo_ck "${UPSTREAM}/i686" "${TUNASYNC_WORKING_DIR}/i686"
