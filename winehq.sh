@@ -6,7 +6,7 @@ function sync_winehq() {
 
 	[ ! -d "$repo_dir" ] && mkdir -p "$repo_dir"
 	cd $repo_dir
-	lftp "${repo_url}/" -e "mirror --verbose --exclude wine-builds.old/ -P 5 --delete; bye"
+	lftp "${repo_url}/" -e "mirror --verbose --skip-noaccess -x wine-builds.old/ -x /\\..+ -P 5 --delete ; bye"
 }
 
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"ftp://ftp.winehq.org/pub/"}
