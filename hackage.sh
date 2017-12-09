@@ -49,7 +49,7 @@ function hackage_mirror() {
 
 	echo "Downloading index..."
 	rm index.tar.gz || true
-	wget "${base_url}/packages/index.tar.gz" -O index.tar.gz &> /dev/null
+	wget "${base_url}/01-index.tar.gz" -O index.tar.gz &> /dev/null
 	
 	echo "building local package list"
 	local tmp
@@ -97,7 +97,8 @@ function hackage_mirror() {
 		rm "package/$name"
 	done
 
-	cp index.tar.gz 00-index.tar.gz
+	cp index.tar.gz 01-index.tar.gz
+	ln -sf 01-index.tar.gz 00-index.tar.gz
 }
 
 function cleanup () {
