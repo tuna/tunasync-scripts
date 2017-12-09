@@ -98,6 +98,7 @@ function hackage_mirror() {
 	done
 
 	cp index.tar.gz 01-index.tar.gz
+	ln -sf 01-index.tar.gz 00-index.tar.gz
 }
 
 function cleanup () {
