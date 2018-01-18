@@ -185,7 +185,7 @@ def main():
         try:
             sync_repo(remote_url, local_dir, Path(tmpdir))
         except Exception:
-            logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
+            logging.exception("Failed to sync repo: {}".format(repo))
         finally:
             shutil.rmtree(tmpdir)
 
