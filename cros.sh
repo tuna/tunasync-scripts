@@ -18,25 +18,25 @@ function contains() {
 function git_clone_or_pull {
     URL=$1
     DIRECTORY=$2
-    MIRROR=$3
-    if [[ -z $MIRROR ]]; then
+    BARE=$3
+    if [[ -z $BARE ]]; then
         if [[ -d $DIRECTORY ]]; then
             git -C $DIRECTORY pull
         else
-            git clone $URL $DIRECTORY 
+            git clone $URL $DIRECTORY
         fi
     else
         if [[ -d $DIRECTORY ]]; then
-            git -C $DIRECTORY remote update
+            git -C $DIRECTORY fetch --force --prune
         else
-            git clone --mirror $URL $DIRECTORY 
+            git clone --bare $URL $DIRECTORY
         fi
     fi
 }
 
 function git_repack() {
 	echo "Start writing bitmap index"
-	while read repo; do 
+	while read repo; do
 		cd $repo
 		size=$(du -sm .|cut -f1)
 		if [[ "$size" -gt "100" ]]; then
