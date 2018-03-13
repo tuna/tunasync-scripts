@@ -7,6 +7,8 @@ _here=`dirname $(realpath $0)`
 
 [ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
 
+UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://packages.gitlab.com/gitlab/gitlab-ce"}
+
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 YUM_PATH="${BASE_PATH}/yum"
@@ -26,7 +28,7 @@ keepcache=0
 
 [el6]
 name=el6
-baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/6/x86_64
+baseurl=${UPSTREAM}/el/6/x86_64
 repo_gpgcheck=0
 gpgcheck=0
 enabled=1
@@ -35,7 +37,7 @@ sslverify=0
 
 [el7]
 name=el7
-baseurl=https://packages.gitlab.com/gitlab/gitlab-ce/el/7/x86_64
+baseurl=${UPSTREAM}/el/7/x86_64
 repo_gpgcheck=0
 gpgcheck=0
 enabled=1
@@ -54,14 +56,14 @@ if [[ ! -z ${DRY_RUN:-} ]]; then
 	export APT_DRY_RUN=1
 fi
 
-base_url="https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu"
+base_url="${UPSTREAM}/ubuntu"
 for version in ${UBUNTU_VERSIONS[@]}; do
 	apt-download-binary ${base_url} "$version" "main" "amd64" "${UBUNTU_PATH}" || true
 	apt-download-binary ${base_url} "$version" "main" "i386" "${UBUNTU_PATH}" || true
 done
 echo "Ubuntu finished"
 
-base_url="https://packages.gitlab.com/gitlab/gitlab-ce/debian"
+base_url="${UPSTREAM}/debian"
 for version in ${DEBIAN_VERSIONS[@]}; do
 	apt-download-binary ${base_url} "$version" "main" "amd64" "${DEBIAN_PATH}" || true
 	apt-download-binary ${base_url} "$version" "main" "i386" "${DEBIAN_PATH}" || true
