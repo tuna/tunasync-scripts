@@ -12,25 +12,26 @@ from email.utils import parsedate_to_datetime
 import requests
 from pyquery import PyQuery as pq
 
-DEFAULT_CONDA_REPO_BASE="https://repo.continuum.io"
-DEFAULT_CONDA_CLOUD_BASE="https://conda.anaconda.org"
+DEFAULT_CONDA_REPO_BASE = "https://repo.continuum.io"
+DEFAULT_CONDA_CLOUD_BASE = "https://conda.anaconda.org"
 
-CONDA_REPO_BASE_URL=os.getenv("CONDA_REPO_URL", "https://repo.continuum.io")
-CONDA_CLOUD_BASE_URL=os.getenv("CONDA_COULD_URL", "https://conda.anaconda.org")
+CONDA_REPO_BASE_URL = os.getenv("CONDA_REPO_URL", "https://repo.continuum.io")
+CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL", "https://conda.anaconda.org")
 
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 
-CONDA_REPOS=("main", "free", "r", "mro", "pro")
-CONDA_ARCHES=(
+CONDA_REPOS = ("main", "free", "r", "mro", "pro")
+CONDA_ARCHES = (
     "noarch", "linux-64", "linux-32", "linux-armv6l", "linux-armv7l",
     "linux-ppc64le", "osx-64", "osx-32", "win-64", "win-32"
 )
 
-CONDA_CLOUD_REPOS=(
+CONDA_CLOUD_REPOS = (
     "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/win-64", "conda-forge/noarch",
     "msys2/win-64", "msys2/noarch",
     "bioconda/noarch", "bioconda/linux-64", "bioconda/osx-64",
     "menpo/linux-64", "menpo/osx-64", "menpo/win-64", "menpo/win-32", "menpo/noarch",
+    "pytorch/linux-64", "pytorch/osx-64", "pytorch/win-64", "pytorch/win-32", "pytorch/noarch", "peterjc123/win-64", "peterjc123/noarch",
 )
 
 logging.basicConfig(
