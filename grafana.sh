@@ -14,7 +14,7 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packagecloud.io/grafana/stable"}
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("wheezy" "jessie")
+APT_VERSIONS=("wheezy" "jessie" "stretch")
 EL_VERSIONS=("6" "7")
 
 mkdir -p ${YUM_PATH} ${APT_PATH}
@@ -44,7 +44,7 @@ keepcache=0
 EOF
 
 for elver in ${EL_VERSIONS[@]}; do
-cat << EOF >> $cfg 
+cat << EOF >> $cfg
 [el${elver}]
 name=el${elver}
 baseurl=${BASE_URL}/el/$elver/x86_64/

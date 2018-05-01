@@ -15,7 +15,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 RPM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("xenial" "trusty" "precise" "stretch" "jessie" "wheezy" "squeeze")
+APT_VERSIONS=("xenial" "trusty" "precise" "stretch" "jessie" "wheezy" "squeeze" "bionic")
 EL_VERSIONS=("5" "6" "7")
 
 mkdir -p ${RPM_PATH} ${APT_PATH}
@@ -79,7 +79,7 @@ while read line; do
 
 	dest_filename="${LATEST_PATH}/${filename}"
 	pkg_url="${BASE_URL}/${LATEST_VERSION}/${filename}"
-	
+
 	declare downloaded=false
 
 	if [[ -f ${dest_filename} ]]; then
@@ -100,7 +100,7 @@ while read line; do
 			downloaded=true
 		fi
 	done
-	
+
 	case $filename in
 		*Win.exe)
 			ln -sf ${dest_filename} ${BASE_PATH}/virtualbox-Win-latest.exe

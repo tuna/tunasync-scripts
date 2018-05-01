@@ -14,7 +14,7 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.percona.com"}
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("wheezy" "jessie" "trusty" "xenial")
+APT_VERSIONS=("wheezy" "jessie" "trusty" "xenial" "stretch" "bionic")
 EL_VERSIONS=("6" "7")
 
 mkdir -p ${YUM_PATH} ${APT_PATH}
@@ -43,7 +43,7 @@ keepcache=0
 EOF
 
 for elver in ${EL_VERSIONS[@]}; do
-cat << EOF >> $cfg 
+cat << EOF >> $cfg
 [el${elver}]
 name=el${elver}
 baseurl=${BASE_URL}/centos/$elver/os/x86_64/

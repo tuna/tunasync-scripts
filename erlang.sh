@@ -14,8 +14,8 @@ YUM_PATH="${BASE_PATH}/centos"
 UBUNTU_PATH="${BASE_PATH}/ubuntu"
 DEBIAN_PATH="${BASE_PATH}/debian"
 
-UBUNTU_VERSIONS=("trusty" "xenial")
-DEBIAN_VERSIONS=("wheezy" "jessie")
+UBUNTU_VERSIONS=("trusty" "xenial" "bionic")
+DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
 EL_VERSIONS=("6" "7")
 
 # =================== APT repos ===============================
@@ -50,7 +50,7 @@ keepcache=0
 EOF
 
 for elver in ${EL_VERSIONS[@]}; do
-cat << EOF >> $cfg 
+cat << EOF >> $cfg
 [$elver]
 name=Elang for el-${elver}
 baseurl=${BASE_URL}/rpm/centos/$elver/x86_64

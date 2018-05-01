@@ -24,8 +24,8 @@ APT_PATH="${BASE_PATH}/apt"
 UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
 
-UBUNTU_VERSIONS=("trusty" "precise" "xenial")
-DEBIAN_VERSIONS=("wheezy" "jessie")
+UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
+DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
 
 
 mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
@@ -36,7 +36,7 @@ if [[ ! -z ${DRY_RUN:-} ]]; then
 	export APT_DRY_RUN=1
 fi
 MYSQL_APT_REPOS=("mysql-5.6" "mysql-5.7" "mysql-tools" "connector-python-2.1")
- 
+
 base_url="${BASE_URL}/apt/ubuntu"
 for version in ${UBUNTU_VERSIONS[@]}; do
 	for repo in ${MYSQL_APT_REPOS[@]}; do
@@ -69,7 +69,7 @@ keepcache=0
 EOF
 
 for elver in "6" "7"; do
-cat << EOF >> $cfg 
+cat << EOF >> $cfg
 [mysql-connectors-community-el${elver}]
 name=MySQL Connectors Community
 baseurl=http://repo.mysql.com/yum/mysql-connectors-community/el/$elver/x86_64/
