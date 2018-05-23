@@ -61,7 +61,7 @@ function hackage_mirror() {
 	tar -ztf index.tar.gz | (cut -d/ -f 1,2 2>/dev/null) | sed 's|/|-|' > $remote_pklist
 	
 	echo "building download list"
-	# substract local list from remote list
+	# subtract local list from remote list
 	# this cannot use pipe, or the `wait` afterwards cannot wait
 	# because pipe spawns a subshell
 	while read pk; do
