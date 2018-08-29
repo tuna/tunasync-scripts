@@ -5,7 +5,7 @@ set -o pipefail
 
 function remove_broken() {
 	interval=$1
-	interval_file="/tmp/hackage_lastcheck"
+	interval_file="${TUNASYNC_WORKING_DIR}/.tunasync_hackage_lastcheck"
 	now=`date +%s`
 
 	if [[ -f ${interval_file} ]]; then
@@ -32,9 +32,9 @@ function must_download() {
 	src=$1
 	dst=$2
 	while true; do
-		echo "downloading: $name"
+		echo "downloading: $dst"
 		wget "$src" -O "$dst" &>/dev/null
-		tar -tzf package/$name >/dev/null || rm package/$name && break 
+		tar -tzf "$dst" >/dev/null || rm "$dst" && break 
 	done
 	return 0
 }
@@ -55,10 +55,10 @@ function hackage_mirror() {
 	local tmp
 	tmp=(package/*)
 	tmp=(${tmp[@]#package/})
-	printf '%s\n' "${tmp[@]%.tar.gz}" > "${local_pklist}"
+	printf '%s\n' "${tmp[@]%.tar.gz}" | sort | uniq > "${local_pklist}"
 	
 	echo "building remote package list"
-	tar -ztf index.tar.gz | (cut -d/ -f 1,2 2>/dev/null) | sed 's|/|-|' > $remote_pklist
+	tar -ztf index.tar.gz | (cut -d/ -f 1,2 2>/dev/null) | sed 's|/|-|' | sort | uniq > "${remote_pklist}"
 	
 	echo "building download list"
 	# substract local list from remote list
@@ -78,17 +78,17 @@ function hackage_mirror() {
 		done
 		
 		name="$pk.tar.gz"
-		if [ ! -a package/$name ]; then
+		if [ ! -e package/$name ]; then
 			must_download "${base_url}/package/$pk/$name" "package/$name" &
 		else
 			echo "skip existed: $name"
 		fi
-	done < <(comm <(sort $remote_pklist) <(sort $local_pklist) -23)
+	done < <(comm "${remote_pklist}" "${local_pklist}" -23)
 	
 	wait
 	
 	# delete redundanty files
-	comm <(sort $remote_pklist) <(sort $local_pklist) -13 | while read pk; do
+	comm "$remote_pklist" "$local_pklist" -13 | while read pk; do
 		if [[ $pk == "preferred-versions" ]]; then
 			continue
 		fi
