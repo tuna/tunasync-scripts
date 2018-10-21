@@ -9,8 +9,7 @@ RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch main contrib n
 RUN apt-get update && \
         apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo python3-dev python3-pip aria2
 
-RUN pip install --upgrade pip setuptools && \
-        pip install bandersnatch==1.11
+RUN pip3 install bandersnatch==2.2.1
         
 RUN pip3 install requests pyyaml
 
