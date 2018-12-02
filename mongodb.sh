@@ -11,10 +11,10 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
-UBUNTU_VERSIONS=("trusty" "precise" "xenial")
-DEBIAN_VERSIONS=("wheezy" "jessie")
-MONGO_VERSIONS=("3.6" "3.4" "3.2" "3.0")
-STABLE_VERSION="3.6"
+UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
+DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
+MONGO_VERSIONS=("4.0" "3.6" "3.4" "3.2")
+STABLE_VERSION="4.0"
 
 UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
