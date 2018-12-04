@@ -16,12 +16,14 @@ if [[ $INIT == "0" ]]; then
 [mirror]
 directory = ${TUNASYNC_WORKING_DIR}
 master = ${TUNASYNC_UPSTREAM}
+json = true
 timeout = 15
 workers = 10
-stop-on-error = true
+hash-index = false
+stop-on-error = false
 delete-packages = true
 EOF
-	/usr/bin/timeout -s INT 7200 $BANDERSNATCH -c $CONF mirror 
+	/usr/bin/timeout -s INT 36000 $BANDERSNATCH -c $CONF mirror 
 	if [[ $? == 124 ]]; then
 		echo 'Sync timeout (/_\\)'
 		exit 1
@@ -31,8 +33,10 @@ else
 [mirror]
 directory = ${TUNASYNC_WORKING_DIR}
 master = ${TUNASYNC_UPSTREAM}
+json = true
 timeout = 15
 workers = 10
+hash-index = false
 stop-on-error = false
 delete-packages = false
 EOF
