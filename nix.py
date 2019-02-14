@@ -11,8 +11,8 @@ from pathlib import Path
 
 from urllib3.util.retry import Retry
 
-UPSTREAM_URL = 'https://nixos.org/releases/nix'
-MIRROR_BASE_URL = 'https://mirrors.tuna.tsinghua.edu.cn/nix'
+UPSTREAM_URL = os.getenv("TUNASYNC_UPSTREAM_URL", 'https://nixos.org/releases/nix/')
+MIRROR_BASE_URL = os.getenv("MIRROR_BASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/nix')
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working')
 CLONE_SINCE = datetime(2018, 6, 1)
 TIMEOUT = 60
