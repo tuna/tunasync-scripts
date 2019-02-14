@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib3.util.retry import Retry
 
 UPSTREAM_URL = 'https://nixos.org/releases/nix'
-MIRRORED_URL = 'https://mirrors.tuna.tsinghua.edu.cn/nix'
+MIRROR_BASE_URL = 'https://mirrors.tuna.tsinghua.edu.cn/nix'
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working')
 CLONE_SINCE = datetime(2018, 6, 1)
 TIMEOUT = 15
@@ -194,7 +194,7 @@ def clone_releases():
 
             logging.info('  - Writing installer')
 
-            patched_text = installer_res.text.replace(UPSTREAM_URL, MIRRORED_URL)
+            patched_text = installer_res.text.replace(UPSTREAM_URL, MIRROR_BASE_URL)
             atomic_write_file(ver_path / 'install', patched_text)
             atomic_write_file(ver_path / 'install.sha256', file_sha256(ver_path / 'install'))
 
