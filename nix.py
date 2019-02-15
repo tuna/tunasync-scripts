@@ -15,7 +15,7 @@ UPSTREAM_URL = 'https://nixos.org/releases/nix'
 MIRROR_BASE_URL = 'https://mirrors.tuna.tsinghua.edu.cn/nix'
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working')
 CLONE_SINCE = datetime(2018, 6, 1)
-TIMEOUT = 15
+TIMEOUT = 60
 
 working_dir = Path(WORKING_DIR)
 
@@ -54,16 +54,45 @@ def atomic_write_file(dest, contents):
         f.write(contents)
     tmp_dest.rename(dest)
 
+class WrongSize(RuntimeError):
+    def __init__(self, expected, actual):
+        super().__init__(f'Wrong file size: expected {expected}, actual {actual}')
+        self.actual = actual
+        self.expected = expected
+
 def download(url, dest):
     dest.parent.mkdir(parents=True, exist_ok=True)
     download_dest = dest.parent / f'.{dest.name}.tmp'
 
-    with http_get(url, stream=True) as res:
-        res.raise_for_status()
-        with download_dest.open('wb') as f:
-            for chunk in res.iter_content(chunk_size=1024 * 1024):
-                if chunk:
-                    f.write(chunk)
+    retry = retries
+
+    while True:
+        with http_get(url, stream=True) as res:
+            res.raise_for_status()
+            try:
+                with download_dest.open('wb') as f:
+                    for chunk in res.iter_content(chunk_size=1024 * 1024):
+                        if chunk:
+                            f.write(chunk)
+                actual_size = download_dest.stat().st_size
+                if 'Content-Length' in res.headers:
+                    expected_size = int(res.headers['Content-Length'])
+                    if actual_size != expected_size:
+                        raise WrongSize(expected=expected_size, actual=actual_size)
+
+                break
+            except (requests.exceptions.ConnectionError, WrongSize) as e:
+                logging.warn(e)
+                next_retry = retry.increment(
+                    method='GET',
+                    url=url,
+                    error=e
+                )
+                if next_retry is None:
+                    raise e
+                else:
+                    retry = next_retry
+                    logging.warn(f'Retrying download: {retry}')
 
     download_dest.rename(dest)
 
