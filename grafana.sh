@@ -9,13 +9,13 @@ _here=`dirname $(realpath $0)`
 [ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packagecloud.io/grafana/stable"}
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.grafana.com/oss"}
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("wheezy" "jessie" "stretch")
-EL_VERSIONS=("6" "7")
+APT_VERSIONS=("stable" "beta")
+RPM_VERSIONS=("rpm" "rpm-beta")
 
 mkdir -p ${YUM_PATH} ${APT_PATH}
 
@@ -24,9 +24,9 @@ mkdir -p ${YUM_PATH} ${APT_PATH}
 if [[ ! -z ${DRY_RUN:-} ]]; then
 	export APT_DRY_RUN=1
 fi
-base_url="${BASE_URL}/debian"
-for version in ${APT_VERSIONS[@]}; do
-	for arch in "amd64" "i386"; do
+base_url="${BASE_URL}/deb"
+for version in "${APT_VERSIONS[@]}"; do
+	for arch in "amd64" "arm64" "armhf"; do
 		apt-download-binary ${base_url} "$version" "main" "$arch" "${APT_PATH}" || true
 	done
 done
@@ -43,19 +43,19 @@ keepcache=0
 
 EOF
 
-for elver in ${EL_VERSIONS[@]}; do
+for rpmver in "${RPM_VERSIONS[@]}"; do
 cat << EOF >> $cfg
-[el${elver}]
-name=el${elver}
-baseurl=${BASE_URL}/el/$elver/x86_64/
+[${rpmver}]
+name=${rpmver}
+baseurl=${BASE_URL}/$rpmver
 enabled=1
 EOF
 done
 
 if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-	for elver in ${EL_VERSIONS[@]}; do
-		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el${elver}/ ${YUM_PATH}/el${elver}/
+	for rpmver in "${RPM_VERSIONS[@]}"; do
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${rpmver}/ ${YUM_PATH}/${rpmver}/
 	done
 fi
 rm $cfg
