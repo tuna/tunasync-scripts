@@ -19,9 +19,6 @@ TIMEOUT = 60
 
 working_dir = Path(WORKING_DIR)
 
-def parse_datetime(s):
-    return datetime.strptime(s,'%Y-%m-%d %H:%M')
-
 session = requests.Session()
 retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
 retry_adapter = requests.adapters.HTTPAdapter(max_retries=retries)
@@ -133,7 +130,7 @@ def clone_releases():
 
         ver_path = working_dir / ver
 
-        if parse_datetime(release_updated) < CLONE_SINCE:
+        if datetime.strptime(release_updated,'%Y-%m-%d %H:%M') < CLONE_SINCE:
             continue
 
         logging.info(f'{ver}')
