@@ -161,6 +161,7 @@ def clone_images():
         res.raise_for_status()
 
         chan_location = res.headers['Location']
+        chan_release_basename = chan_location.split('/')[-1]
 
         try:
             last_url = (chan_path / '.last-url').read_text()
@@ -170,9 +171,7 @@ def clone_images():
         if chan_location == last_url:
             continue
 
-        chan_location_base = chan_location.split('/')[-1]
-
-        logging.info(f'- {channel} -> {chan_location_base}')
+        logging.info(f'- {channel} -> {chan_release_basename}')
 
         chan_info = get_channel(chan_location)
 
@@ -184,28 +183,31 @@ def clone_images():
 
         logging.info(f'  - Downloading new files')
 
+        chan_version = channel.split('-', 1)[1]
+
+        chan_release_version = chan_release_basename.split('-', 1)[1]
+
+        simplify_name = lambda fname: fname.replace(f'-{chan_release_version}-', f'-{chan_version}-')
+
         image_files = [
-            (file_name, file_hash)
+            (simplify_name(file_name), file_name, file_hash)
             for file_name, _file_size, file_hash in chan_info['files']
             if file_name.endswith('.iso') or file_name.endswith('ova')
         ]
 
-        for file_name, file_hash in image_files:
-            keep_files.add(file_name)
+        for mirror_file_name, upstream_file_name, file_hash in image_files: 
+            keep_files.add(mirror_file_name)
 
-            if (chan_path / file_name).is_file() \
-                and file_hash == file_sha256(chan_path / file_name):
-                logging.info(f'    - {file_name} (existing)')
-            else:
-                logging.info(f'    - {file_name}')
-                download(f'{chan_location}/{file_name}', chan_path / file_name)
-                actual_hash = file_sha256(chan_path / file_name)
-                if file_hash != actual_hash:
-                    has_hash_fail = True
+            logging.info(f'    - {upstream_file_name} -> {mirror_file_name}')
+            download(f'{chan_location}/{upstream_file_name}', chan_path / mirror_file_name)
+            actual_hash = file_sha256(chan_path / mirror_file_name)
 
-                    logging.error(f'      - Incorrect hash')
-                    logging.error(f'        actual   {actual_hash}')
-                    logging.error(f'        expected {file_sha256}')
+            if file_hash != actual_hash:
+                has_hash_fail = True
+
+                logging.error(f'      - Incorrect hash')
+                logging.error(f'        actual   {actual_hash}')
+                logging.error(f'        expected {file_sha256}')
 
         logging.info(f'  - Removing old files')
 
@@ -219,8 +221,8 @@ def clone_images():
         logging.info(f'  - Writing SHA256SUMS')
 
         with (chan_path / 'SHA256SUMS').open('w') as f:
-            for file_name, file_hash in image_files:
-                f.write(f'{file_hash} *{file_name}\n')
+            for mirror_file_name, _upstream_file_name, file_hash in image_files:
+                f.write(f'{file_hash} *{mirror_file_name}\n')
 
         if has_hash_fail:
             logging.warn(f'  - Found bad files. Not marking update as finished')
