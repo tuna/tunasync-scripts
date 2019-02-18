@@ -180,6 +180,7 @@ def clone_images():
         has_hash_fail = False
 
         keep_files = { '.last-url', '.released-time' }
+        rename_files = []
 
         logging.info(f'  - Downloading new files')
 
@@ -197,36 +198,43 @@ def clone_images():
 
         for mirror_file_name, upstream_file_name, file_hash in image_files: 
             keep_files.add(mirror_file_name)
-
             logging.info(f'    - {upstream_file_name} -> {mirror_file_name}')
-            download(f'{chan_location}/{upstream_file_name}', chan_path / mirror_file_name)
-            actual_hash = file_sha256(chan_path / mirror_file_name)
+            tmp_dest = f'.update.{upstream_file_name}'
+            rename_files.append((tmp_dest, mirror_file_name))
+
+            download(f'{chan_location}/{upstream_file_name}', chan_path / tmp_dest)
+            actual_hash = file_sha256(chan_path / tmp_dest)
 
             if file_hash != actual_hash:
                 has_hash_fail = True
-
                 logging.error(f'      - Incorrect hash')
                 logging.error(f'        actual   {actual_hash}')
-                logging.error(f'        expected {file_sha256}')
-
-        logging.info(f'  - Removing old files')
-
-        for file_path in chan_path.iterdir():
-            file_name = file_path.name
-
-            if file_name not in keep_files:
-                logging.info(f'    - {file_name}')
-                file_path.unlink()
-
-        logging.info(f'  - Writing SHA256SUMS')
-
-        with (chan_path / 'SHA256SUMS').open('w') as f:
-            for mirror_file_name, _upstream_file_name, file_hash in image_files:
-                f.write(f'{file_hash} *{mirror_file_name}\n')
+                logging.error(f'        expected {file_hash}')
+                logging.info(f'      - File saved as {tmp_dest}')
 
         if has_hash_fail:
-            logging.warn(f'  - Found bad files. Not marking update as finished')
+            logging.warn(f'  - Found bad files. Will retry next time.')
         else:
+            logging.info(f'  - Renaming files')
+
+            for tmp_dest, mirror_file_name in rename_files:
+                (chan_path / tmp_dest).rename(chan_path / mirror_file_name)
+
+            logging.info(f'  - Removing useless files')
+
+            for file_path in chan_path.iterdir():
+                file_name = file_path.name
+
+                if file_name not in keep_files:
+                    logging.info(f'    - {file_name}')
+                    file_path.unlink()
+
+            logging.info(f'  - Writing SHA256SUMS')
+
+            with (chan_path / 'SHA256SUMS').open('w') as f:
+                for mirror_file_name, _upstream_file_name, file_hash in image_files:
+                    f.write(f'{file_hash} *{mirror_file_name}\n')
+
             logging.info(f'  - Update finished')
             atomic_write_file(chan_path / '.last-url', chan_location)
 
