@@ -9,7 +9,7 @@ RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch main contrib n
 RUN apt-get update && \
         apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo aria2
 
-RUN pip3 install bandersnatch==3.1.2
+RUN pip3 install git+https://github.com/tuna/bandersnatch.git@master
         
 RUN STATIC_DEPS=true pip3 install pyquery
 RUN pip3 install requests pyyaml
