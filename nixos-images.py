@@ -173,6 +173,12 @@ def clone_images():
 
         logging.info(f'- {channel} -> {chan_release_basename}')
 
+        # Matches nixos-19.03 -> nixos-19.03beta171840.23fd1394dc6
+        #                                   ^
+        if chan_release_basename.lstrip(channel)[0].isalpha():
+            logging.info(f'  - Beta channel, not updating')
+            continue
+
         chan_info = get_channel(chan_location)
 
         atomic_write_file(chan_path / '.released-time', chan_info['released_time'])
