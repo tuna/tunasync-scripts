@@ -174,8 +174,8 @@ def clone_images():
         logging.info(f'- {channel} -> {chan_release_basename}')
 
         # Matches nixos-19.03 -> nixos-19.03beta171840.23fd1394dc6
-        #                                   ^
-        if chan_release_basename.lstrip(channel)[0].isalpha():
+        #                        ^-------------^
+        if chan_release_basename.startswith(channel + 'beta'):
             logging.info(f'  - Beta channel, not updating')
             continue
 
