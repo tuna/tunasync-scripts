@@ -7,7 +7,7 @@ RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch main contrib n
         echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian-security/ stretch/updates main contrib non-free" >> /etc/apt/sources.list
 
 RUN apt-get update && \
-        apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo aria2
+        apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo aria2 awscli
 
 RUN pip3 install git+https://github.com/tuna/bandersnatch.git@master
         
