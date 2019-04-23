@@ -12,7 +12,7 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://artifacts.elastic.co"}
 BASE_PATH="${TUNASYNC_WORKING_DIR%/}"
 BASE_URL="${BASE_URL%/}"
 
-ELASTIC_VERSION=("5.x" "6.x")
+ELASTIC_VERSION=("5.x" "6.x" "7.x")
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
