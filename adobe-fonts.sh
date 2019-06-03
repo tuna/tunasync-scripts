@@ -32,7 +32,7 @@ function checkout_font_branch() {
 }
 
 UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL:-"https://github.com/adobe-fonts"}
-REPOS=("source-code-pro" "source-sans-pro" "source-serif-pro" "source-han-sans" "source-han-serif")
+REPOS=("source-code-pro" "source-sans-pro" "source-serif-pro" "source-han-sans" "source-han-serif" "source-han-mono")
 
 for repo in ${REPOS[@]}; do
         if [[ ! -d "$TUNASYNC_WORKING_DIR/${repo}.git" ]]; then
