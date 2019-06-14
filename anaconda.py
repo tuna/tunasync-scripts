@@ -36,6 +36,8 @@ CONDA_CLOUD_REPOS = (
     "fermi/noarch", "fermi/linux-64", "fermi/osx-64",
     "fastai/linux-64", "fastai/osx-64", "fastai/win-64", "fastai/noarch",
     "omnia/linux-64", "omnia/osx-64", "omnia/win-64", "omnia/noarch",
+    "simpleitk/linux-64", "simpleitk/linux-32", "simpleitk/osx-64", "simpleitk/win-64", "simpleitk/win-32",
+    "caffe2/linux-64", "caffe2/osx-64",
 )
 
 logging.basicConfig(
