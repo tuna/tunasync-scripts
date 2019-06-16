@@ -41,6 +41,10 @@ CONDA_CLOUD_REPOS = (
     "plotly/linux-64", "plotly/linux-32", "plotly/osx-64", "plotly/win-64", "plotly/win-32", "plotly/noarch",
 )
 
+CONDA_CLOUD_EXCLUDED_PACKAGES = (
+    "pytorch-nightly", "pytorch-nightly-cpu", "ignite-nightly",
+)
+
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s] [%(levelname)s] %(message)s",
@@ -86,6 +90,9 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
 
     packages = repodata['packages']
     for filename, meta in packages.items():
+        if meta['name'] in CONDA_CLOUD_EXCLUDED_PACKAGES:
+            continue
+
         file_size, md5 = meta['size'], meta['md5']
 
         pkg_url = '/'.join([repo_url, filename])
