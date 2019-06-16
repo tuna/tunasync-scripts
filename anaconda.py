@@ -38,6 +38,7 @@ CONDA_CLOUD_REPOS = (
     "omnia/linux-64", "omnia/osx-64", "omnia/win-64", "omnia/noarch",
     "simpleitk/linux-64", "simpleitk/linux-32", "simpleitk/osx-64", "simpleitk/win-64", "simpleitk/win-32",
     "caffe2/linux-64", "caffe2/osx-64",
+    "plotly/linux-64", "plotly/linux-32", "plotly/osx-64", "plotly/win-64", "plotly/win-32", "plotly/noarch",
 )
 
 logging.basicConfig(
