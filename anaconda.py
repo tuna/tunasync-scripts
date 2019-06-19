@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-import os
-import json
 import hashlib
-import tempfile
-import shutil
+import json
 import logging
+import os
+import shutil
 import subprocess as sp
-from pathlib import Path
+import tempfile
 from email.utils import parsedate_to_datetime
+from pathlib import Path
+
+from pyquery import PyQuery as pq
 
 import requests
-from pyquery import PyQuery as pq
+
 
 DEFAULT_CONDA_REPO_BASE = "https://repo.continuum.io"
 DEFAULT_CONDA_CLOUD_BASE = "https://conda.anaconda.org"
@@ -28,17 +30,19 @@ CONDA_ARCHES = (
 
 CONDA_CLOUD_REPOS = (
     "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/win-64", "conda-forge/noarch",
-    "msys2/win-64", "msys2/noarch",
-    "bioconda/noarch", "bioconda/linux-64", "bioconda/osx-64",
+    "msys2/linux-64", "msys2/win-64", "msys2/noarch",
+    "bioconda/linux-64", "bioconda/osx-64", "bioconda/win-64", "bioconda/noarch",
     "menpo/linux-64", "menpo/osx-64", "menpo/win-64", "menpo/win-32", "menpo/noarch",
     "pytorch/linux-64", "pytorch/osx-64", "pytorch/win-64", "pytorch/win-32", "pytorch/noarch",
-    "stackless/linux-64","stackless/win-64","stackless/win-32","stackless/linux-32","stackless/osx-64",
-    "fermi/noarch", "fermi/linux-64", "fermi/osx-64",
+    "stackless/linux-64", "stackless/win-64", "stackless/win-32", "stackless/linux-32", "stackless/osx-64",
+    "fermi/linux-64", "fermi/osx-64", "fermi/win-64", "fermi/noarch",
     "fastai/linux-64", "fastai/osx-64", "fastai/win-64", "fastai/noarch",
     "omnia/linux-64", "omnia/osx-64", "omnia/win-64", "omnia/noarch",
     "simpleitk/linux-64", "simpleitk/linux-32", "simpleitk/osx-64", "simpleitk/win-64", "simpleitk/win-32",
-    "caffe2/linux-64", "caffe2/osx-64",
+    "caffe2/linux-64", "caffe2/osx-64", "caffe2/win-64",
     "plotly/linux-64", "plotly/linux-32", "plotly/osx-64", "plotly/win-64", "plotly/win-32", "plotly/noarch",
+    "intel/linux-64", "intel/linux-32", "intel/osx-64", "intel/win-64", "intel/win-32",
+    "auto/linux-64", "auto/linux-32", "auto/osx-64", "auto/win-64", "auto/win-32",
 )
 
 EXCLUDED_PACKAGES = (
@@ -51,7 +55,7 @@ logging.basicConfig(
 )
 
 
-def md5_check(file: Path, md5: str=None):
+def md5_check(file: Path, md5: str = None):
     m = hashlib.md5()
     with file.open('rb') as f:
         while True:
@@ -62,7 +66,7 @@ def md5_check(file: Path, md5: str=None):
     return m.hexdigest() == md5
 
 
-def curl_download(remote_url: str, dst_file: Path, md5: str=None):
+def curl_download(remote_url: str, dst_file: Path, md5: str = None):
     sp.check_call([
         "curl", "-o", str(dst_file),
         "-sL", "--remote-time", "--show-error",
