@@ -44,6 +44,7 @@ CONDA_CLOUD_REPOS = (
     "intel/linux-64", "intel/linux-32", "intel/osx-64", "intel/win-64", "intel/win-32",
     "auto/linux-64", "auto/linux-32", "auto/osx-64", "auto/win-64", "auto/win-32",
     "ursky/linux-64", "ursky/osx-64",
+    "rapidsai/linux-64", "rapidsai-nightly/linux-64",
 )
 
 EXCLUDED_PACKAGES = (
