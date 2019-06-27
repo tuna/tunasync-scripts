@@ -94,6 +94,8 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
         repodata = json.load(f)
 
     packages = repodata['packages']
+    if 'packages.conda' in repodata:
+        packages.update(repodata['packages.conda'])
     for filename, meta in packages.items():
         if meta['name'] in EXCLUDED_PACKAGES:
             continue
