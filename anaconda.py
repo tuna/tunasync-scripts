@@ -71,7 +71,8 @@ def curl_download(remote_url: str, dst_file: Path, md5: str = None):
     sp.check_call([
         "curl", "-o", str(dst_file),
         "-sL", "--remote-time", "--show-error",
-        "--fail", remote_url,
+        "--fail", "--retry", "10", "--speed-time", "15",
+        "--speed-limit", "5000", remote_url,
     ])
     if md5 and (not md5_check(dst_file, md5)):
         return "MD5 mismatch"
