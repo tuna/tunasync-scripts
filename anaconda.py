@@ -50,6 +50,9 @@ EXCLUDED_PACKAGES = (
     "pytorch-nightly", "pytorch-nightly-cpu", "ignite-nightly",
 )
 
+# connect and read timeout value
+TIMEOUT_OPTION = (7, 10)
+
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s] [%(levelname)s] %(message)s",
@@ -132,7 +135,7 @@ def sync_installer(repo_url, local_dir: Path):
     local_dir.mkdir(parents=True, exist_ok=True)
 
     def remote_list():
-        r = requests.get(repo_url)
+        r = requests.get(repo_url, timeout=TIMEOUT_OPTION)
         d = pq(r.content)
         for tr in d('table').find('tr'):
             tds = pq(tr).find('td')
@@ -147,7 +150,7 @@ def sync_installer(repo_url, local_dir: Path):
         dst_file = local_dir / filename
 
         if dst_file.is_file():
-            r = requests.head(pkg_url)
+            r = requests.head(pkg_url, timeout=TIMEOUT_OPTION)
             remote_filesize = int(r.headers['content-length'])
             remote_date = parsedate_to_datetime(r.headers['last-modified'])
             stat = dst_file.stat()
