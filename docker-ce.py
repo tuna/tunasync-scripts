@@ -11,6 +11,8 @@ from pyquery import PyQuery as pq
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://download.docker.com/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 
+# connect and read timeout value
+TIMEOUT_OPTION = (7, 10)
 
 class RemoteSite:
 
@@ -47,7 +49,7 @@ class RemoteSite:
             yield base_url
             return
 
-        r = requests.get(base_url)
+        r = requests.get(base_url, timeout=TIMEOUT_OPTION)
         if not r.ok:
             return
 
@@ -101,7 +103,7 @@ def main():
         remote_filelist.append(dst_file.relative_to(working_dir))
 
         if dst_file.is_file():
-            r = requests.head(url)
+            r = requests.head(url, timeout=TIMEOUT_OPTION)
             remote_filesize = int(r.headers['content-length'])
             remote_date = parsedate_to_datetime(r.headers['last-modified'])
             stat = dst_file.stat()
