@@ -122,7 +122,10 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
 
         for retry in range(3):
             logging.info("Downloading {}".format(filename))
-            err = curl_download(pkg_url, dst_file, md5=md5)
+            try:
+                err = curl_download(pkg_url, dst_file, md5=md5)
+            except sp.CalledProcessError:
+                err = 'CalledProcessError'
             if err is None:
                 break
             logging.error("Failed to download {}: {}".format(filename, err))
