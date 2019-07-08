@@ -50,6 +50,14 @@ function hackage_mirror() {
 	echo "Downloading index..."
 	rm index.tar.gz || true
 	wget "${base_url}/01-index.tar.gz" -O index.tar.gz &> /dev/null
+
+	# https://hackage.haskell.org/api#security
+	echo "Dowloading security features..."
+	jsons=("timestamp.json" "snapshot.json" "root.json" "mirrors.json")
+	for name in "${jsons[@]}"
+	do
+    		wget "${base_url}/${name}" -O ${name}
+	done
 	
 	echo "building local package list"
 	local tmp
