@@ -56,7 +56,7 @@ function hackage_mirror() {
 	jsons=("timestamp.json" "snapshot.json" "root.json" "mirrors.json")
 	for name in "${jsons[@]}"
 	do
-    		wget "${base_url}/${name}" -O ${name}
+    		wget "${base_url}/${name}" -O "${name}"
 	done
 	
 	echo "building local package list"
