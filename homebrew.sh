@@ -14,7 +14,7 @@ function update_homebrew_git() {
 	echo "==== SYNC $repo_dir DONE ===="
 }
 
-brews=("brew" "homebrew-core" "homebrew-python" "homebrew-science")
+brews=("brew" "homebrew-core" "homebrew-python" "homebrew-science" "homebrew-cask")
 
 for brew in ${brews[@]}; do
 	if [[ ! -d "$TUNASYNC_WORKING_DIR/${brew}.git" ]]; then
