@@ -25,7 +25,7 @@ UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
 
 UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
-DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
+DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
 
 
 mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
@@ -68,7 +68,7 @@ keepcache=0
 
 EOF
 
-for elver in "6" "7"; do
+for elver in "6" "7" "8"; do
 cat << EOF >> $cfg
 [mysql-connectors-community-el${elver}]
 name=MySQL Connectors Community
@@ -80,6 +80,16 @@ name=MySQL Tools Community
 baseurl=http://repo.mysql.com/yum/mysql-tools-community/el/$elver/x86_64/
 enabled=1
 
+[mysql80-community-el${elver}]
+name=MySQL 8.0 Community Server
+baseurl=http://repo.mysql.com/yum/mysql-8.0-community/el/$elver/x86_64/
+enabled=1
+
+EOF
+done
+
+for elver in "6" "7"; do
+cat << EOF >> $cfg
 [mysql56-community-el${elver}]
 name=MySQL 5.6 Community Server
 baseurl=http://repo.mysql.com/yum/mysql-5.6-community/el/$elver/x86_64/
@@ -89,19 +99,18 @@ enabled=1
 name=MySQL 5.7 Community Server
 baseurl=http://repo.mysql.com/yum/mysql-5.7-community/el/$elver/x86_64/
 enabled=1
-
-[mysql80-community-el${elver}]
-name=MySQL 8.0 Community Server
-baseurl=http://repo.mysql.com/yum/mysql-8.0-community/el/$elver/x86_64/
-enabled=1
-
 EOF
 done
 
 if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-	for repo in "mysql-connectors-community" "mysql-tools-community" "mysql56-community" "mysql57-community" "mysql80-community"; do
+	for repo in "mysql56-community" "mysql57-community"; do
 		for elver in "6" "7"; do
+			createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${repo}-el${elver}/ ${YUM_PATH}/${repo}-el${elver}/
+		done
+	done
+	for repo in "mysql-connectors-community" "mysql-tools-community" "mysql80-community"; do
+		for elver in "6" "7" "8"; do
 			createrepo --update -v -c $cache_dir -o ${YUM_PATH}/${repo}-el${elver}/ ${YUM_PATH}/${repo}-el${elver}/
 		done
 	done
