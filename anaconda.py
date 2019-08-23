@@ -22,7 +22,7 @@ CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL", "https://conda.anaconda.org"
 
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 
-CONDA_REPOS = ("main", "free", "r", "mro", "pro")
+CONDA_REPOS = ("main", "free", "r", "mro", "pro", "msys2")
 CONDA_ARCHES = (
     "noarch", "linux-64", "linux-32", "linux-armv6l", "linux-armv7l",
     "linux-ppc64le", "osx-64", "osx-32", "win-64", "win-32"
