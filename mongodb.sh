@@ -13,8 +13,8 @@ APT_PATH="${BASE_PATH}/apt"
 
 UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
 DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
-MONGO_VERSIONS=("4.0" "3.6" "3.4" "3.2")
-STABLE_VERSION="4.0"
+MONGO_VERSIONS=("4.2" "4.0" "3.6" "3.4" "3.2")
+STABLE_VERSION="4.2"
 
 UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
