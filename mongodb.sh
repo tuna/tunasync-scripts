@@ -12,7 +12,7 @@ YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
 UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
-DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
+DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
 MONGO_VERSIONS=("4.0" "3.6" "3.4" "3.2")
 STABLE_VERSION="4.0"
 
