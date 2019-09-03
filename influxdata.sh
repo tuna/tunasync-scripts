@@ -16,7 +16,7 @@ UBUNTU_PATH="${BASE_PATH}/ubuntu"
 DEBIAN_PATH="${BASE_PATH}/debian"
 
 UBUNTU_VERSIONS=("trusty" "xenial" "bionic")
-DEBIAN_VERSIONS=("wheezy" "jessie" "stretch")
+DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
 EL_VERSIONS=("6" "7")
 
 mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
