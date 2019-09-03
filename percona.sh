@@ -14,7 +14,7 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.percona.com"}
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("wheezy" "jessie" "trusty" "xenial" "stretch" "bionic")
+APT_VERSIONS=("wheezy" "jessie" "trusty" "xenial" "stretch" "bionic" "buster")
 EL_VERSIONS=("6" "7")
 
 mkdir -p ${YUM_PATH} ${APT_PATH}
