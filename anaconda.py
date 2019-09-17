@@ -41,7 +41,7 @@ CONDA_CLOUD_REPOS = (
     "simpleitk/linux-64", "simpleitk/linux-32", "simpleitk/osx-64", "simpleitk/win-64", "simpleitk/win-32",
     "caffe2/linux-64", "caffe2/osx-64", "caffe2/win-64",
     "plotly/linux-64", "plotly/linux-32", "plotly/osx-64", "plotly/win-64", "plotly/win-32", "plotly/noarch",
-    "intel/linux-64", "intel/linux-32", "intel/osx-64", "intel/win-64", "intel/win-32",
+    "intel/linux-64", "intel/linux-32", "intel/osx-64", "intel/win-64", "intel/win-32", "intel/noarch",
     "auto/linux-64", "auto/linux-32", "auto/osx-64", "auto/win-64", "auto/win-32",
     "ursky/linux-64", "ursky/osx-64",
     "matsci/linux-64", "matsci/osx-64", "matsci/win-64", "matsci/noarch",
