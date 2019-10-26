@@ -47,6 +47,7 @@ CONDA_CLOUD_REPOS = (
     "matsci/linux-64", "matsci/osx-64", "matsci/win-64", "matsci/noarch",
     "psi4/linux-64", "psi4/osx-64", "psi4/win-64", "psi4/noarch",
     "Paddle/linux-64", "Paddle/linux-32", "Paddle/osx-64", "Paddle/win-64", "Paddle/win-32", "Paddle/noarch",
+    "deepmodeling/linux-64",
 )
 
 EXCLUDED_PACKAGES = (
