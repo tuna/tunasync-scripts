@@ -48,6 +48,7 @@ CONDA_CLOUD_REPOS = (
     "psi4/linux-64", "psi4/osx-64", "psi4/win-64", "psi4/noarch",
     "Paddle/linux-64", "Paddle/linux-32", "Paddle/osx-64", "Paddle/win-64", "Paddle/win-32", "Paddle/noarch",
     "deepmodeling/linux-64",
+    "numba/linux-64", "numba/linux-32", "numba/osx-64", "numba/win-64", "numba/win-32", "numba/noarch",
 )
 
 EXCLUDED_PACKAGES = (
