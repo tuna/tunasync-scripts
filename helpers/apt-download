@@ -129,8 +129,12 @@ function apt-download-binary() {
 	
 	ERROR=0
 
+	awk_script='BEGIN{FS="\n";RS="\n\n"}{for(i=1;i<=NF;i++){if($i ~ /^Filename/){fn=$i;gsub(/^.+: /,"",fn)}else if($i ~ /^Size/){sz=$i;gsub(/^.+: /,"",sz)}else if($i ~ /'
+	awk_script+="${checksum_regex}"
+	awk_script+='/){hash=$i;gsub(/^.+: /,"",hash)}}print fn;print sz;print hash }'
+
 	# Download packages
-	(echo -e "${pkgidx_content}" | grep -e '^Filename' -e '^Size' -e ${checksum_regex} | cut -d' ' -f 2) | \
+	(echo -e "${pkgidx_content}" | awk "$awk_script") | \
 	while read pkg_filename; read pkg_size; read pkg_checksum; do
 		echo ${pkg_filename} >> $filelist
 		dest_filename="${dest_base_dir}/${pkg_filename}"
