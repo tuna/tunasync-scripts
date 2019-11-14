@@ -50,6 +50,7 @@ CONDA_CLOUD_REPOS = (
     "deepmodeling/linux-64", "deepmodeling/noarch",
     "numba/linux-64", "numba/linux-32", "numba/osx-64", "numba/win-64", "numba/win-32", "numba/noarch", "numba/label/dev/win-64",
     "pyviz/linux-64", "pyviz/linux-32", "pyviz/win-64", "pyviz/win-32", "pyviz/osx-64", "pyviz/noarch",
+    "dglteam/linux-64", "dglteam/win-64", "dglteam/osx-64", "dglteam/noarch",
 )
 
 EXCLUDED_PACKAGES = (
