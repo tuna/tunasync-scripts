@@ -149,6 +149,7 @@ def clone_channels():
     for channel, chan_updated in get_links(f'{UPSTREAM_URL}/'):
         chan_path = working_dir / channel
 
+        # Old channels, little value in cloning and format changes
         if datetime.strptime(chan_updated, '%Y-%m-%d %H:%M') < CLONE_SINCE:
             continue
 
@@ -264,6 +265,8 @@ def update_channels(channels):
 
         logging.info(f'    - {len(paths)} paths listed')
 
+        # xargs can splits up the argument lists and invokes nix copy multiple
+        # times to avoid E2BIG (Argument list too long)
         nix_process = subprocess.Popen(
             [ 'xargs', 'nix', 'copy',
                 '--from', upstream_binary_cache,
