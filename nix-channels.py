@@ -261,12 +261,26 @@ def clone_channels():
 def update_channels(channels):
     logging.info(f'- Updating binary cache')
 
+    has_cache_info = False
+
     for channel in channels:
         logging.info(f'  - {channel}')
 
         chan_path_update = working_dir / f'.{channel}.update'
 
         upstream_binary_cache = (chan_path_update / '.original-binary-cache-url').read_text()
+
+        # All the channels should have https://cache.nixos.org as binary cache
+        # URL. We download nix-cache-info here (once per sync) to avoid
+        # hard-coding it, and in case it changes.
+        if not has_cache_info:
+            info_file = 'nix-cache-info'
+            logging.info(f'    - Downloading {info_file}')
+            download(
+                f'{upstream_binary_cache}/{info_file}',
+                working_dir / STORE_DIR / info_file
+            )
+            has_cache_info = True
 
         with lzma.open(str(chan_path_update / 'store-paths.xz')) as f:
             paths = [ path.rstrip() for path in f ]
