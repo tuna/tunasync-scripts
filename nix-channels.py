@@ -15,9 +15,17 @@ from pathlib import Path
 from urllib3.util.retry import Retry
 
 ### Config
-UPSTREAM_URL = os.getenv("TUNASYNC_UPSTREAM_URL", 'https://nixos.org/channels')
-MIRROR_BASE_URL = os.getenv("MIRROR_BASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/nix-channels')
-WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working-channels')
+
+if len(sys.argv) > 1 and sys.argv[1] == '--ustc':
+    # Mode for https://github.com/ustclug/ustcmirror-images
+    UPSTREAM_URL = os.getenv("NIX_MIRROR_UPSTREAM", 'https://nixos.org/channels')
+    MIRROR_BASE_URL = os.getenv("NIX_MIRROR_BASE_URL", 'https://mirrors.ustc.edu.cn/nix-channels')
+    WORKING_DIR = os.getenv("TO", 'working-channels')
+else:
+    UPSTREAM_URL = os.getenv("TUNASYNC_UPSTREAM_URL", 'https://nixos.org/channels')
+    MIRROR_BASE_URL = os.getenv("MIRROR_BASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/nix-channels')
+    WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working-channels')
+
 STORE_DIR = 'store'
 RELEASES_DIR = 'releases'
 CLONE_SINCE = datetime(2018, 12, 1)
