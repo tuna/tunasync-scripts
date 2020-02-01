@@ -68,6 +68,8 @@ for repo in $($MANIFEST_XML_REPOLIST $MANIFEST_DIR/default.xml cros chromium); d
     fi
 done
 
+wait # wait for all background jobs
+
 if [[ -z ${DRY_RUN:-} && "$USE_BITMAP_INDEX" == "1" ]]; then
     git_repack
 fi
