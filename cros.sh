@@ -2,6 +2,7 @@
 set -e
 
 USE_BITMAP_INDEX=${USE_BITMAP_INDEX:-"0"}
+CONCURRENT_JOBS=${CONCURRENT_JOBS:-"1"}
 MANIFEST_URL=$TUNASYNC_UPSTREAM_URL/chromiumos/manifest.git
 MANIFEST_DIR=$TUNASYNC_WORKING_DIR/.manifest
 MANIFEST_XML_REPOLIST=$(dirname $0)/helpers/manifest-xml-repolist.py
@@ -52,7 +53,18 @@ for repo in $($MANIFEST_XML_REPOLIST $MANIFEST_DIR/default.xml cros chromium); d
     contains $repo ${IGNORED_REPO[@]} && continue
     echo $TUNASYNC_UPSTREAM_URL/$repo
     if [[ -z ${DRY_RUN:-} ]]; then
-        git_clone_or_pull $TUNASYNC_UPSTREAM_URL/$repo $TUNASYNC_WORKING_DIR/$repo yes
+        while true
+        do
+            running=$(jobs -r | wc -l)
+            if [ "$running" -lt "$CONCURRENT_JOBS" ]
+            then
+                echo "start cloning $repo"
+                git_clone_or_pull $TUNASYNC_UPSTREAM_URL/$repo $TUNASYNC_WORKING_DIR/$repo yes &
+                break
+            else
+                wait -n
+            fi
+        done
     fi
 done
 
