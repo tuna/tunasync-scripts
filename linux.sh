@@ -7,14 +7,14 @@ function repo_init() {
 
 function update_linux_git() {
 	cd $TUNASYNC_WORKING_DIR
-	echo "==== SYNC linux.git START ===="
+	echo "==== SYNC $UPSTREAM START ===="
 	/usr/bin/timeout -s INT 3600 git remote -v update
 	git repack -a -b -d
-	echo "==== SYNC linux.git DONE ===="
+	echo "==== SYNC $UPSTREAM DONE ===="
 }
 
 if [[ ! -f "$TUNASYNC_WORKING_DIR/HEAD" ]]; then
-	echo "Initializing Linux.git mirror"
+	echo "Initializing $UPSTREAM mirror"
 	repo_init
 fi
 
