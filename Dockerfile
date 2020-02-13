@@ -8,11 +8,9 @@ RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ stretch main contrib n
 
 RUN apt-get update && \
         apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo aria2 awscli ack
-
-RUN pip3 install git+https://github.com/tuna/bandersnatch.git@master
         
 RUN STATIC_DEPS=true pip3 install pyquery
-RUN pip3 install requests pyyaml
+RUN pip3 install requests pyyaml bandersnatch==3.6.0
 
 RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
