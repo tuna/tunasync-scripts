@@ -1,4 +1,4 @@
-FROM google/dart:2.1.1
+FROM google/dart:2
 MAINTAINER Hui Yiqun <i@huiyiqun.me>
 
 ENV PUB_CACHE /pub-cache
