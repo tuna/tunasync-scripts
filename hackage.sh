@@ -1,5 +1,5 @@
 #!/bin/bash
-# requires: wget
+# requires: curl -s -S --fail
 set -e
 set -o pipefail
 
@@ -33,7 +33,7 @@ function must_download() {
 	dst=$2
 	while true; do
 		echo "downloading: $dst"
-		wget "$src" -O "$dst" &>/dev/null
+		curl -s -S --fail -L "$src" -o "$dst"
 		tar -tzf "$dst" >/dev/null || rm "$dst" && break 
 	done
 	return 0
@@ -49,14 +49,14 @@ function hackage_mirror() {
 
 	echo "Downloading index..."
 	rm index.tar.gz || true
-	wget "${base_url}/01-index.tar.gz" -O index.tar.gz &> /dev/null
+	curl -s -S --fail -L "${base_url}/01-index.tar.gz" -o index.tar.gz 
 
 	# https://hackage.haskell.org/api#security
 	echo "Dowloading security features..."
 	jsons=("timestamp.json" "snapshot.json" "root.json" "mirrors.json")
 	for name in "${jsons[@]}"
 	do
-    		wget "${base_url}/${name}" -O "${name}"
+    		curl -s -S --fail -L "${base_url}/${name}" -o "${name}"
 	done
 	
 	echo "building local package list"
