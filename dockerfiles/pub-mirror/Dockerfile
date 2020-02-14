@@ -3,6 +3,6 @@ MAINTAINER Hui Yiqun <i@huiyiqun.me>
 
 ENV PUB_CACHE /pub-cache
 
-RUN pub global activate pub_mirror 1.0.7
+RUN pub global activate -s git https://github.com/tuna/pub-mirror.git
 
 CMD /bin/bash
