@@ -2,6 +2,7 @@
 import os
 import threading
 import queue
+import traceback
 from pathlib import Path
 from email.utils import parsedate_to_datetime
 
@@ -98,32 +99,31 @@ def downloading_worker(q):
         if item is None:
             break
 
-        url, dst_file, working_dir = item
-        if dst_file.is_file():
-            print("checking", url, flush=True)
-            r = requests.head(url, timeout=TIMEOUT_OPTION)
-            remote_filesize = int(r.headers['content-length'])
-            remote_date = parsedate_to_datetime(r.headers['last-modified'])
-            stat = dst_file.stat()
-            local_filesize = stat.st_size
-            local_mtime = stat.st_mtime
-
-            if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime:
-                print("skipping", dst_file.relative_to(working_dir), flush=True)
-                q.task_done()
-                continue
-
-            dst_file.unlink()
-
-        print("downloading", url, flush=True)
         try:
+            url, dst_file, working_dir = item
+            if dst_file.is_file():
+                print("checking", url, flush=True)
+                r = requests.head(url, timeout=TIMEOUT_OPTION)
+                remote_filesize = int(r.headers['content-length'])
+                remote_date = parsedate_to_datetime(r.headers['last-modified'])
+                stat = dst_file.stat()
+                local_filesize = stat.st_size
+                local_mtime = stat.st_mtime
+
+                if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime:
+                    print("skipping", dst_file.relative_to(working_dir), flush=True)
+                    continue
+
+                dst_file.unlink()
+            print("downloading", url, flush=True)
             requests_download(url, dst_file)
         except Exception:
+            traceback.print_exc()
             print("Failed to download", url, flush=True)
             if dst_file.is_file():
                 dst_file.unlink()
-
-        q.task_done()
+        finally:
+            q.task_done()
 
 
 def create_workers(n):
