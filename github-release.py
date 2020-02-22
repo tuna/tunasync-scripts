@@ -17,6 +17,9 @@ REPOS = ["googlefonts/noto-fonts",
          "googlefonts/noto-emoji",
          "be5invis/Sarasa-Gothic",
          "VSCodium/vscodium",
+         "openark/orchestrator",
+         "git-lfs/git-lfs",
+         "prometheus/prometheus",
          ]
 
 # connect and read timeout value
