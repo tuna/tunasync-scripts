@@ -20,6 +20,7 @@ REPOS = ["googlefonts/noto-fonts",
          "openark/orchestrator",
          "git-lfs/git-lfs",
          "prometheus/prometheus",
+         "AdoptOpenJDK/openjdk8-binaries",
          ]
 
 # connect and read timeout value
