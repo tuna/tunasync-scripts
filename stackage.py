@@ -51,24 +51,17 @@ class StackageSession(object):
                         .format(d['ghc'][platform][ver]['url'].split('/')[-1])
                 )
 
-        d['msys2'] = {
-            'windows32': {
-                'version': '20161025',
-                'url': 'http://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/i686/msys2-base-i686-20161025.tar.xz',
-                'content-length': 47526500,
-                'sha1': '5d17fa53077a93a38a9ac0acb8a03bf6c2fc32ad',
-            },
-            'windows64': {
-                'version': '20161025',
-                'url': 'http://mirrors.tuna.tsinghua.edu.cn/msys2/distrib/x86_64/msys2-base-x86_64-20161025.tar.xz',
-                'content-length': 47166584,
-                'sha1': '05fd74a6c61923837dffe22601c9014f422b5460',
-            }
-        }
+        if 'msys2' in d:
+            for os in d['msys2']:
+                print(os)
+                d['msys2'][os]['url'] = d['msys2'][os]['url'].replace(
+                    'https://github.com/fpco/stackage-content/releases/download/', 
+                    'https://mirrors.tuna.tsinghua.edu.cn/github-release/fpco/stackage-content/')
+
         for i in ['portable-git', 'stack', 'ghcjs']:
             del d[i]
         with open(self._base_path / 'stack-setup.yaml', 'w') as f:
-            yaml.dump(d, f)
+            yaml.dump(d, f, default_flow_style=False)
         print('Loaded stack-setup.yaml', flush=True)
 
     def load_stackage_snapshots(self):
