@@ -36,7 +36,7 @@ class StackageSession(object):
     def load_stack_setup(self):
         d = yaml.load(
             requests
-                .get('https://raw.githubusercontent.com/fpco/stackage-content/master/stack/stack-setup-2.yaml')
+                .get('https://raw.githubusercontent.com/commercialhaskell/stackage-content/master/stack/stack-setup-2.yaml')
                 .content
         )
         for platform in d['ghc']:
@@ -56,7 +56,7 @@ class StackageSession(object):
                 print(os)
                 d['msys2'][os]['url'] = d['msys2'][os]['url'].replace(
                     'https://github.com/fpco/stackage-content/releases/download/', 
-                    'https://mirrors.tuna.tsinghua.edu.cn/github-release/fpco/stackage-content/')
+                    'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
 
         for i in ['portable-git', 'stack', 'ghcjs']:
             del d[i]
@@ -70,7 +70,7 @@ class StackageSession(object):
                 args = ['git', '-C', self._base_path / channel, 'pull']
             else:
                 args = ['git', '-C', self._base_path, 'clone', '--depth', '1',
-                        'https://github.com/fpco/{}.git'.format(channel)]
+                        'https://github.com/commercialhaskell/{}.git'.format(channel)]
             subprocess.run(args, check=True)
             print('Loaded {}'.format(channel), flush=True)
 
