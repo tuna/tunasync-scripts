@@ -7,6 +7,9 @@ RUN apt-get update && \
 RUN STATIC_DEPS=true pip3 install pyquery
 RUN pip3 install requests pyyaml bandersnatch==3.6.0
 
+RUN cd /usr/local && git clone --depth 1 https://github.com/tuna/composer-mirror.git && cd composer-mirror && composer i
+COPY composer-mirror.config.php /usr/local/composer-mirror/config.php
+
 RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
 RUN chmod a+x /usr/local/bin/aosp-repo
