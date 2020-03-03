@@ -258,56 +258,7 @@ def clone_channels():
 
     return channels_to_update
 
-def make_xargs():
-    arg_max = int(subprocess.run(
-        [ 'getconf', 'ARG_MAX' ],
-        stdout=subprocess.PIPE
-    ).stdout)
-
-    env_size = sum(
-        len(k.encode()) + len(v.encode()) + 2
-        for k, v in os.environ.items()
-    )
-
-    # Subtract 1024 to be safe safe
-    usable = arg_max - env_size - 1024
-
-    logging.info(f'- mk_xargs: Usable command line bytes: {usable}')
-
-    def check_run(args):
-        global failure
-        p = subprocess.run(args)
-        if p.returncode != 0:
-            logging.info(f'    - Subprocess failed with code {p.returncode}')
-            failure = True
-
-    def xargs(common, args):
-        common = [ a.encode() if isinstance(a, str) else a for a in common ]
-        args = [ a.encode() if isinstance(a, str) else a for a in args ]
-
-        common_size = sum(len(a) + 1 for a in common)
-
-        buf, cur_size = [], common_size
-
-        for a in args:
-            size = len(a) + 1
-            if cur_size + size > usable:
-                check_run(common + buf)
-                buf, cur_size = [], common_size
-
-            buf.append(a)
-            cur_size += size
-
-            assert cur_size <= usable, f'Argument {a[:50]}... will never fit'
-
-        if buf:
-            check_run(common + buf)
-
-    return xargs
-
 def update_channels(channels):
-    xargs = make_xargs()
-
     logging.info(f'- Updating binary cache')
 
     has_cache_info = False
@@ -336,15 +287,24 @@ def update_channels(channels):
 
         logging.info(f'    - {len(paths)} paths listed')
 
-        xargs(
-            [
-                'nix', 'copy',
-                '--from', upstream_binary_cache,
-                '--to', nix_store_dest,
-                '--verbose'
-            ],
-            paths
-        )
+        # Batch paths to avoid E2BIG
+
+        PATH_BATCH = 128
+
+        for i in range(0, len(paths), PATH_BATCH):
+            batch = paths[i : i + PATH_BATCH]
+            process = subprocess.run(
+                [
+                    'nix', 'copy',
+                    '--from', upstream_binary_cache,
+                    '--to', nix_store_dest,
+                    '--verbose'
+                ] + batch
+            )
+            if process.returncode != 0:
+                logging.info(f'    - Error status: {process.returncode}')
+                global failure
+                failure = True
 
         logging.info(f'    - Finished')
 
