@@ -5,7 +5,7 @@ RUN apt-get update && \
         apt-get install -y wget curl rsync lftp git jq python-dev python-pip yum-utils createrepo aria2 awscli ack composer php-curl php-zip
         
 RUN STATIC_DEPS=true pip3 install pyquery
-RUN pip3 install requests pyyaml bandersnatch==3.6.0
+RUN pip3 install requests[socks] pyyaml bandersnatch==3.6.0
 
 RUN cd /usr/local && git clone --depth 1 https://github.com/tuna/composer-mirror.git && cd composer-mirror && composer i
 COPY composer-mirror.config.php /usr/local/composer-mirror/config.php
