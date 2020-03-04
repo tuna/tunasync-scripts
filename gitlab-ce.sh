@@ -43,6 +43,15 @@ gpgcheck=0
 enabled=1
 gpgkey=https://packages.gitlab.com/gpg.key
 sslverify=0
+
+[el8]
+name=el8
+baseurl=${UPSTREAM}/el/8/x86_64
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+gpgkey=https://packages.gitlab.com/gpg.key
+sslverify=0
 EOF
 
 if [[ -z ${DRY_RUN:-} ]]; then
