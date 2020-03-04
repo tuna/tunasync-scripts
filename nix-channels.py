@@ -266,6 +266,7 @@ def update_channels(channels):
     for channel in channels:
         logging.info(f'  - {channel}')
 
+        chan_path = working_dir / channel
         chan_path_update = working_dir / f'.{channel}.update'
 
         upstream_binary_cache = (chan_path_update / '.original-binary-cache-url').read_text()
@@ -291,6 +292,8 @@ def update_channels(channels):
 
         PATH_BATCH = 128
 
+        channel_failure = False
+
         for i in range(0, len(paths), PATH_BATCH):
             batch = paths[i : i + PATH_BATCH]
             process = subprocess.run(
@@ -303,10 +306,16 @@ def update_channels(channels):
             )
             if process.returncode != 0:
                 logging.info(f'    - Error status: {process.returncode}')
+                channel_failure = True
+
                 global failure
                 failure = True
 
-        logging.info(f'    - Finished')
+        if channel_failure:
+            logging.info(f'    - Finished with errors, not updating symlink')
+        else:
+            chan_path_update.rename(chan_path)
+            logging.info(f'    - Finished with success, symlink updated')
 
 if __name__ == '__main__':
     channels = clone_channels()
