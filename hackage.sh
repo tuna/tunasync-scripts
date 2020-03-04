@@ -1,5 +1,5 @@
 #!/bin/bash
-# requires: curl -s -S --fail
+# requires: curl
 set -e
 set -o pipefail
 
