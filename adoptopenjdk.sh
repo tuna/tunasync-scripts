@@ -23,7 +23,7 @@ function downloadRelease() {
 	        downloaded=true
         }
       done
-      if [[ -z $installer_name ]]; then
+      if [[ ! -z "$installer_name" ]]; then
         dest_filename="$BASE_PATH/$version/$binary_type/$architecture/$os/$installer_name"
         downloaded=false
         if [[ -f $dest_filename ]]; then
