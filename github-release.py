@@ -21,12 +21,6 @@ REPOS = ["googlefonts/noto-fonts",
          "openark/orchestrator",
          "git-lfs/git-lfs",
          "prometheus/prometheus",
-         "AdoptOpenJDK/openjdk8-binaries",
-         "AdoptOpenJDK/openjdk9-binaries",
-         "AdoptOpenJDK/openjdk10-binaries",
-         "AdoptOpenJDK/openjdk11-binaries",
-         "AdoptOpenJDK/openjdk12-binaries",
-         "AdoptOpenJDK/openjdk13-binaries",
          "commercialhaskell/stackage-content",
          ]
 
