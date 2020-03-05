@@ -1,5 +1,5 @@
 #!/bin/bash
-# requires: wget, timeout, sha256sum, awk
+# requires: curl, sha256sum, awk
 set -e
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
@@ -13,30 +13,31 @@ function downloadRelease() {
       dest_filename="$BASE_PATH/$version/$binary_type/$architecture/$os/$binary_name"
       declare downloaded=false
       if [[ -f $dest_filename ]]; then
-        sha256sum_check && {
-          downloaded=true
-          echo "Skiping $binary_name"
-        }
+	    echo "Skiping $binary_name"
+		downloaded=true
       fi
       while [[ $downloaded != true ]]; do
 		echo "Downloading ${dest_filename}"
-        rm ${dest_filename} ${dest_filename}.sha256.txt 2>/dev/null || true
-        wget -t 2 -T 30 ${WGET_OPTIONS:-}  \
-          -O "${dest_filename}" \
+        rm "${dest_filename}" "${dest_filename}.sha256.txt" 2>/dev/null || true
+        rm "${dest_filename}.tmp" "${dest_filename}.sha256.txt.tmp" 2>/dev/null || true
+        curl -s -S --fail -L ${CURL_OPTIONS:-}  \
+          -o "${dest_filename}.tmp" \
           "$binary_link"
-        wget -t 2 -T 30 ${WGET_OPTIONS:-}  \
-          -O "${dest_filename}.sha256.txt" \
+        curl -s -S --fail -L ${CURL_OPTIONS:-}  \
+          -o "${dest_filename}.sha256.txt.tmp" \
           "$checksum_link"
         sha256sum_check && {
-          downloaded=true
+          mv "${dest_filename}.sha256.txt.tmp" "${dest_filename}.sha256.txt"
+		  mv "${dest_filename}.tmp" "${dest_filename}"
+	      downloaded=true
         }
       done
     done
 }
 
 function sha256sum_check() {
-  expected=$(cat "${dest_filename}.sha256.txt" | awk '{print $1}')
-  actual=$(sha256sum "${dest_filename}" | awk '{print $1}')
+  expected=$(cat "${dest_filename}.sha256.txt.tmp" | awk '{print $1}')
+  actual=$(sha256sum "${dest_filename}.tmp" | awk '{print $1}')
   if [ "$expected" = "$actual" ]; then
     return 0
   else
