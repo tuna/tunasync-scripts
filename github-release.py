@@ -24,6 +24,7 @@ REPOS = ["googlefonts/noto-fonts",
          "commercialhaskell/stackage-content",
          "xxr3376/Learn-Project",
          "robertying/learnX",
+         "rust-analyzer/rust-analyzer",
          ]
 
 # connect and read timeout value
