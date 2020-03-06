@@ -71,6 +71,16 @@ def create_workers(n):
     return task_queue
 
 
+def ensure_safe_name(filename):
+    filename = filename.replace('\0', ' ')
+    if filename == '.':
+        return ' .'
+    elif filename == '..':
+        return '. .'
+    else:
+        return filename.replace('/', '\\')
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -110,7 +120,7 @@ def main():
             print("Error: No release version found")
             continue
 
-        name = latest['name'] or latest['tag_name']
+        name = ensure_safe_name(latest['name'] or latest['tag_name'])
         if len(name) == 0:
             print("Error: Unnamed release")
             continue
@@ -128,12 +138,9 @@ def main():
                 task_queue.put((url, dst_file, working_dir, updated))
 
         for asset in latest['assets']:
-            if '/' in asset['name'] or '\\' in asset['name']:
-                print(f"Error: Invalid file name {asset['name']}")
-                continue
             url = asset['browser_download_url']
             updated = datetime.strptime(asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
-            dst_file = repo_local / name / asset['name']
+            dst_file = repo_local / name / ensure_safe_name(asset['name'])
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
