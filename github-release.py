@@ -78,7 +78,7 @@ def ensure_safe_name(filename):
     elif filename == '..':
         return '. .'
     else:
-        return filename.replace('/', '\\')
+        return filename.replace('/', '\\').replace('\\', '_')
 
 
 def main():
