@@ -30,7 +30,7 @@ else:
 
 PATH_BATCH = int(os.getenv('NIX_MIRROR_PATH_BATCH', 8192))
 THREADS = int(os.getenv('NIX_MIRROR_THREADS', 10))
-DELETE_OLD = os.getenv('NIX_MIRROR_DELETE_OLD', '0') == '1'
+DELETE_OLD = os.getenv('NIX_MIRROR_DELETE_OLD', '1') == '1'
 RETAIN_DAYS = float(os.getenv('NIX_MIRROR_RETAIN_DAYS', 30))
 
 STORE_DIR = 'store'
