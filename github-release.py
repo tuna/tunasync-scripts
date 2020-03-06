@@ -37,9 +37,19 @@ FULL_DOWNLOAD_REPOS = [
 TIMEOUT_OPTION = (7, 10)
 
 
-def requests_download(remote_url: str, dst_file: Path, remote_ts: float):
+# wrap around requests.get to use token if available
+def github_get(*args, **kwargs):
+    headers = kwargs['headers'] if 'headers' in kwargs else {}
+    if 'GITHUB_TOKEN' in os.environ:
+        headers['Authorization'] = 'token {}'.format(os.environ['GITHUB_TOKEN'])
+    kwargs['headers'] = headers
+    return requests.get(*args, **kwargs)
+
+
+
+def do_download(remote_url: str, dst_file: Path, remote_ts: float):
     # NOTE the stream=True parameter below
-    with requests.get(remote_url, stream=True) as r:
+    with github_get(remote_url, stream=True) as r:
         r.raise_for_status()
         with open(dst_file, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024**2):
@@ -60,7 +70,7 @@ def downloading_worker(q):
         print("downloading", url, "to",
               dst_file.relative_to(working_dir), flush=True)
         try:
-            requests_download(url, dst_file, updated)
+            do_download(url, dst_file, updated)
         except Exception:
             print("Failed to download", url, flush=True)
             if dst_file.is_file():
@@ -156,7 +166,7 @@ def main():
         print(f"syncing {repo} to {repo_dir}")
         
         try:
-            r = requests.get(f"{args.base_url}{repo}/releases")
+            r = github_get(f"{args.base_url}{repo}/releases")
             r.raise_for_status()
             releases = r.json()
         except:
