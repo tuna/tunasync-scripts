@@ -27,6 +27,8 @@ else:
     WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working-channels')
 
 PATH_BATCH = int(os.getenv('NIX_MIRROR_PATH_BATCH', 8192))
+DELETE_OLD = os.getenv('NIX_MIRROR_DELETE_OLD', '0') == '1'
+RETAIN_DAYS = float(os.getenv('NIX_MIRROR_RETAIN_DAYS', 30))
 
 STORE_DIR = 'store'
 RELEASES_DIR = 'releases'
@@ -317,8 +319,89 @@ def update_channels(channels):
             chan_path_update.rename(chan_path)
             logging.info(f'    - Finished with success, symlink updated')
 
+def parse_narinfo(narinfo):
+    res = {}
+    for line in narinfo.splitlines():
+        key, value = line.split(': ', 1)
+        res[key] = value
+    return res
+
+def garbage_collect():
+    logging.info(f'- Collecting garbage')
+
+    time_threshold = datetime.now() - timedelta(days=RETAIN_DAYS)
+
+    last_updated = {}
+    latest = {}
+    alive = set()
+
+    for release in (working_dir / RELEASES_DIR).iterdir():
+        channel = release.name.split('@')[0]
+        date_str = (release / '.released-time').read_text
+        released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+
+        if released_date >= time_threshold:
+            alive.add(release)
+
+        if channel not in last_updated \
+            or last_updated[channel] < released_date:
+            last_updated[channel] = released_date
+            latest[channel] = release
+
+    alive.update(latest.values())
+
+    logging.info(f'  - {len(alive)} releases alive')
+
+    closure = set()
+
+    for release in alive:
+        with lzma.open(str(release / 'store-paths.xz')) as f:
+            paths = [ path.rstrip() for path in f ]
+
+        for i in range(0, len(paths), PATH_BATCH):
+            batch = paths[i : i + PATH_BATCH]
+
+            process = subprocess.run(
+                [
+                    'nix', 'path-info',
+                    '--store', nix_store_dest,
+                    '--recursive'
+                ] + batch,
+                stdout=subprocess.PIPE
+            )
+
+            for path in process.stdout.splitlines():
+                # /nix/store/hash-...
+                #            ^^^^
+                closure.add(path.split('/')[-1].split('-', 1)[0])
+
+    logging.info(f'  - {len(closure)} paths in closure')
+
+    deleted = 0
+
+    for path in (working_dir / STORE_DIR).iterdir():
+        if not path.name.endswith('.narinfo'):
+            continue
+
+        hash = path.split('.narinfo', 1)[0]
+        if hash in closure:
+            continue
+
+        deleted += 1
+
+        if DELETE_OLD:
+            narinfo = parse_narinfo(path.read_text)
+            path.unlink()
+            (working_dir / STORE_DIR / narinfo['URL']).unlink()
+
+    if DELETE_OLD:
+        logging.info(f'  - {deleted} paths deleted')
+    else:
+        logging.info(f'  - {deleted} paths now unreachable')
+
 if __name__ == '__main__':
     channels = clone_channels()
     update_channels(channels)
+    garbage_collect()
     if failure:
         sys.exit(1)
