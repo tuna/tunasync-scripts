@@ -112,7 +112,7 @@ def main():
         name = ensure_safe_name(release['name'] or release['tag_name'])
         if len(name) == 0:
             print("Error: Unnamed release")
-            continue
+            return
 
         if len(release['assets']) == 0:
             url = release['tarball_url']
