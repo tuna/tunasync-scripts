@@ -22,6 +22,8 @@ REPOS = ["googlefonts/noto-fonts",
          "git-lfs/git-lfs",
          "prometheus/prometheus",
          "commercialhaskell/stackage-content",
+         "xxr3376/Learn-Project",
+         "robertying/learnX",
          ]
 
 # connect and read timeout value
