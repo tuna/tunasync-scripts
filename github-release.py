@@ -12,7 +12,8 @@ import requests
 
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
-REPOS = ["googlefonts/noto-fonts",
+REPOS = [
+        "googlefonts/noto-fonts",
          "googlefonts/noto-cjk",
          "googlefonts/noto-emoji",
          "be5invis/Sarasa-Gothic",
@@ -26,6 +27,11 @@ REPOS = ["googlefonts/noto-fonts",
          "robertying/learnX",
          "rust-analyzer/rust-analyzer",
          ]
+
+FULL_DOWNLOAD_REPOS = [
+        "xxr3376/Learn-Project",
+        "robertying/learnX",
+        ]
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
@@ -102,33 +108,16 @@ def main():
     remote_filelist = []
     cleaning = False
 
-    for repo in args.repo:
-        repo_local = working_dir / Path(repo)
-        print(f"syncing {repo} to {repo_local}")
-        try:
-            r = requests.get(f"{args.base_url}{repo}/releases")
-            r.raise_for_status()
-            releases = r.json()
-        except:
-            traceback.print_exc()
-            break
-
-        for latest in releases:
-            if not latest['draft'] and not latest['prerelease']:
-                break
-        else:
-            print("Error: No release version found")
-            continue
-
-        name = ensure_safe_name(latest['name'] or latest['tag_name'])
+    def download(release, repo_dir):
+        name = ensure_safe_name(release['name'] or release['tag_name'])
         if len(name) == 0:
             print("Error: Unnamed release")
             continue
 
-        if len(latest['assets']) == 0:
-            url = latest['tarball_url']
-            updated = datetime.strptime(latest['published_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
-            dst_file = repo_local / name / 'repo-snapshot.tar.gz'
+        if len(release['assets']) == 0:
+            url = release['tarball_url']
+            updated = datetime.strptime(release['published_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
+            dst_file = repo_dir / name / 'repo-snapshot.tar.gz'
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
@@ -137,10 +126,10 @@ def main():
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
                 task_queue.put((url, dst_file, working_dir, updated))
 
-        for asset in latest['assets']:
+        for asset in release['assets']:
             url = asset['browser_download_url']
             updated = datetime.strptime(asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
-            dst_file = repo_local / name / ensure_safe_name(asset['name'])
+            dst_file = repo_dir / name / ensure_safe_name(asset['name'])
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
@@ -160,6 +149,28 @@ def main():
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
 
             task_queue.put((url, dst_file, working_dir, updated))
+
+
+    for repo in args.repo:
+        repo_dir = working_dir / Path(repo)
+        print(f"syncing {repo} to {repo_dir}")
+        
+        try:
+            r = requests.get(f"{args.base_url}{repo}/releases")
+            r.raise_for_status()
+            releases = r.json()
+        except:
+            traceback.print_exc()
+            break
+
+        for release in releases:
+            if not release['draft'] and not release['prerelease']:
+                download(release, repo_dir)
+                if repo not in FULL_DOWNLOAD_REPOS: # only download the latest release
+                    break
+        else:
+            print("Error: No release version found")
+            continue
     else:
         cleaning = True
 
