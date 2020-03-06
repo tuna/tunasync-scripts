@@ -26,6 +26,8 @@ else:
     MIRROR_BASE_URL = os.getenv("MIRROR_BASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/nix-channels')
     WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR", 'working-channels')
 
+PATH_BATCH = int(os.getenv('NIX_MIRROR_PATH_BATCH', 8192))
+
 STORE_DIR = 'store'
 RELEASES_DIR = 'releases'
 CLONE_SINCE = datetime(2018, 12, 1)
@@ -289,8 +291,6 @@ def update_channels(channels):
         logging.info(f'    - {len(paths)} paths listed')
 
         # Batch paths to avoid E2BIG
-
-        PATH_BATCH = 128
 
         channel_failure = False
 
