@@ -374,7 +374,7 @@ def garbage_collect():
 
     for release in (working_dir / RELEASES_DIR).iterdir():
         channel = release.name.split('@')[0]
-        date_str = (release / '.released-time').read_text
+        date_str = (release / '.released-time').read_text()
         released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
 
         if released_date >= time_threshold:
@@ -407,7 +407,7 @@ def garbage_collect():
                 stdout=subprocess.PIPE
             )
 
-            for path in process.stdout.splitlines():
+            for path in process.stdout.decode().splitlines():
                 closure.add(hash_part(path))
 
     logging.info(f'  - {len(closure)} paths in closure')
@@ -418,16 +418,16 @@ def garbage_collect():
         if not path.name.endswith('.narinfo'):
             continue
 
-        hash = path.split('.narinfo', 1)[0]
+        hash = path.name.split('.narinfo', 1)[0]
         if hash in closure:
             continue
 
         deleted += 1
 
         if DELETE_OLD:
-            narinfo = parse_narinfo(path.read_text)
-            path.unlink()
-            (working_dir / STORE_DIR / narinfo['URL']).unlink()
+            narinfo = parse_narinfo(path.read_text())
+            path.unlink(missing_ok=True)
+            (working_dir / STORE_DIR / narinfo['URL']).unlink(missing_ok=True)
 
     if DELETE_OLD:
         logging.info(f'  - {deleted} paths deleted')
