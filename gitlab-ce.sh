@@ -13,6 +13,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 YUM_PATH="${BASE_PATH}/yum"
 
+EL_VERSIONS=(6 7 8)
 UBUNTU_VERSIONS=("trusty" "xenial" "bionic")
 DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
@@ -25,39 +26,26 @@ cfg="/tmp/gitlab-ce-yum.conf"
 cat <<EOF > ${cfg}
 [main]
 keepcache=0
+EOF
+for elver in ${EL_VERSIONS[@]}; do
+	cat <<EOF >> ${cfg}
 
-[el6]
-name=el6
-baseurl=${UPSTREAM}/el/6/x86_64
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-gpgkey=https://packages.gitlab.com/gpg.key
-sslverify=0
-
-[el7]
-name=el7
-baseurl=${UPSTREAM}/el/7/x86_64
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-gpgkey=https://packages.gitlab.com/gpg.key
-sslverify=0
-
-[el8]
-name=el8
-baseurl=${UPSTREAM}/el/8/x86_64
+[el${elver}]
+name=el${elver}
+baseurl=${UPSTREAM}/el/${elver}/x86_64
 repo_gpgcheck=0
 gpgcheck=0
 enabled=1
 gpgkey=https://packages.gitlab.com/gpg.key
 sslverify=0
 EOF
+done
 
 if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6 ${YUM_PATH}/el6
-	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7 ${YUM_PATH}/el7
+	for elver in ${EL_VERSIONS[@]}; do
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el${elver} ${YUM_PATH}/el${elver}
+	done
 fi
 rm $cfg
 
