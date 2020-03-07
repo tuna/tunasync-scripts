@@ -7,10 +7,10 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 # 参数为版本，比如8,11等
 function downloadRelease() {
   curl -s "https://api.adoptopenjdk.net/v2/latestAssets/releases/openjdk$1" | \
-    jq -r '.[]| [.version,.binary_type,.architecture,.os,.binary_name,.binary_link,.checksum_link,.installer_name,.installer_link,.installer_checksum_link]| @tsv' | \
-    while IFS=$'\t' read -r version binary_type architecture os binary_name binary_link checksum_link installer_name installer_link installer_checksum_link; do
-      mkdir -p "$BASE_PATH/$version/$binary_type/$architecture/$os/" || true
-      dest_filename="$BASE_PATH/$version/$binary_type/$architecture/$os/$binary_name"
+    jq -r '.[]| [.version,.version_data.semver,.binary_type,.architecture,.os,.binary_name,.binary_link,.checksum_link,.installer_name,.installer_link,.installer_checksum_link]| @tsv' | \
+    while IFS=$'\t' read -r version semver binary_type architecture os binary_name binary_link checksum_link installer_name installer_link installer_checksum_link; do
+      mkdir -p "$BASE_PATH/$version/$semver/$binary_type/$architecture/$os/" || true
+      dest_filename="$BASE_PATH/$version/$semver/$binary_type/$architecture/$os/$binary_name"
       declare downloaded=false
       if [[ -f $dest_filename ]]; then
         echo "Skiping $binary_name"
@@ -24,7 +24,7 @@ function downloadRelease() {
         }
       done
       if [[ ! -z "$installer_name" ]]; then
-        dest_filename="$BASE_PATH/$version/$binary_type/$architecture/$os/$installer_name"
+        dest_filename="$BASE_PATH/$version/$semver/$binary_type/$architecture/$os/$installer_name"
         downloaded=false
         if [[ -f $dest_filename ]]; then
           echo "Skiping $installer_name"
