@@ -11,9 +11,10 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
+RHEL_VERSIONS=("6" "7" "8")
 UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
 DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
-MONGO_VERSIONS=("4.2" "4.0" "3.6" "3.4" "3.2")
+MONGO_VERSIONS=("4.2" "4.0" "3.6")
 STABLE_VERSION="4.2"
 
 UBUNTU_PATH="${APT_PATH}/ubuntu"
@@ -30,45 +31,34 @@ keepcache=0
 EOF
 
 for mgver in ${MONGO_VERSIONS[@]}; do
-cat <<EOF >> ${cfg}
-[el6-${mgver}]
-name=el6-${mgver}
-baseurl=https://repo.mongodb.org/yum/redhat/6/mongodb-org/${mgver}/x86_64/
+	for elver in ${RHEL_VERSIONS[@]}; do
+		# Check if mongo/os version combination exists
+		wget -q --spider "https://repo.mongodb.org/yum/redhat/$elver/mongodb-org/$mgver/" \
+		&& cat <<EOF >> ${cfg}
+[el$elver-${mgver}]
+name=el$elver-${mgver}
+baseurl=https://repo.mongodb.org/yum/redhat/$elver/mongodb-org/${mgver}/x86_64/
 repo_gpgcheck=0
 gpgcheck=0
 enabled=1
 sslverify=0
 
-[el7-${mgver}]
-name=el7-${mgver}
-baseurl=https://repo.mongodb.org/yum/redhat/7/mongodb-org/${mgver}/x86_64/
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-sslverify=0
-
-[el8-${mgver}]
-name=el8-${mgver}
-baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/${mgver}/x86_64/
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-sslverify=0
 EOF
+	done
 done
 
 if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
 	for mgver in ${MONGO_VERSIONS[@]}; do
-		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6-$mgver/ ${YUM_PATH}/el6-$mgver/
-		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7-$mgver/ ${YUM_PATH}/el7-$mgver/
-		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7-$mgver/ ${YUM_PATH}/el8-$mgver/
+		for elver in ${RHEL_VERSIONS[@]}; do
+			[[ -e "${YUM_PATH}/el$elver-$mgver/" ]] && createrepo --update -v -c $cache_dir -o "${YUM_PATH}/el$elver-$mgver/" "${YUM_PATH}/el$elver-$mgver/"
+		done
 	done
 fi
 
-[ -e ${YUM_PATH}/el6 ] || (cd ${YUM_PATH}; ln -s el6-${STABLE_VERSION} el6)
-[ -e ${YUM_PATH}/el7 ] || (cd ${YUM_PATH}; ln -s el7-${STABLE_VERSION} el7)
-[ -e ${YUM_PATH}/el8 ] || (cd ${YUM_PATH}; ln -s el8-${STABLE_VERSION} el8)
+for elver in ${RHEL_VERSIONS[@]}; do
+	[[ -e "${YUM_PATH}/el$elver" ]] || (cd "${YUM_PATH}" && ln -fs "el$elver-${STABLE_VERSION}" el$elver)
+done
 
 rm $cfg
 
