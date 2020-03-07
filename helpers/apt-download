@@ -10,6 +10,7 @@ fi
 
 LOADED_APT_DOWNLOAD="yes"
 MAX_RETRY=${MAX_RETRY:-"3"}
+DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-"1800"}
 
 function apt-download-binary() {
 	local base_url=$1
@@ -154,8 +155,9 @@ function apt-download-binary() {
 		for retry in `seq ${MAX_RETRY}`; do
 			echo "downloading ${pkg_url} to ${dest_filename}"
 			if [[ -z ${APT_DRY_RUN:-} ]]; then
-				wget ${WGET_OPTIONS:-} -q -O ${dest_filename} ${pkg_url} && {
-					echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true # two space for md5sum/sha1sum/sha256sum check format
+				timeout -s INT "$DOWNLOAD_TIMEOUT" wget ${WGET_OPTIONS:-} -q -O ${dest_filename} ${pkg_url} && {
+					# two space for md5sum/sha1sum/sha256sum check format
+					echo "${pkg_checksum}  ${dest_filename}" | ${checksum_cmd} -c - && downloaded=true
 				}
 			else
 				downloaded=true

@@ -8,6 +8,8 @@ _here=`dirname $(realpath $0)`
 
 [[ -z "${LOADED_APT_DOWNLOAD}" ]] && { echo "failed to load apt-download"; exit 1; }
 
+MAX_RETRY=${MAX_RETRY:-"3"}
+DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-"1800"}
 
 BASE_URL="http://download.virtualbox.org/virtualbox"
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
@@ -63,13 +65,13 @@ echo "Debian and ubuntu finished"
 
 # === download standalone packages ====
 
-timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${BASE_PATH}/LATEST.TXT" "${BASE_URL}/LATEST.TXT"
+timeout -s INT 30 wget ${WGET_OPTIONS:-} -q -O "${BASE_PATH}/LATEST.TXT" "${BASE_URL}/LATEST.TXT"
 LATEST_VERSION=`cat "${BASE_PATH}/LATEST.TXT"`
 LATEST_PATH="${BASE_PATH}/${LATEST_VERSION}"
 
 mkdir -p ${LATEST_PATH}
-timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/MD5SUMS" "${BASE_URL}/${LATEST_VERSION}/MD5SUMS"
-timeout -s INT 300 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/SHA256SUMS" "${BASE_URL}/${LATEST_VERSION}/SHA256SUMS"
+timeout -s INT 30 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/MD5SUMS" "${BASE_URL}/${LATEST_VERSION}/MD5SUMS"
+timeout -s INT 30 wget ${WGET_OPTIONS:-} -q -O "${LATEST_PATH}/SHA256SUMS" "${BASE_URL}/${LATEST_VERSION}/SHA256SUMS"
 
 while read line; do
 	read -a tokens <<< $line
@@ -88,18 +90,23 @@ while read line; do
 			echo "Skipping ${filename}"
 		}
 	fi
-	while [[ $downloaded != true ]]; do
+	for retry in `seq ${MAX_RETRY}`; do
 		rm ${dest_filename} || true
 		echo "downloading ${pkg_url} to ${dest_filename}"
 		if [[ -z ${DRY_RUN:-} ]]; then
-			wget ${WGET_OPTIONS:-} -N -c -q -O ${dest_filename} ${pkg_url} && {
+			timeout -s INT "$DOWNLOAD_TIMEOUT" wget ${WGET_OPTIONS:-} -N -c -q -O ${dest_filename} ${pkg_url} && {
 				# two space for md5sum/sha1sum/sha256sum check format
 				echo "${pkg_checksum}  ${dest_filename}" | md5sum -c - && downloaded=true
 			}
 		else
 			downloaded=true
 		fi
+		[[ $downloaded == true ]] && break
 	done
+	if [[ $downloaded == false ]];then
+		echo "failed to download ${pkg_url} to ${dest_filename}"
+		exit 1
+	fi
 
 	case $filename in
 		*Win.exe)
