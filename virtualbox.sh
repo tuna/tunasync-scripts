@@ -18,7 +18,7 @@ RPM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
 
 APT_VERSIONS=("bionic" "xenial" "trusty" "precise" "buster" "stretch" "jessie" "wheezy" "squeeze")
-EL_VERSIONS=("5" "6" "7")
+EL_VERSIONS=("5" "6" "7" "8")
 
 mkdir -p ${RPM_PATH} ${APT_PATH}
 

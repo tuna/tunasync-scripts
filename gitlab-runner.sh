@@ -42,14 +42,25 @@ gpgcheck=0
 enabled=1
 gpgkey=https://packages.gitlab.com/gpg.key
 sslverify=0
+
+[el8]
+name=gitlab-runner-el8
+baseurl=https://packages.gitlab.com/runner/gitlab-runner/el/8/x86_64
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+gpgkey=https://packages.gitlab.com/gpg.key
+sslverify=0
 EOF
 
 if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH}  -e $cache_dir
 	[ ! -d ${YUM_PATH}/el6 ] && mkdir -p ${YUM_PATH}/el6
 	[ ! -d ${YUM_PATH}/el7 ] && mkdir -p ${YUM_PATH}/el7
+	[ ! -d ${YUM_PATH}/el8 ] && mkdir -p ${YUM_PATH}/el8
 	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6 ${YUM_PATH}/el6
 	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7 ${YUM_PATH}/el7
+	createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el8 ${YUM_PATH}/el8
 fi
 rm $cfg
 

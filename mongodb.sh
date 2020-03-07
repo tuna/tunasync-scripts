@@ -46,6 +46,14 @@ repo_gpgcheck=0
 gpgcheck=0
 enabled=1
 sslverify=0
+
+[el8-${mgver}]
+name=el8-${mgver}
+baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/${mgver}/x86_64/
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+sslverify=0
 EOF
 done
 
@@ -54,11 +62,13 @@ if [[ -z ${DRY_RUN:-} ]]; then
 	for mgver in ${MONGO_VERSIONS[@]}; do
 		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el6-$mgver/ ${YUM_PATH}/el6-$mgver/
 		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7-$mgver/ ${YUM_PATH}/el7-$mgver/
+		createrepo --update -v -c $cache_dir -o ${YUM_PATH}/el7-$mgver/ ${YUM_PATH}/el8-$mgver/
 	done
 fi
 
 [ -e ${YUM_PATH}/el6 ] || (cd ${YUM_PATH}; ln -s el6-${STABLE_VERSION} el6)
 [ -e ${YUM_PATH}/el7 ] || (cd ${YUM_PATH}; ln -s el7-${STABLE_VERSION} el7)
+[ -e ${YUM_PATH}/el8 ] || (cd ${YUM_PATH}; ln -s el8-${STABLE_VERSION} el8)
 
 rm $cfg
 
