@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import os
+import random
 import shutil
 import subprocess as sp
 import tempfile
@@ -169,10 +170,13 @@ def sync_installer(repo_url, local_dir: Path):
             local_filesize = stat.st_size
             local_mtime = stat.st_mtime
 
-            if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime:
+            # Do content verification on ~5% of files (see issue #25)
+            if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime and\
+                    (random.random() < 0.95 or md5_check(dst_file, md5)):
                 logging.info("Skipping {}".format(filename))
                 continue
 
+            logging.info("Removing {}".format(filename))
             dst_file.unlink()
 
         for retry in range(3):
@@ -197,14 +201,17 @@ def main():
         raise Exception("Working Directory is None")
 
     working_dir = Path(args.working_dir)
+    random.seed()
 
-    for dist in ("archive", "miniconda"):
-        remote_url = "{}/{}".format(CONDA_REPO_BASE_URL, dist)
-        local_dir = working_dir / dist
-        try:
-            sync_installer(remote_url, local_dir)
-        except Exception:
-            logging.exception("Failed to sync installers of {}".format(dist))
+    if random.random() < 0.1: # Syncing installer less frequently
+        logging.info("Syncing installers...")
+        for dist in ("archive", "miniconda"):
+            remote_url = "{}/{}".format(CONDA_REPO_BASE_URL, dist)
+            local_dir = working_dir / dist
+            try:
+                sync_installer(remote_url, local_dir)
+            except Exception:
+                logging.exception("Failed to sync installers of {}".format(dist))
 
     for repo in CONDA_REPOS:
         for arch in CONDA_ARCHES:
