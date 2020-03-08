@@ -6,11 +6,15 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 # 参数为版本，比如8,11等
 function downloadRelease() {
+  remote_filelist="$BASE_PATH/$1/filelist"
+  echo -n "" >$remote_filelist
   curl -s "https://api.adoptopenjdk.net/v2/latestAssets/releases/openjdk$1" | \
     jq -r '.[]| [.version,.binary_type,.architecture,.os,.binary_name,.binary_link,.checksum_link,.installer_name,.installer_link,.installer_checksum_link]| @tsv' | \
     while IFS=$'\t' read -r version binary_type architecture os binary_name binary_link checksum_link installer_name installer_link installer_checksum_link; do
       mkdir -p "$BASE_PATH/$version/$binary_type/$architecture/$os/" || true
       dest_filename="$BASE_PATH/$version/$binary_type/$architecture/$os/$binary_name"
+      echo "$dest_filename" >>$remote_filelist
+      echo "$dest_filename.sha256.txt" >>$remote_filelist
       declare downloaded=false
       if [[ -f $dest_filename ]]; then
         echo "Skiping $binary_name"
@@ -25,6 +29,8 @@ function downloadRelease() {
       done
       if [[ ! -z "$installer_name" ]]; then
         dest_filename="$BASE_PATH/$version/$binary_type/$architecture/$os/$installer_name"
+        echo "$dest_filename" >>$remote_filelist
+        echo "$dest_filename.sha256.txt" >>$remote_filelist
         downloaded=false
         if [[ -f $dest_filename ]]; then
           echo "Skiping $installer_name"
@@ -40,6 +46,17 @@ function downloadRelease() {
         done
       fi
     done
+}
+
+function clean_old_releases() {
+  declare version=$1
+  declare remote_filelist="$BASE_PATH/$version/filelist"
+	declare local_filelist="/tmp/filelist.local"
+	find "$BASE_PATH/$version" -type f > ${local_filelist}
+	comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
+		echo "deleting ${file}"
+		rm "${file}"
+	done
 }
 
 function download_and_check() {
@@ -70,6 +87,6 @@ function sha256sum_check() {
 
 for i in 8 11 13;
 do
-  downloadRelease $i
+  downloadRelease $i && clean_old_releases $i
 done
 
