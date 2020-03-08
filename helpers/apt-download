@@ -188,8 +188,8 @@ function apt-delete-old-debs {
 	local_filelist="${base_dir}/filelist.local"
 	(cd ${base_dir}; find . -type f -iname "*.deb") | sed 's+^\./++' > ${local_filelist}
 	comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
-		echo "deleting ${file}"
-		rm ${file}
+		echo "deleting ${base_dir}/${file}"
+		rm "${base_dir}/${file}"
 	done
 	rm $local_filelist
 }
