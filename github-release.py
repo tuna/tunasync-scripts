@@ -166,8 +166,14 @@ def main():
             task_queue.put((url, dst_file, working_dir, updated))
 
         if latest:
-            os.unlink(repo_dir / "LatestRelease")
-            os.symlink(name, repo_dir / "LatestRelease")
+            try:
+                os.unlink(repo_dir / "LatestRelease")
+            except OSError:
+                pass
+            try:
+                os.symlink(name, repo_dir / "LatestRelease")
+            except OSError:
+                pass
 
     for repo in args.repo:
         repo_dir = working_dir / Path(repo)
