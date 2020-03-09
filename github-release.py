@@ -119,7 +119,7 @@ def main():
     remote_filelist = []
     cleaning = False
 
-    def download(release, repo_dir):
+    def download(release, repo_dir, latest = False):
         name = ensure_safe_name(release['name'] or release['tag_name'])
         if len(name) == 0:
             print("Error: Unnamed release")
@@ -165,6 +165,10 @@ def main():
 
             task_queue.put((url, dst_file, working_dir, updated))
 
+        if latest:
+            os.unlink(repo_dir / "LatestRelease")
+            os.symlink(name, repo_dir / "LatestRelease")
+
     for repo in args.repo:
         repo_dir = working_dir / Path(repo)
         print(f"syncing {repo} to {repo_dir}")
@@ -177,9 +181,11 @@ def main():
             traceback.print_exc()
             break
 
+        latest = True
         for release in releases:
             if not release['draft'] and not release['prerelease']:
-                download(release, repo_dir)
+                download(release, repo_dir, latest)
+                latest = False
                 if repo not in FULL_DOWNLOAD_REPOS:  # only download the latest release
                     break
         else:
