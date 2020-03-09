@@ -13,25 +13,26 @@ import requests
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 REPOS = [
-        "googlefonts/noto-fonts",
-         "googlefonts/noto-cjk",
-         "googlefonts/noto-emoji",
-         "be5invis/Sarasa-Gothic",
-         "z4yx/GoAuthing",
-         "VSCodium/vscodium",
-         "openark/orchestrator",
-         "git-lfs/git-lfs",
-         "prometheus/prometheus",
-         "commercialhaskell/stackage-content",
-         "xxr3376/Learn-Project",
-         "robertying/learnX",
-         "rust-analyzer/rust-analyzer",
-         ]
+    "Homebrew/homebrew-portable-ruby",  # Used by homebrew-bottles
+    "googlefonts/noto-fonts",
+    "googlefonts/noto-cjk",
+    "googlefonts/noto-emoji",
+    "be5invis/Sarasa-Gothic",
+    "z4yx/GoAuthing",
+    "VSCodium/vscodium",
+    "openark/orchestrator",
+    "git-lfs/git-lfs",
+    "prometheus/prometheus",
+    "commercialhaskell/stackage-content",  # Used by stackage
+    "xxr3376/Learn-Project",
+    "robertying/learnX",
+    "rust-analyzer/rust-analyzer",
+]
 
 FULL_DOWNLOAD_REPOS = [
-        "xxr3376/Learn-Project",
-        "robertying/learnX",
-        ]
+    "xxr3376/Learn-Project",
+    "robertying/learnX",
+]
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
@@ -41,10 +42,10 @@ TIMEOUT_OPTION = (7, 10)
 def github_get(*args, **kwargs):
     headers = kwargs['headers'] if 'headers' in kwargs else {}
     if 'GITHUB_TOKEN' in os.environ:
-        headers['Authorization'] = 'token {}'.format(os.environ['GITHUB_TOKEN'])
+        headers['Authorization'] = 'token {}'.format(
+            os.environ['GITHUB_TOKEN'])
     kwargs['headers'] = headers
     return requests.get(*args, **kwargs)
-
 
 
 def do_download(remote_url: str, dst_file: Path, remote_ts: float):
@@ -126,7 +127,8 @@ def main():
 
         if len(release['assets']) == 0:
             url = release['tarball_url']
-            updated = datetime.strptime(release['published_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
+            updated = datetime.strptime(
+                release['published_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
             dst_file = repo_dir / name / 'repo-snapshot.tar.gz'
             remote_filelist.append(dst_file.relative_to(working_dir))
 
@@ -138,13 +140,15 @@ def main():
 
         for asset in release['assets']:
             url = asset['browser_download_url']
-            updated = datetime.strptime(asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
+            updated = datetime.strptime(
+                asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
             dst_file = repo_dir / name / ensure_safe_name(asset['name'])
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
                 if args.fast_skip:
-                    print("fast skipping", dst_file.relative_to(working_dir), flush=True)
+                    print("fast skipping", dst_file.relative_to(
+                        working_dir), flush=True)
                     continue
                 else:
                     stat = dst_file.stat()
@@ -153,18 +157,18 @@ def main():
                     # print(f"{local_filesize} vs {asset['size']}")
                     # print(f"{local_mtime} vs {updated}")
                     if asset['size'] == local_filesize and local_mtime == updated:
-                        print("skipping", dst_file.relative_to(working_dir), flush=True)
+                        print("skipping", dst_file.relative_to(
+                            working_dir), flush=True)
                         continue
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
 
             task_queue.put((url, dst_file, working_dir, updated))
 
-
     for repo in args.repo:
         repo_dir = working_dir / Path(repo)
         print(f"syncing {repo} to {repo_dir}")
-        
+
         try:
             r = github_get(f"{args.base_url}{repo}/releases")
             r.raise_for_status()
@@ -176,7 +180,7 @@ def main():
         for release in releases:
             if not release['draft'] and not release['prerelease']:
                 download(release, repo_dir)
-                if repo not in FULL_DOWNLOAD_REPOS: # only download the latest release
+                if repo not in FULL_DOWNLOAD_REPOS:  # only download the latest release
                     break
         else:
             print("Error: No release version found")
