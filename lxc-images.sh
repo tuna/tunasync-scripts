@@ -12,7 +12,7 @@ function sync_lxc_images() {
 	[[ ! -d "$repo_dir" ]] && mkdir -p "$repo_dir"
 	cd "$repo_dir"
 
-	lftp "${repo_url}" -e "mirror --verbose -P 5 --delete --only-newer; bye"
+	lftp "${repo_url}" -e "mirror --verbose -P 5 ; bye"
 	echo "lftp returns $?"
 }
 
@@ -34,20 +34,18 @@ done
 
 echo "=== Downloading images ==="
 
+sync_lxc_images "${BASE_URL}/images" "${TUNASYNC_WORKING_DIR}/images"
+
 images_json="${TUNASYNC_WORKING_DIR}/streams/v1/images.json.work-in-progress"
 [[ -f "$images_json" ]] || exit 1
 jq -r '.products[].versions[].items[].path' "$images_json" > /tmp/filelist.txt
 
-#cut -f 6 -d ';' "${TUNASYNC_WORKING_DIR}/meta/1.0/index-system.work-in-progress"
 cat /tmp/filelist.txt | while read line; do
     # $line looks like 'images/ubuntu/xenial/armhf/default/20200219_07:42/rootfs.tar.xz'
-    dir="$(dirname $line)"
-    if [[ "$dir" = "$last_dir" ]]; then
-        continue
+    if [[ ! -f "${TUNASYNC_WORKING_DIR}/${line}" ]]; then
+        echo "Error: ${TUNASYNC_WORKING_DIR}/${line} vanished"
+        exit 1
     fi
-    last_dir="$dir"
-    echo "=== Syncing $dir ==="
-    sync_lxc_images "${BASE_URL}/${dir}" "${TUNASYNC_WORKING_DIR}/${dir}"
 done
 
 echo "=== Replacing /meta/1.0 ==="
