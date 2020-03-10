@@ -27,6 +27,7 @@ REPOS = [
     {"repo": "xxr3376/Learn-Project", "all_versions": True},
     {"repo": "robertying/learnX", "all_versions": True},
     "rust-analyzer/rust-analyzer",
+    {"repo": "iina/iina", "all_versions": True, "pre_release": True, "flat": True},
 ]
 
 # connect and read timeout value
