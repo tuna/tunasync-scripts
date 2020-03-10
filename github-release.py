@@ -24,10 +24,10 @@ REPOS = [
     "git-lfs/git-lfs",
     "prometheus/prometheus",
     "commercialhaskell/stackage-content",  # Used by stackage
-    {"repo": "xxr3376/Learn-Project", "all_versions": True},
-    {"repo": "robertying/learnX", "all_versions": True},
+    {"repo": "xxr3376/Learn-Project", "versions": -1},
+    {"repo": "robertying/learnX", "versions": -1},
     "rust-analyzer/rust-analyzer",
-    {"repo": "iina/iina", "all_versions": True, "pre_release": True, "flat": True},
+    {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
 ]
 
 # connect and read timeout value
@@ -167,16 +167,16 @@ def main():
             pass
 
     for cfg in REPOS:
-        flat = False
-        all_versions = False
-        tarball = False
-        prerelease = False
+        flat = False # build a folder for each release
+        versions = 1 # keep only one release
+        tarball = False # do not download the tarball
+        prerelease = False # filter out pre-releases
         if isinstance(cfg, str):
             repo = cfg
         else:
             repo = cfg["repo"]
-            if "all_versions" in cfg:
-                all_versions = cfg["all_versions"]
+            if "versions" in cfg:
+                versions = cfg["versions"]
             if "flat" in cfg:
                 flat = cfg["flat"]
             if "tarball" in cfg:
@@ -195,7 +195,7 @@ def main():
             traceback.print_exc()
             break
 
-        nothing = True
+        n_downloaded = 0
         for release in releases:
             if not release['draft'] and (prerelease or not release['prerelease']):
                 name = ensure_safe_name(release['name'] or release['tag_name'])
@@ -203,12 +203,13 @@ def main():
                     print("Error: Unnamed release")
                     continue
                 download(release, (repo_dir if flat else repo_dir / name), tarball)
-                if nothing and not flat:
+                if n_downloaded == 0 and not flat:
+                    # create a symbolic link to the latest release folder
                     link_latest(name, repo_dir)
-                nothing = False
-                if not all_versions:  # only download the latest release
+                n_downloaded += 1
+                if versions > 0 and n_downloaded >= versions:
                     break
-        if nothing:
+        if n_downloaded == 0:
             print(f"Error: No release version found for {repo}")
             continue
     else:
@@ -231,6 +232,13 @@ def main():
             old_file = working_dir / old_file
             old_file.unlink()
 
+        for local_dir in working_dir.glob('*/*/*'):
+            if local_dir.is_dir():
+                try:
+                    # remove empty dirs only
+                    local_dir.rmdir()
+                except:
+                    pass
 
 if __name__ == "__main__":
     main()
