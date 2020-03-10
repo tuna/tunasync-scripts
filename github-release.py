@@ -14,9 +14,9 @@ BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 REPOS = [
     "Homebrew/homebrew-portable-ruby",  # Used by homebrew-bottles
-    "googlefonts/noto-fonts",
-    "googlefonts/noto-cjk",
-    "googlefonts/noto-emoji",
+    {"repo": "googlefonts/noto-fonts", "tarball": True},
+    {"repo": "googlefonts/noto-cjk", "tarball": True},
+    {"repo": "googlefonts/noto-emoji", "tarball": True},
     "be5invis/Sarasa-Gothic",
     "z4yx/GoAuthing",
     "VSCodium/vscodium",
@@ -24,14 +24,9 @@ REPOS = [
     "git-lfs/git-lfs",
     "prometheus/prometheus",
     "commercialhaskell/stackage-content",  # Used by stackage
-    "xxr3376/Learn-Project",
-    "robertying/learnX",
+    {"repo": "xxr3376/Learn-Project", "all_versions": True},
+    {"repo": "robertying/learnX", "all_versions": True},
     "rust-analyzer/rust-analyzer",
-]
-
-FULL_DOWNLOAD_REPOS = [
-    "xxr3376/Learn-Project",
-    "robertying/learnX",
 ]
 
 # connect and read timeout value
@@ -103,8 +98,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default=BASE_URL)
     parser.add_argument("--working-dir", default=WORKING_DIR)
-    parser.add_argument("--repo", type=str, nargs='*', default=REPOS,
-                        help='repositories to download (e.g. --repo be5invis/Sarasa-Gothic googlefonts/noto-emoji)')
     parser.add_argument("--workers", default=1, type=int,
                         help='number of concurrent downloading jobs')
     parser.add_argument("--fast-skip", action='store_true',
@@ -119,17 +112,13 @@ def main():
     remote_filelist = []
     cleaning = False
 
-    def download(release, repo_dir, latest = False):
-        name = ensure_safe_name(release['name'] or release['tag_name'])
-        if len(name) == 0:
-            print("Error: Unnamed release")
-            return
+    def download(release, release_dir, tarball = False):
 
-        if len(release['assets']) == 0:
+        if tarball:
             url = release['tarball_url']
             updated = datetime.strptime(
                 release['published_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
-            dst_file = repo_dir / name / 'repo-snapshot.tar.gz'
+            dst_file = release_dir / 'repo-snapshot.tar.gz'
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
@@ -142,7 +131,7 @@ def main():
             url = asset['browser_download_url']
             updated = datetime.strptime(
                 asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
-            dst_file = repo_dir / name / ensure_safe_name(asset['name'])
+            dst_file = release_dir / ensure_safe_name(asset['name'])
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
@@ -156,7 +145,8 @@ def main():
                     local_mtime = stat.st_mtime
                     # print(f"{local_filesize} vs {asset['size']}")
                     # print(f"{local_mtime} vs {updated}")
-                    if asset['size'] == local_filesize and local_mtime == updated:
+                    if local_mtime > updated or \
+                        asset['size'] == local_filesize and local_mtime == updated:
                         print("skipping", dst_file.relative_to(
                             working_dir), flush=True)
                         continue
@@ -165,17 +155,34 @@ def main():
 
             task_queue.put((url, dst_file, working_dir, updated))
 
-        if latest:
-            try:
-                os.unlink(repo_dir / "LatestRelease")
-            except OSError:
-                pass
-            try:
-                os.symlink(name, repo_dir / "LatestRelease")
-            except OSError:
-                pass
+    def link_latest(name, repo_dir):
+        try:
+            os.unlink(repo_dir / "LatestRelease")
+        except OSError:
+            pass
+        try:
+            os.symlink(name, repo_dir / "LatestRelease")
+        except OSError:
+            pass
 
-    for repo in args.repo:
+    for cfg in REPOS:
+        flat = False
+        all_versions = False
+        tarball = False
+        prerelease = False
+        if isinstance(cfg, str):
+            repo = cfg
+        else:
+            repo = cfg["repo"]
+            if "all_versions" in cfg:
+                all_versions = cfg["all_versions"]
+            if "flat" in cfg:
+                flat = cfg["flat"]
+            if "tarball" in cfg:
+                tarball = cfg["tarball"]
+            if "pre_release" in cfg:
+                prerelease = cfg["pre_release"]
+
         repo_dir = working_dir / Path(repo)
         print(f"syncing {repo} to {repo_dir}")
 
@@ -187,15 +194,21 @@ def main():
             traceback.print_exc()
             break
 
-        latest = True
+        nothing = True
         for release in releases:
-            if not release['draft'] and not release['prerelease']:
-                download(release, repo_dir, latest)
-                latest = False
-                if repo not in FULL_DOWNLOAD_REPOS:  # only download the latest release
+            if not release['draft'] and (prerelease or not release['prerelease']):
+                name = ensure_safe_name(release['name'] or release['tag_name'])
+                if len(name) == 0:
+                    print("Error: Unnamed release")
+                    continue
+                download(release, (repo_dir if flat else repo_dir / name), tarball)
+                if nothing and not flat:
+                    link_latest(name, repo_dir)
+                nothing = False
+                if not all_versions:  # only download the latest release
                     break
-        else:
-            print("Error: No release version found")
+        if nothing:
+            print(f"Error: No release version found for {repo}")
             continue
     else:
         cleaning = True
