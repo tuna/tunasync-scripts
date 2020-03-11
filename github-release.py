@@ -18,6 +18,7 @@ REPOS = [
     {"repo": "googlefonts/noto-cjk", "tarball": True},
     {"repo": "googlefonts/noto-emoji", "tarball": True},
     "be5invis/Sarasa-Gothic",
+    "be5invis/Iosevka",
     "z4yx/GoAuthing",
     "VSCodium/vscodium",
     "openark/orchestrator",
