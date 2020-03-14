@@ -118,6 +118,7 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
 
         pkg_url = '/'.join([repo_url, filename])
         dst_file = local_dir / filename
+        dst_file_wip = local_dir / ('.downloading.' + filename)
 
         if dst_file.is_file():
             stat = dst_file.stat()
@@ -132,7 +133,9 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
         for retry in range(3):
             logging.info("Downloading {}".format(filename))
             try:
-                err = curl_download(pkg_url, dst_file, md5=md5)
+                err = curl_download(pkg_url, dst_file_wip, md5=md5)
+                if err is None:
+                    dst_file_wip.rename(dst_file)
             except sp.CalledProcessError:
                 err = 'CalledProcessError'
             if err is None:
@@ -161,6 +164,7 @@ def sync_installer(repo_url, local_dir: Path):
     for filename, md5 in remote_list():
         pkg_url = "/".join([repo_url, filename])
         dst_file = local_dir / filename
+        dst_file_wip = local_dir / ('.downloading.' + filename)
 
         if dst_file.is_file():
             r = requests.head(pkg_url, timeout=TIMEOUT_OPTION)
@@ -183,7 +187,9 @@ def sync_installer(repo_url, local_dir: Path):
             logging.info("Downloading {}".format(filename))
             err = ''
             try:
-                err = curl_download(pkg_url, dst_file, md5=md5)
+                err = curl_download(pkg_url, dst_file_wip, md5=md5)
+                if err is None:
+                    dst_file_wip.rename(dst_file)
             except sp.CalledProcessError:
                 err = 'CalledProcessError'
             if err is None:
