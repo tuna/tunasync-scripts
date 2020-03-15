@@ -9,9 +9,12 @@ gsutil rsync -d -C -r -x '(1\..+/|\d{5}/|.+/api-docs)' gs://dart-archive/channel
 gsutil rsync -d -C -r -x '(dev|beta)' gs://flutter_infra/releases \
     "${DEST_DIR}/flutter_infra/releases"
 
+cur_engine_list=/tmp/cur_engine_list.txt
+>$cur_engine_list
 
 function sync_engine() {
     [[ -z "$1" ]] && exit 1
+    echo $1 >>$cur_engine_list
     path="flutter_infra/flutter/$1"
     mkdir -p "${DEST_DIR}/$path" 2>/dev/null || true
     gsutil -m rsync -d -C -r "gs://$path" "${DEST_DIR}/$path"
@@ -39,6 +42,14 @@ elif [[ "$SYNC_FLUTTER_ENGINES" == "latest_tags" ]]; then
         done
     done
 fi
+
+#cat $cur_engine_list
+find ${DEST_DIR}/flutter_infra/flutter -maxdepth 1 -mindepth 1 -mtime +90 | while read line; do
+    # $line looks like '/xxx/flutter/flutter_infra/flutter/ca7623eb39d74a8cbdd095fcc7db398267b6928f'
+    version=${line##*/}
+    grep --quiet "$version" "$cur_engine_list" || ( echo "Removing $line"; rm -rf "$line" )
+done
+
 
 for path in "flutter_infra/ios-usb-dependencies" \
             "flutter_infra/flutter/fonts" \
