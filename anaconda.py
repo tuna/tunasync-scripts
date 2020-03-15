@@ -68,6 +68,12 @@ logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
 )
 
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def md5_check(file: Path, md5: str = None):
     m = hashlib.md5()
@@ -91,7 +97,7 @@ def curl_download(remote_url: str, dst_file: Path, md5: str = None):
         return "MD5 mismatch"
 
 
-def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
+def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
     logging.info("Start syncing {}".format(repo_url))
     local_dir.mkdir(parents=True, exist_ok=True)
 
@@ -107,6 +113,8 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
     with tmp_repodata.open() as f:
         repodata = json.load(f)
 
+    remote_filelist = []
+    total_size = 0
     packages = repodata['packages']
     if 'packages.conda' in repodata:
         packages.update(repodata['packages.conda'])
@@ -115,10 +123,12 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
             continue
 
         file_size, md5 = meta['size'], meta['md5']
+        total_size += file_size
 
         pkg_url = '/'.join([repo_url, filename])
         dst_file = local_dir / filename
         dst_file_wip = local_dir / ('.downloading.' + filename)
+        remote_filelist.append(dst_file)
 
         if dst_file.is_file():
             stat = dst_file.stat()
@@ -142,13 +152,30 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path):
                 break
             logging.error("Failed to download {}: {}".format(filename, err))
 
+
     shutil.move(str(tmp_repodata), str(local_dir / "repodata.json"))
     shutil.move(str(tmp_bz2_repodata), str(local_dir / "repodata.json.bz2"))
 
+    if delete:
+        local_filelist = []
+        delete_count = 0
+        for i in local_dir.glob('*.tar.bz2'):
+            local_filelist.append(i)
+        for i in local_dir.glob('*.conda'):
+            local_filelist.append(i)
+        for i in set(local_filelist) - set(remote_filelist):
+            logging.info("Deleting {}".format(i))
+            i.unlink()
+            delete_count += 1
+        logging.info("{} files deleted".format(delete_count))
+
+    logging.info("{}: {} files, {} in total".format(
+        repodata_url, len(remote_filelist), sizeof_fmt(total_size)))
 
 def sync_installer(repo_url, local_dir: Path):
     logging.info("Start syncing {}".format(repo_url))
     local_dir.mkdir(parents=True, exist_ok=True)
+    full_scan = random.random() < 0.1 # Do full version check less frequently
 
     def remote_list():
         r = requests.get(repo_url, timeout=TIMEOUT_OPTION)
@@ -178,6 +205,12 @@ def sync_installer(repo_url, local_dir: Path):
             if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime and\
                     (random.random() < 0.95 or md5_check(dst_file, md5)):
                 logging.info("Skipping {}".format(filename))
+
+                # Stop the scanning if the most recent version is present
+                if not full_scan:
+                    logging.info("Stop the scanning")
+                    break
+
                 continue
 
             logging.info("Removing {}".format(filename))
@@ -201,6 +234,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--working-dir", default=WORKING_DIR)
+    parser.add_argument("--delete", action='store_true',
+                        help='delete unreferenced package files')
     args = parser.parse_args()
 
     if args.working_dir is None:
@@ -209,15 +244,14 @@ def main():
     working_dir = Path(args.working_dir)
     random.seed()
 
-    if random.random() < 0.1: # Syncing installer less frequently
-        logging.info("Syncing installers...")
-        for dist in ("archive", "miniconda"):
-            remote_url = "{}/{}".format(CONDA_REPO_BASE_URL, dist)
-            local_dir = working_dir / dist
-            try:
-                sync_installer(remote_url, local_dir)
-            except Exception:
-                logging.exception("Failed to sync installers of {}".format(dist))
+    logging.info("Syncing installers...")
+    for dist in ("archive", "miniconda"):
+        remote_url = "{}/{}".format(CONDA_REPO_BASE_URL, dist)
+        local_dir = working_dir / dist
+        try:
+            sync_installer(remote_url, local_dir)
+        except Exception:
+            logging.exception("Failed to sync installers of {}".format(dist))
 
     for repo in CONDA_REPOS:
         for arch in CONDA_ARCHES:
@@ -226,7 +260,7 @@ def main():
 
             tmpdir = tempfile.mkdtemp()
             try:
-                sync_repo(remote_url, local_dir, Path(tmpdir))
+                sync_repo(remote_url, local_dir, Path(tmpdir), args.delete)
             except Exception:
                 logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
             finally:
@@ -238,7 +272,7 @@ def main():
 
         tmpdir = tempfile.mkdtemp()
         try:
-            sync_repo(remote_url, local_dir, Path(tmpdir))
+            sync_repo(remote_url, local_dir, Path(tmpdir), args.delete)
         except Exception:
             logging.exception("Failed to sync repo: {}".format(repo))
         finally:
