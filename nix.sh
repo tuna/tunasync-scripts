@@ -42,3 +42,5 @@ for version in $(ls "$INSTALL_TEMP"); do
         > "${INSTALL_TEMP}/${version}/.install.sha256"
     mv "${INSTALL_TEMP}/${version}/.install.sha256" "${version}/install.sha256"
 done
+
+ln -sfn "$(ls -d nix-* | sort -rV | head -1)" latest
