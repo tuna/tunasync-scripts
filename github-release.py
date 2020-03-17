@@ -29,7 +29,6 @@ REPOS = [
     {"repo": "robertying/learnX", "versions": -1},
     "rust-analyzer/rust-analyzer",
     "kubernetes/minikube",
-    "helm/helm",
     {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
 ]
 
