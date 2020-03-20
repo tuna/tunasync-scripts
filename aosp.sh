@@ -21,7 +21,7 @@ function git_repack() {
 	while read repo; do 
 		cd $repo
 		size=$(du -sk .|cut -f1)
-		total_size=$(($total_size+1024*$sz))
+		total_size=$(($total_size+1024*$size))
 		if [[ "$size" -gt "100000" ]]; then
 			git repack -a -b -d
 		fi
