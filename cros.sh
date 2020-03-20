@@ -39,9 +39,9 @@ function git_repack() {
 	echo "Start writing bitmap index"
 	while read repo; do
 		cd $repo
-		size=$(du -sm .|cut -f1)
-		if [[ "$size" -gt "100" ]]; then
-			echo $repo, ${size}M
+		size=$(du -sk .|cut -f1)
+		total_size=$(($total_size+1024*$sz))
+		if [[ "$size" -gt "100000" ]]; then
 			git repack -a -b -d
 		fi
 	done < <(find $TUNASYNC_WORKING_DIR -not -path "$MANIFEST_DIR/.git/*" -type f -name HEAD -exec dirname '{}' ';')
@@ -70,6 +70,8 @@ done
 
 wait # wait for all background jobs
 
+total_size=0
 if [[ -z ${DRY_RUN:-} && "$USE_BITMAP_INDEX" == "1" ]]; then
     git_repack
+    echo "Total size is" $(numfmt --to=iec $total_size)
 fi
