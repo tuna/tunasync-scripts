@@ -13,7 +13,7 @@ function repo_init() {
 
 function repo_sync() {
 	cd $TUNASYNC_WORKING_DIR
-	$REPO sync -f
+	$REPO sync -f -j1 || echo "WARNING: repo-sync may fail, but we just ignore it."
 }
 
 function git_repack() {

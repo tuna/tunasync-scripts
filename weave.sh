@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 set -e
 
 USE_BITMAP_INDEX=${USE_BITMAP_INDEX:-"0"}
