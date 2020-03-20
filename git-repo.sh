@@ -10,6 +10,7 @@ function update_repo_git() {
 	echo "==== SYNC repo.git START ===="
 	/usr/bin/timeout -s INT 3600 git remote -v update
 	git repack -a -b -d
+	git count-objects -v -H
 	echo "==== SYNC repo.git DONE ===="
 }
 
