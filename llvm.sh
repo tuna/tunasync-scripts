@@ -11,10 +11,13 @@ function repo_update() {
 	echo "==== SYNC $repo_dir START ===="
 	/usr/bin/timeout -s INT 3600 git remote -v update
 	git repack -a -b -d
+	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
+	total_size=$(($total_size+1024*$sz))
 	echo "==== SYNC $repo_dir DONE ===="
 }
 
 repos=("llvm" "clang" "libcxx" "lldb" "clang-tools-extra" "polly" "zorg" "compiler-rt" "libcxxabi" "lld" "lnt")
+total_size=0
 
 for repo in ${repos[@]}; do
 	if [[ ! -d "$TUNASYNC_WORKING_DIR/${repo}.git" ]]; then
@@ -23,3 +26,5 @@ for repo in ${repos[@]}; do
 	fi
 	repo_update "$TUNASYNC_WORKING_DIR/${repo}.git"
 done
+
+echo "Total size is" $(numfmt --to=iec $total_size)

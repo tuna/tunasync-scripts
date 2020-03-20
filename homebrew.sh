@@ -11,10 +11,13 @@ function update_homebrew_git() {
 	echo "==== SYNC $repo_dir START ===="
 	/usr/bin/timeout -s INT 3600 git remote -v update
 	git repack -a -b -d
+	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
+	total_size=$(($total_size+1024*$sz))
 	echo "==== SYNC $repo_dir DONE ===="
 }
 
 brews=("brew" "homebrew-core" "homebrew-cask" "homebrew-cask-fonts" "homebrew-cask-drivers" "linuxbrew-core")
+total_size=0
 
 for brew in ${brews[@]}; do
 	if [[ ! -d "$TUNASYNC_WORKING_DIR/${brew}.git" ]]; then
@@ -23,3 +26,5 @@ for brew in ${brews[@]}; do
 	fi
 	update_homebrew_git "$TUNASYNC_WORKING_DIR/${brew}.git"
 done
+
+echo "Total size is" $(numfmt --to=iec $total_size)
