@@ -10,7 +10,8 @@ function update_linux_git() {
 	echo "==== SYNC $UPSTREAM START ===="
 	/usr/bin/timeout -s INT 3600 git remote -v update
 	git repack -a -b -d
-	git count-objects -v -H
+	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
+	echo "size-pack:" $(numfmt --to=iec $sz)
 	echo "==== SYNC $UPSTREAM DONE ===="
 }
 
