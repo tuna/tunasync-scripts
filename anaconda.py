@@ -103,12 +103,20 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
 
     repodata_url = repo_url + '/repodata.json'
     bz2_repodata_url = repo_url + '/repodata.json.bz2'
+    # https://docs.conda.io/projects/conda-build/en/latest/release-notes.html
+    # "current_repodata.json" - like repodata.json, but only has the newest version of each file
+    current_repodata_url = repo_url + '/current_repodata.json'
 
     tmp_repodata = tmpdir / "repodata.json"
     tmp_bz2_repodata = tmpdir / "repodata.json.bz2"
+    tmp_current_repodata = tmpdir / 'current_repodata.json'
 
     curl_download(repodata_url, tmp_repodata)
     curl_download(bz2_repodata_url, tmp_bz2_repodata)
+    try:
+        curl_download(current_repodata_url, tmp_current_repodata)
+    except:
+        pass
 
     with tmp_repodata.open() as f:
         repodata = json.load(f)
@@ -155,6 +163,9 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
 
     shutil.move(str(tmp_repodata), str(local_dir / "repodata.json"))
     shutil.move(str(tmp_bz2_repodata), str(local_dir / "repodata.json.bz2"))
+    if tmp_current_repodata.is_file():
+        shutil.move(str(tmp_current_repodata), str(
+            local_dir / "current_repodata.json"))
 
     if delete:
         local_filelist = []
