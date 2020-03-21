@@ -15,6 +15,8 @@ function update_font_git() {
         echo "==== SYNC $repo_dir START ===="
         /usr/bin/timeout -s INT 3600 git remote -v update
         git repack -a -b -d
+        sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
+        total_size=$(($total_size+1024*$sz))
         echo "==== SYNC $repo_dir DONE ===="
 }
 
@@ -33,6 +35,7 @@ function checkout_font_branch() {
 
 UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL:-"https://github.com/adobe-fonts"}
 REPOS=("source-code-pro" "source-sans-pro" "source-serif-pro" "source-han-sans" "source-han-serif")
+total_size=0
 
 for repo in ${REPOS[@]}; do
         if [[ ! -d "$TUNASYNC_WORKING_DIR/${repo}.git" ]]; then
@@ -42,3 +45,5 @@ for repo in ${REPOS[@]}; do
         update_font_git "$TUNASYNC_WORKING_DIR/${repo}.git"
 	checkout_font_branch "$TUNASYNC_WORKING_DIR/${repo}.git" "$TUNASYNC_WORKING_DIR/${repo}" "release"
 done
+
+echo "Total size is" $(numfmt --to=iec $total_size)
