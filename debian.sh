@@ -24,7 +24,7 @@ if [[ $1 == sync:archive:* ]]; then
 	tail --retry -f "${FTPSYNC_LOG_DIR}/rsync-ftpsync-${jobname}.log" &
 	tail --retry -f "${FTPSYNC_LOG_DIR}/rsync-ftpsync-${jobname}.error" &
 	wait $PID
-	sz=$(tail -n 15 ${FTPSYNC_LOG_DIR}/rsync-ftpsync-${jobname}.log|grep -Po '(?<=Total file size: )\d+')
+	sz=$(tail -n 15 ${FTPSYNC_LOG_DIR}/rsync-ftpsync-${jobname}.log.0|grep -Po '(?<=Total file size: )\d+')
 	[[ -z "$sz" ]] || echo "Total size is" $(numfmt --to=iec $sz)
 else
 	echo "Invalid command line"
