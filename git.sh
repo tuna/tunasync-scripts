@@ -1,5 +1,9 @@
 #!/bin/bash
-UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"}
+UPSTREAM=${TUNASYNC_UPSTREAM_URL}
+if [[ -z "$UPSTREAM" ]];then
+	echo "Please set the TUNASYNC_UPSTREAM_URL"
+	exit 1
+fi
 
 function repo_init() {
 	git clone --mirror $UPSTREAM $TUNASYNC_WORKING_DIR
