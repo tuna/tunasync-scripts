@@ -68,12 +68,12 @@ logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
 )
 
-def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+def sizeof_fmt(num, suffix='iB'):
+    for unit in ['','K','M','G','T','P','E','Z']:
         if abs(num) < 1024.0:
             return "%3.2f %s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.2f %s%s" % (num, 'Yi', suffix)
+    return "%.2f %s%s" % (num, 'Y', suffix)
 
 def md5_check(file: Path, md5: str = None):
     m = hashlib.md5()
@@ -171,6 +171,7 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
 
     logging.info("{}: {} files, {} in total".format(
         repodata_url, len(remote_filelist), sizeof_fmt(total_size)))
+    return total_size
 
 def sync_installer(repo_url, local_dir: Path):
     logging.info("Start syncing {}".format(repo_url))
@@ -229,7 +230,6 @@ def sync_installer(repo_url, local_dir: Path):
                 break
             logging.error("Failed to download {}: {}".format(filename, err))
 
-
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -242,6 +242,7 @@ def main():
         raise Exception("Working Directory is None")
 
     working_dir = Path(args.working_dir)
+    size_statistics = 0
     random.seed()
 
     logging.info("Syncing installers...")
@@ -250,6 +251,8 @@ def main():
         local_dir = working_dir / dist
         try:
             sync_installer(remote_url, local_dir)
+            size_statistics += sum(
+                f.stat().st_size for f in local_dir.glob('*') if f.is_file())
         except Exception:
             logging.exception("Failed to sync installers of {}".format(dist))
 
@@ -260,7 +263,8 @@ def main():
 
             tmpdir = tempfile.mkdtemp()
             try:
-                sync_repo(remote_url, local_dir, Path(tmpdir), args.delete)
+                size_statistics += sync_repo(remote_url,
+                                             local_dir, Path(tmpdir), args.delete)
             except Exception:
                 logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
             finally:
@@ -272,12 +276,14 @@ def main():
 
         tmpdir = tempfile.mkdtemp()
         try:
-            sync_repo(remote_url, local_dir, Path(tmpdir), args.delete)
+            size_statistics += sync_repo(remote_url,
+                                         local_dir, Path(tmpdir), args.delete)
         except Exception:
             logging.exception("Failed to sync repo: {}".format(repo))
         finally:
             shutil.rmtree(tmpdir)
 
+    print("Total size is", sizeof_fmt(size_statistics, suffix=""))
 
 if __name__ == "__main__":
     main()
