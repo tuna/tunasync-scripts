@@ -11,6 +11,7 @@ function update_repo_git() {
 	/usr/bin/timeout -s INT 3600 git remote -v update
 	git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
+	sz=$(($sz*1024))
 	echo "size-pack:" $(numfmt --to=iec $sz)
 	echo "==== SYNC repo.git DONE ===="
 }
