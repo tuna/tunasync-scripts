@@ -85,7 +85,7 @@ function sha256sum_check() {
   fi
 }
 
-for i in 8 11 13;
+for i in 8 9 10 11 12 13 14;
 do
   downloadRelease $i && clean_old_releases $i
 done
