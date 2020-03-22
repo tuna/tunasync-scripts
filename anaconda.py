@@ -71,9 +71,9 @@ logging.basicConfig(
 def sizeof_fmt(num, suffix='iB'):
     for unit in ['','K','M','G','T','P','E','Z']:
         if abs(num) < 1024.0:
-            return "%3.2f %s%s" % (num, unit, suffix)
+            return "%3.2f%s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.2f %s%s" % (num, 'Y', suffix)
+    return "%.2f%s%s" % (num, 'Y', suffix)
 
 def md5_check(file: Path, md5: str = None):
     m = hashlib.md5()
