@@ -37,7 +37,7 @@ do
     if [[ -f "$remote_filelist" ]];then # clean outdated files
         local_filelist=/tmp/filelist.local
         (cd ${HOMEBREW_CACHE}; find . -type f -iname "*.tmp" -delete)
-        (cd ${HOMEBREW_CACHE}; find . -type f -iname "*.tar.gz") | sed 's+^\./++' > $local_filelist
+        (cd ${HOMEBREW_CACHE}; find . -type f -mtime 30 -iname "*.tar.gz") | sed 's+^\./++' > $local_filelist
         comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
             echo "deleting ${HOMEBREW_CACHE}/${file}"
             rm "${HOMEBREW_CACHE}/${file}"
