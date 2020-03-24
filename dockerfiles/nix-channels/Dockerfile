@@ -1,7 +1,8 @@
 FROM debian:buster
 MAINTAINER Wang Ruikang <dramforever@live.com>
 
-RUN apt install python3-dev python3-pip && \
+RUN apt-get update && \
+    apt-get install -y python3-dev python3-pip && \
     pip3 install pyquery requests minio && \
     # Install Nix. To simplify management we only copy binaries and create
     # symlinks, and do no further configuration
