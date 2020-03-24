@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
+from minio.credentials import Credentials, Static
+
 from urllib3.util.retry import Retry
 
 ### Config
@@ -135,7 +137,8 @@ def download(url, dest):
 
     download_dest.rename(dest)
 
-client = minio.Minio('s3.amazonaws.com')
+credentials = Credentials(provider=Static())
+client = minio.Minio('s3.amazonaws.com', credentials=credentials)
 
 def get_channels():
     return [

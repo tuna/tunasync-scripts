@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
 
+from minio.credentials import Credentials, Static
+
 from urllib3.util.retry import Retry
 
 UPSTREAM_URL = os.getenv('TUNASYNC_UPSTREAM_URL', 'https://nixos.org/channels')
@@ -89,7 +91,8 @@ def download(url, dest):
 
     download_dest.rename(dest)
 
-client = minio.Minio('s3.amazonaws.com')
+credentials = Credentials(provider=Static())
+client = minio.Minio('s3.amazonaws.com', credentials=credentials)
 
 def get_url(name):
     response = client.get_object('nix-channels', name)
