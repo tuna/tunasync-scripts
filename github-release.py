@@ -30,6 +30,7 @@ REPOS = [
     "rust-analyzer/rust-analyzer",
     "kubernetes/minikube",
     {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
+    "FreeCAD/FreeCAD",
 ]
 
 # connect and read timeout value

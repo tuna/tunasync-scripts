@@ -2,6 +2,7 @@
 import hashlib
 import logging
 import lzma
+import minio
 import os
 import re
 import sys
@@ -11,6 +12,9 @@ import subprocess
 from pyquery import PyQuery as pq
 from datetime import datetime, timedelta
 from pathlib import Path
+from collections import defaultdict
+
+from minio.credentials import Credentials, Static
 
 from urllib3.util.retry import Retry
 
@@ -38,14 +42,8 @@ def http_head(*args, **kwargs):
 def http_get(*args, **kwargs):
     return session.get(*args, timeout=TIMEOUT, **kwargs)
 
-def file_sha256(dest):
-    sha = subprocess.check_output(
-        [ 'sha256sum', str(dest) ],
-        universal_newlines=True
-    )
-    return sha.split(' ')[0]
-
 def atomic_write_file(dest, contents):
+    dest.parent.mkdir(parents=True, exist_ok=True)
     tmp_dest = dest.parent / f'.{dest.name}.tmp'
     with tmp_dest.open('w') as f:
         f.write(contents)
@@ -93,156 +91,51 @@ def download(url, dest):
 
     download_dest.rename(dest)
 
-def get_links(url):
-    r = http_get(url)
-    r.raise_for_status()
+credentials = Credentials(provider=Static())
+client = minio.Minio('s3.amazonaws.com', credentials=credentials)
 
-    node = pq(r.content)
-
-    links = []
-    for row in node('tr'):
-        td = pq(row)('td')
-        if len(td) != 5:
-            continue
-
-        link_target = td[1].find('a').get('href')
-        if link_target.startswith('/'):
-            # Link to parent directory
-            continue
-
-        last_updated = td[2].text.strip()
-
-        links.append((link_target, last_updated))
-
-    return links
-
-def get_channel(chan_location):
-    release_res = http_get(chan_location)
-    release_res.raise_for_status()
-
-    node = pq(release_res.text)
-
-    tagline = node('p').text()
-
-    tagline_res = re.match(r'^Released on (.+) from', tagline)
-
-    assert tagline_res is not None
-
-    released_time = tagline_res[1]
-
-    files = []
-
-    for row in node('tr'):
-        td = pq(row)('td')
-        if len(td) != 3:
-            continue
-        file_name, file_size, file_hash = (pq(x).text() for x in td)
-        files.append((file_name, file_size, file_hash))
-
-    return {
-        'released_time': released_time,
-        'files': files
-    }
+def get_url(name):
+    response = client.get_object('nix-channels', name)
+    return response.headers['x-amz-website-redirect-location']
 
 def clone_images():
-    for channel, chan_updated in get_links(f'{UPSTREAM_URL}/'):
-        if not channel.startswith('nixos-') \
-            or channel.endswith('-small') \
-            or channel == 'nixos-unstable':
+    DOWNLOAD_MATCH = r'nixos-\d\d.\d\d/latest-nixos-\w+-\w+-linux.\w+(.sha256)?'
+
+    object_names = [
+        x.object_name
+        for x in client.list_objects_v2('nix-channels', recursive=True)
+        if re.fullmatch(DOWNLOAD_MATCH, x.object_name)
+    ]
+
+    channels = defaultdict(lambda: [])
+
+    for name in object_names:
+        chan, file = name.split('/', 1)
+        channels[chan].append(file)
+
+    for channel, files in channels.items():
+        chan_dir = working_dir / channel
+        git_rev = http_get(get_url(f'{channel}/git-revision')).text
+        git_rev_path = chan_dir / 'git-revision'
+
+        if git_rev_path.exists() and git_rev == git_rev_path.read_text():
             continue
 
-        if datetime.strptime(chan_updated, '%Y-%m-%d %H:%M') < CLONE_SINCE:
-            continue
+        logging.info(f'- {channel} -> {git_rev}')
 
-        chan_path = working_dir / channel
-        chan_path.mkdir(parents=True, exist_ok=True)
+        for file in files:
+            logging.info(f'  - {file}')
+            url = get_url(f'{channel}/{file}')
 
-        res = http_head(f'{UPSTREAM_URL}/{channel}', allow_redirects=False)
-        res.raise_for_status()
+            try:
+                download(url, chan_dir / file)
+            except requests.HTTPError as e:
+                if e.response.status_code == 404:
+                    logging.info(f'    - 404, skipped')
+                else:
+                    raise
 
-        chan_location = res.headers['Location']
-        chan_release_basename = chan_location.split('/')[-1]
-
-        try:
-            last_url = (chan_path / '.last-url').read_text()
-        except (IOError, OSError):
-            last_url = 'not available'
-
-        if chan_location == last_url:
-            continue
-
-        logging.info(f'- {channel} -> {chan_release_basename}')
-
-        # Matches nixos-19.03 -> nixos-19.03beta171840.23fd1394dc6
-        #                        ^-------------^
-        if chan_release_basename.startswith(channel + 'beta'):
-            logging.info(f'  - Beta channel, not updating')
-            continue
-
-        chan_info = get_channel(chan_location)
-
-        atomic_write_file(chan_path / '.released-time', chan_info['released_time'])
-
-        has_hash_fail = False
-
-        keep_files = { '.last-url', '.released-time' }
-        rename_files = []
-
-        logging.info(f'  - Downloading new files')
-
-        chan_version = channel.split('-', 1)[1]
-
-        chan_release_version = chan_release_basename.split('-', 1)[1]
-
-        simplify_name = lambda fname: fname.replace(f'-{chan_release_version}-', f'-{chan_version}-')
-
-        image_files = [
-            (simplify_name(file_name), file_name, file_hash)
-            for file_name, _file_size, file_hash in chan_info['files']
-            if file_name.endswith('.iso') or file_name.endswith('ova')
-        ]
-
-        for mirror_file_name, upstream_file_name, file_hash in image_files: 
-            keep_files.add(mirror_file_name)
-            logging.info(f'    - {upstream_file_name} -> {mirror_file_name}')
-            tmp_dest = f'.update.{upstream_file_name}'
-            rename_files.append((tmp_dest, mirror_file_name))
-
-            download(f'{chan_location}/{upstream_file_name}', chan_path / tmp_dest)
-            actual_hash = file_sha256(chan_path / tmp_dest)
-
-            if file_hash != actual_hash:
-                has_hash_fail = True
-                logging.error(f'      - Incorrect hash')
-                logging.error(f'        actual   {actual_hash}')
-                logging.error(f'        expected {file_hash}')
-                logging.info(f'      - File saved as {tmp_dest}')
-
-        if has_hash_fail:
-            logging.warn(f'  - Found bad files. Will retry next time.')
-        else:
-            logging.info(f'  - Renaming files')
-
-            for tmp_dest, mirror_file_name in rename_files:
-                (chan_path / tmp_dest).rename(chan_path / mirror_file_name)
-
-            logging.info(f'  - Removing useless files')
-
-            for file_path in chan_path.iterdir():
-                file_name = file_path.name
-
-                if file_name not in keep_files:
-                    logging.info(f'    - {file_name}')
-                    file_path.unlink()
-
-            logging.info(f'  - Writing SHA256SUMS')
-
-            with (chan_path / 'SHA256SUMS').open('w') as f:
-                for mirror_file_name, _upstream_file_name, file_hash in image_files:
-                    f.write(f'{file_hash} *{mirror_file_name}\n')
-
-            logging.info(f'  - Update finished')
-            atomic_write_file(chan_path / '.last-url', chan_location)
+        atomic_write_file(git_rev_path, git_rev)
 
 if __name__ == "__main__":
     clone_images()

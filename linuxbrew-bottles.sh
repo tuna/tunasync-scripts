@@ -24,6 +24,7 @@ do
         repo_name="homebrew-${tap}"
         args="mac"
     fi
+    remote_filelist="$HOMEBREW_CACHE/filelist.txt"
 
     echo "===== SYNC STARTED AT $(date -R) ====="
     dir_core=/home/homebrew/.linuxbrew/homebrew/Library/Taps/homebrew/homebrew-core
@@ -33,4 +34,13 @@ do
     echo ""
     echo "> RUN brew bottle-mirror $args..."
     /home/homebrew/.linuxbrew/bin/brew bottle-mirror "$args"
+    if [[ -f "$remote_filelist" ]];then # clean outdated files
+        local_filelist=/tmp/filelist.local
+        (cd ${HOMEBREW_CACHE}; find . -type f -iname "*.tmp" -delete)
+        (cd ${HOMEBREW_CACHE}; find . -type f -mtime 30 -iname "*.tar.gz") | sed 's+^\./++' > $local_filelist
+        comm <(sort $remote_filelist) <(sort $local_filelist) -13 | while read file; do
+            echo "deleting ${HOMEBREW_CACHE}/${file}"
+            rm "${HOMEBREW_CACHE}/${file}"
+        done
+    fi
 done

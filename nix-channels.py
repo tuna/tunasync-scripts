@@ -3,16 +3,20 @@ import hashlib
 import json
 import logging
 import lzma
+import minio
 import os
+import pytz
 import re
-import sys
 import requests
 import subprocess
+import sys
 
 from pyquery import PyQuery as pq
 from datetime import datetime, timedelta
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+
+from minio.credentials import Credentials, Static
 
 from urllib3.util.retry import Retry
 
@@ -35,7 +39,12 @@ RETAIN_DAYS = float(os.getenv('NIX_MIRROR_RETAIN_DAYS', 30))
 
 STORE_DIR = 'store'
 RELEASES_DIR = 'releases'
-CLONE_SINCE = datetime(2018, 12, 1)
+
+# Channels that have not updated since migration to Netlify [1] are assumed to
+# be too old and defunct.
+#
+# [1]: https://discourse.nixos.org/t/announcement-moving-nixos-org-to-netlify/6212
+CLONE_SINCE = datetime(2020, 3, 6, tzinfo=pytz.utc)
 TIMEOUT = 60
 
 working_dir = Path(WORKING_DIR)
@@ -62,9 +71,6 @@ logging.basicConfig(
 # Set this to True if some sub-process failed
 # Don't forget 'global failure'
 failure = False
-
-def http_head(*args, **kwargs):
-    return session.head(*args, timeout=TIMEOUT, **kwargs)
 
 def http_get(*args, **kwargs):
     return session.get(*args, timeout=TIMEOUT, **kwargs)
@@ -131,28 +137,15 @@ def download(url, dest):
 
     download_dest.rename(dest)
 
-def get_links(url):
-    r = http_get(url)
-    r.raise_for_status()
+credentials = Credentials(provider=Static())
+client = minio.Minio('s3.amazonaws.com', credentials=credentials)
 
-    node = pq(r.content)
-
-    links = []
-    for row in node('tr'):
-        td = pq(row)('td')
-        if len(td) != 5:
-            continue
-
-        link_target = td[1].find('a').get('href')
-        if link_target.startswith('/'):
-            # Link to parent directory
-            continue
-
-        last_updated = td[2].text.strip()
-
-        links.append((link_target, last_updated))
-
-    return links
+def get_channels():
+    return [
+        (x.object_name, x.last_modified)
+        for x in client.list_objects_v2('nix-channels')
+        if re.fullmatch(r'(nixos|nixpkgs)-.+[^/]', x.object_name)
+    ]
 
 def clone_channels():
     logging.info(f'- Fetching channels')
@@ -161,17 +154,15 @@ def clone_channels():
 
     working_dir.mkdir(parents=True, exist_ok=True)
 
-    for channel, chan_updated in get_links(f'{UPSTREAM_URL}/'):
+    for channel, chan_updated in get_channels():
         chan_path = working_dir / channel
 
         # Old channels, little value in cloning and format changes
-        if datetime.strptime(chan_updated, '%Y-%m-%d %H:%M') < CLONE_SINCE:
+        if chan_updated < CLONE_SINCE:
             continue
 
-        chan_redirect_res = http_head(f'{UPSTREAM_URL}/{channel}', allow_redirects=False)
-        chan_redirect_res.raise_for_status()
-
-        chan_location = chan_redirect_res.headers['Location']
+        chan_obj = client.get_object('nix-channels', channel)
+        chan_location = chan_obj.headers['x-amz-website-redirect-location']
 
         chan_release = chan_location.split('/')[-1]
 
