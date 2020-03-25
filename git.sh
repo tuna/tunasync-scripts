@@ -13,7 +13,8 @@ function update_linux_git() {
 	cd $TUNASYNC_WORKING_DIR
 	echo "==== SYNC $UPSTREAM START ===="
 	/usr/bin/timeout -s INT 3600 git remote -v update
-	git repack -a -b -d
+	objs=$(find objects -type f | wc -l)
+	[[ "$objs" -gt 8 ]] && git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
 	sz=$(($sz*1024))
 	echo "size-pack:" $(numfmt --to=iec $sz)

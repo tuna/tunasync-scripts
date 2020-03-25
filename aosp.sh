@@ -5,6 +5,9 @@ REPO=${REPO:-"/usr/local/bin/repo"}
 USE_BITMAP_INDEX=${USE_BITMAP_INDEX:-"0"}
 UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://android.googlesource.com/mirror/manifest"}
 
+git config --global user.email "mirrors@tuna"
+git config --global user.name "tuna mirrors"
+
 function repo_init() {
 	mkdir -p $TUNASYNC_WORKING_DIR
 	cd $TUNASYNC_WORKING_DIR
@@ -22,7 +25,8 @@ function git_repack() {
 		cd $repo
 		size=$(du -sk .|cut -f1)
 		total_size=$(($total_size+1024*$size))
-		if [[ "$size" -gt "100000" ]]; then
+		objs=$(find objects -type f | wc -l)
+		if [[ "$objs" -gt 8 && "$size" -gt "100000" ]]; then
 			git repack -a -b -d
 		fi
 	done < <(find $TUNASYNC_WORKING_DIR -type d -not -path "*/.repo/*" -name "*.git")

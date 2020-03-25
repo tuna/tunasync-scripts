@@ -41,7 +41,8 @@ function git_repack() {
 		cd $repo
 		size=$(du -sk .|cut -f1)
 		total_size=$(($total_size+1024*$size))
-		if [[ "$size" -gt "100000" ]]; then
+		objs=$(find objects -type f  | wc -l)
+		if [[ "$objs" -gt 8 && "$size" -gt "100000" ]]; then
 			git repack -a -b -d
 		fi
 	done < <(find $TUNASYNC_WORKING_DIR -not -path "$MANIFEST_DIR/.git/*" -type f -name HEAD -exec dirname '{}' ';')
