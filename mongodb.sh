@@ -27,7 +27,6 @@ done
 popd
 echo "YUM finished"
 
-base_url="http://repo.mongodb.org"
 for mgver in ${MONGO_VERSIONS[@]}; do
 	"$apt_sync" "$BASE_URL/apt/ubuntu" "@{ubuntu-lts}/mongodb-org/$mgver" multiverse amd64,i386 "$UBUNTU_PATH"
 	"$apt_sync" "$BASE_URL/apt/debian" "@{debian-current}/mongodb-org/$mgver" main amd64,i386 "$DEBIAN_PATH"
