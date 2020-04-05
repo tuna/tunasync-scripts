@@ -75,10 +75,10 @@ def main():
                     os, comp, arch,
                     str(args.working_dir.absolute()),
                     filelist[1] ]
-                print(shell_args)
-                # ret = sp.run(shell_args)
-                # if ret.returncode != 0:
-                #     failed.append((os, comp, arch))
+                # print(shell_args)
+                ret = sp.run(shell_args)
+                if ret.returncode != 0:
+                    failed.append((os, comp, arch))
     if len(failed) > 0:
         print("Failed APT repos: ", failed)
     if args.delete:

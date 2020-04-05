@@ -54,7 +54,7 @@ if [[ -z ${DRY_RUN:-} ]]; then
 fi
 
 for elver in ${RHEL_VERSIONS[@]}; do
-	[[ -e "${YUM_PATH}/el$elver" ]] || (cd "${YUM_PATH}" && ln -fs "el$elver-${STABLE_VERSION}" el$elver)
+	[[ -e "${YUM_PATH}/el$elver-${STABLE_VERSION}" ]] && (cd "${YUM_PATH}" && ln -fs "el$elver-${STABLE_VERSION}" el$elver)
 done
 
 rm $cfg
@@ -68,6 +68,9 @@ base_url="http://repo.mongodb.org"
 for mgver in ${MONGO_VERSIONS[@]}; do
 	"$apt_sync" "$BASE_URL/apt/ubuntu" "@{ubuntu-lts}/mongodb-org/$mgver" multiverse amd64,i386 "$UBUNTU_PATH"
 	"$apt_sync" "$BASE_URL/apt/debian" "@{debian-current}/mongodb-org/$mgver" main amd64,i386 "$DEBIAN_PATH"
+done
+for dist in "$BASE_URL"/apt/*/dists/*/mongodb-org/; do
+	[[ -e "${dist}/${STABLE_VERSION}" ]] && (cd "${dist}" && ln -fs "${STABLE_VERSION}" stable)
 done
 echo "APT finished"
 
