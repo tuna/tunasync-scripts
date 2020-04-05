@@ -4,9 +4,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[[ -z "${LOADED_APT_DOWNLOAD}" ]] && { echo "failed to load apt-download"; exit 1; }
+apt_sync="${_here}/apt-sync.py" 
 
 MAX_RETRY=${MAX_RETRY:-"3"}
 DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-"1800"}
@@ -17,7 +15,6 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 RPM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("bionic" "xenial" "trusty" "precise" "buster" "stretch" "jessie" "wheezy" "squeeze")
 EL_VERSIONS=("5" "6" "7" "8")
 
 mkdir -p ${RPM_PATH} ${APT_PATH}
@@ -51,16 +48,8 @@ fi
 rm $cfg
 
 # === download deb packages ====
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
 
-for version in ${APT_VERSIONS[@]}; do
-	apt-download-binary "${BASE_URL}/debian" "$version" "contrib" "amd64" "${APT_PATH}" || true
-	apt-download-binary "${BASE_URL}/debian" "$version" "non-free" "amd64" "${APT_PATH}" || true
-	apt-download-binary "${BASE_URL}/debian" "$version" "contrib" "i386" "${APT_PATH}" || true
-	apt-download-binary "${BASE_URL}/debian" "$version" "non-free" "i386" "${APT_PATH}" || true
-done
+"$apt_sync" "${BASE_URL}/debian" @debian-current,@ubuntu-lts contrib,non-free amd64,i386 "$APT_PATH"
 echo "Debian and ubuntu finished"
 
 # === download standalone packages ====

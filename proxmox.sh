@@ -4,24 +4,16 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[[ -z "${LOADED_APT_DOWNLOAD}" ]] && { echo "failed to load apt-download"; exit 1; }
+apt_sync="${_here}/apt-sync.py" 
 
 BASE_URL="${TUNASYNC_UPSTREAM_URL:-"http://download.proxmox.com"}"
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 APT_PATH="${BASE_PATH}/debian"
 
-APT_VERSIONS=("buster" "stretch" "jessie")
-
 # === download deb packages ====
 
-mkdir -p "${APT_PATH}"
-for version in ${APT_VERSIONS[@]}; do
-	apt-download-binary "${BASE_URL}/debian" "$version" "pve-no-subscription" "amd64" "${APT_PATH}" || true
-	apt-download-binary "${BASE_URL}/debian" "$version" "pvetest" "amd64" "${APT_PATH}" || true
-done
+"$apt_sync" "${BASE_URL}/debian" @debian-current pve-no-subscription,pvetest amd64 "$APT_PATH"
 echo "Debian finished"
 
 # === download standalone files ====
