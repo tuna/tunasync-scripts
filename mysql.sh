@@ -4,9 +4,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+alias apt-sync="${_here}/apt-sync.py" 
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}"
@@ -24,39 +22,14 @@ APT_PATH="${BASE_PATH}/apt"
 UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
 
-UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
-DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
-
-
 mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
 
-
 # =================== APT repos ===============================
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
-MYSQL_APT_REPOS=("mysql-5.6" "mysql-5.7" "mysql-tools" "connector-python-2.1" "mysql-8.0")
-
-base_url="${BASE_URL}/apt/ubuntu"
-for version in ${UBUNTU_VERSIONS[@]}; do
-	for repo in ${MYSQL_APT_REPOS[@]}; do
-		for arch in "amd64" "i386"; do
-			apt-download-binary ${base_url} "$version" "$repo" "$arch" "${UBUNTU_PATH}" || true
-		done
-	done
-done
+MYSQL_APT_REPOS="mysql-5.6,mysql-5.7,mysql-tools,connector-python-2.1,mysql-8.0"
+apt-sync "${BASE_URL}/apt/ubuntu" @ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
 echo "Ubuntu finished"
-
-base_url="${BASE_URL}/apt/debian"
-for version in ${DEBIAN_VERSIONS[@]}; do
-	for repo in ${MYSQL_APT_REPOS[@]}; do
-		for arch in "amd64" "i386"; do
-			apt-download-binary ${base_url} "$version" "$repo" "$arch" "${DEBIAN_PATH}" || true
-		done
-	done
-done
+apt-sync "${BASE_URL}/apt/debian" @debian-current $MYSQL_APT_REPOS amd64,i386 "${DEBIAN_PATH}"
 echo "Debian finished"
-
 
 # =================== YUM/DNF repos ==========================
 
