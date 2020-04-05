@@ -90,7 +90,7 @@ enabled=1
 ''')
             dest_dirs.append((args.working_dir / name).absolute())
         conf.flush()
-        sp.run(["cat", conf.name])
+        # sp.run(["cat", conf.name])
         # sp.run(["ls", "-la", cache_dir])
 
         if len(dest_dirs) == 0:
