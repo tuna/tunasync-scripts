@@ -4,6 +4,7 @@ set -o pipefail
 
 _here=`dirname $(realpath $0)`
 apt_sync="${_here}/apt-sync.py" 
+yum_sync="${_here}/yum-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.elastic.co"}
@@ -16,8 +17,6 @@ declare -A REPO_VERSIONS=(
 	["logstash"]="2.3 2.4 5.0"
 	["kibana"]="4.5 4.6"
 )
-
-mkdir -p ${YUM_PATH} ${APT_PATH}
 
 # =================== APT repos ===============================
 if [[ ! -z ${DRY_RUN:-} ]]; then
@@ -37,35 +36,8 @@ done
 
 # ================ YUM/DNF repos ===============================
 
-cache_dir="/tmp/yum-elk-cache/"
-cfg="/tmp/yum-elk.conf"
-cat <<EOF > ${cfg}
-[main]
-keepcache=0
-
-EOF
-
 for repo in "${!REPO_VERSIONS[@]}"; do
-for version in ${REPO_VERSIONS[$repo]}; do
-cat <<EOF >> ${cfg}
-[${repo}-${version}]
-name=${repo} ${version} packages
-baseurl=${BASE_URL}/${repo}/${version}/centos
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-sslverify=0
-
-EOF
+	versions=${REPO_VERSIONS[$repo]}
+	components=${versions// /,}
+	"$yum_sync" "${BASE_URL}/${repo}/@{comp}/centos/" 7 "$components" x86_64 "${repo}-@{comp}" "$YUM_PATH"
 done
-done
-
-if [[ -z ${DRY_RUN:-} ]]; then
-	reposync -c $cfg -d -p ${YUM_PATH} -e ${cache_dir}
-	for repo in "${!REPO_VERSIONS[@]}"; do
-		for version in ${REPO_VERSIONS[$repo]}; do
-			createrepo --update -v -c ${cache_dir} -o ${YUM_PATH}/${repo}-${version}/ ${YUM_PATH}/${repo}-${version}/
-		done
-	done
-fi
-rm $cfg

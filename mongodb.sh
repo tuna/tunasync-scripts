@@ -3,66 +3,29 @@ set -e
 
 _here=`dirname $(realpath $0)`
 apt_sync="${_here}/apt-sync.py" 
+yum_sync="${_here}/yum-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://repo.mongodb.org"}
 
-YUM_PATH="${BASE_PATH}/yum"
-APT_PATH="${BASE_PATH}/apt"
-
-RHEL_VERSIONS=("6" "7" "8")
 MONGO_VERSIONS=("4.2" "4.0" "3.6")
 STABLE_VERSION="4.2"
 
+YUM_PATH="${BASE_PATH}/yum"
+APT_PATH="${BASE_PATH}/apt"
 UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
 
-mkdir -p $UBUNTU_PATH $DEBIAN_PATH $YUM_PATH
-
-cache_dir="/tmp/yum-mongodb-cache/"
-cfg="/tmp/mongodb-yum.conf"
-cat <<EOF > ${cfg}
-[main]
-keepcache=0
-
-EOF
-
-for mgver in ${MONGO_VERSIONS[@]}; do
-	for elver in ${RHEL_VERSIONS[@]}; do
-		# Check if mongo/os version combination exists
-		wget -q --spider "https://repo.mongodb.org/yum/redhat/$elver/mongodb-org/$mgver/" \
-		&& cat <<EOF >> ${cfg}
-[el$elver-${mgver}]
-name=el$elver-${mgver}
-baseurl=https://repo.mongodb.org/yum/redhat/$elver/mongodb-org/${mgver}/x86_64/
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-sslverify=0
-
-EOF
-	done
+components=$(printf ",%s" "${MONGO_VERSIONS[@]}")
+components=${components:1}
+"$yum_sync" "${BASE_URL}/yum/redhat/@{os_ver}/mongodb-org/@{comp}/@{arch}/" 6-8 "$components" x86_64 "el@{os_ver}-@{comp}" "$YUM_PATH"
+pushd "${YUM_PATH}"
+for stable in el*-${STABLE_VERSION}; do
+	# e.g. "el8" -> "el8-4.2"
+	ln -fsn $stable ${stable%-$STABLE_VERSION}
 done
-
-if [[ -z ${DRY_RUN:-} ]]; then
-	reposync -c $cfg -d -p ${YUM_PATH} -e $cache_dir
-	for mgver in ${MONGO_VERSIONS[@]}; do
-		for elver in ${RHEL_VERSIONS[@]}; do
-			[[ -e "${YUM_PATH}/el$elver-$mgver/" ]] && createrepo --update -v -c $cache_dir -o "${YUM_PATH}/el$elver-$mgver/" "${YUM_PATH}/el$elver-$mgver/"
-		done
-	done
-fi
-
-for elver in ${RHEL_VERSIONS[@]}; do
-	[[ -e "${YUM_PATH}/el$elver-${STABLE_VERSION}" ]] && (cd "${YUM_PATH}" && ln -fsn "el$elver-${STABLE_VERSION}" el$elver)
-done
-
-rm $cfg
-
-
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
+popd
+echo "YUM finished"
 
 base_url="http://repo.mongodb.org"
 for mgver in ${MONGO_VERSIONS[@]}; do
