@@ -4,7 +4,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-alias apt-sync="${_here}/apt-sync.py" 
+apt_sync="${_here}/apt-sync.py" 
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}"
@@ -26,9 +26,9 @@ mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
 
 # =================== APT repos ===============================
 MYSQL_APT_REPOS="mysql-5.6,mysql-5.7,mysql-tools,connector-python-2.1,mysql-8.0"
-apt-sync "${BASE_URL}/apt/ubuntu" @ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
+"$apt_sync" "${BASE_URL}/apt/ubuntu" @ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
 echo "Ubuntu finished"
-apt-sync "${BASE_URL}/apt/debian" @debian-current $MYSQL_APT_REPOS amd64,i386 "${DEBIAN_PATH}"
+"$apt_sync" "${BASE_URL}/apt/debian" @debian-current $MYSQL_APT_REPOS amd64,i386 "${DEBIAN_PATH}"
 echo "Debian finished"
 
 # =================== YUM/DNF repos ==========================
