@@ -309,12 +309,12 @@ def update_channels(channels):
                 channel_failure = True
                 logging.info(f'    - Error status: {process.returncode}')
                 break
+            else:
+                infos = json.loads(process.stdout)
+                for info in infos:
+                    ha = hash_part(info['path'])
+                    todo[ha] = (info['url'], f'{ha}.narinfo')
         else:
-            infos = json.loads(process.stdout)
-            for info in infos:
-                ha = hash_part(info['path'])
-                todo[ha] = (info['url'], f'{ha}.narinfo')
-
             logging.info(f'    - {len(todo)} paths to download')
 
             digits = len(str(len(todo)))

@@ -12,7 +12,7 @@ COPY composer-mirror.config.php /usr/local/composer-mirror/config.php
 
 RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
-RUN chmod a+x /usr/local/bin/aosp-repo
+RUN chmod 0755 /usr/local/bin/aosp-repo
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && apt-get install -y locales -qq && locale-gen
 ENV LANG=en_US.UTF-8

@@ -54,6 +54,7 @@ CONDA_CLOUD_REPOS = (
     "pyviz/linux-64", "pyviz/linux-32", "pyviz/win-64", "pyviz/win-32", "pyviz/osx-64", "pyviz/noarch",
     "dglteam/linux-64", "dglteam/win-64", "dglteam/osx-64", "dglteam/noarch",
     "rdkit/linux-64", "rdkit/win-64", "rdkit/osx-64", "rdkit/noarch",
+    "mordred-descriptor/linux-64", "mordred-descriptor/win-64", "mordred-descriptor/win-32", "mordred-descriptor/osx-64", "mordred-descriptor/noarch",
 )
 
 EXCLUDED_PACKAGES = (
