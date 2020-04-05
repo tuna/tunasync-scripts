@@ -13,7 +13,7 @@ DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-"1800"}
 BASE_URL="http://download.virtualbox.org/virtualbox"
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
-RPM_PATH="${BASE_PATH}/rpm"
+YUM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
 
 # === download rhel packages ====
