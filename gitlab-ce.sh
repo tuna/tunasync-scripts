@@ -3,9 +3,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+apt_sync="${_here}/apt-sync.py" 
 
 UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://packages.gitlab.com/gitlab/gitlab-ce"}
 
@@ -14,8 +12,6 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 YUM_PATH="${BASE_PATH}/yum"
 
 EL_VERSIONS=(6 7 8)
-UBUNTU_VERSIONS=("trusty" "xenial" "bionic")
-DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
 
@@ -49,22 +45,9 @@ if [[ -z ${DRY_RUN:-} ]]; then
 fi
 rm $cfg
 
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
-
-base_url="${UPSTREAM}/ubuntu"
-for version in ${UBUNTU_VERSIONS[@]}; do
-	apt-download-binary ${base_url} "$version" "main" "amd64" "${UBUNTU_PATH}" || true
-	apt-download-binary ${base_url} "$version" "main" "i386" "${UBUNTU_PATH}" || true
-done
+"$apt_sync" "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-
-base_url="${UPSTREAM}/debian"
-for version in ${DEBIAN_VERSIONS[@]}; do
-	apt-download-binary ${base_url} "$version" "main" "amd64" "${DEBIAN_PATH}" || true
-	apt-download-binary ${base_url} "$version" "main" "i386" "${DEBIAN_PATH}" || true
-done
+"$apt_sync" "${UPSTREAM}/debian" @debian-current main amd64,i386 "$DEBIAN_PATH"
 echo "Debian finished"
 
 

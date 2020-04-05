@@ -3,9 +3,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+apt_sync="${_here}/apt-sync.py" 
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.elastic.co"}
@@ -33,9 +31,7 @@ for repo in "${!REPO_VERSIONS[@]}"; do
 		echo $repo-$version
 		apt_url="${BASE_URL}/${repo}/${version}/debian"
 		dest_path="${APT_PATH}/${repo}/${version}"
-		[[ ! -d ${dest_path} ]] && mkdir -p ${dest_path}
-		apt-download-binary ${apt_url} "stable" "main" "amd64" "${dest_path}" || true
-		apt-download-binary ${apt_url} "stable" "main" "i386" "${dest_path}" || true
+		"$apt_sync" "$apt_url" stable main amd64,i386 "$dest_path"
 	done
 done
 

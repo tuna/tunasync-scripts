@@ -3,9 +3,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+apt_sync="${_here}/apt-sync.py" 
 
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://artifacts.elastic.co"}
 
@@ -20,18 +18,9 @@ APT_PATH="${BASE_PATH}/apt"
 mkdir -p ${YUM_PATH} ${APT_PATH}
 
 # =================== APT repos ===============================
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
 
 for elsver in "${ELASTIC_VERSION[@]}"; do
-	mkdir -p ${BASE_PATH}/${elsver}
-
-	apt_url="${BASE_URL}/packages/${elsver}/apt"
-	dest_path="${APT_PATH}/${elsver}"
-
-	apt-download-binary ${apt_url} "stable" "main" "amd64" "${dest_path}" || true
-	apt-download-binary ${apt_url} "stable" "main" "i386" "${dest_path}" || true
+	"$apt_sync" "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
 	
 	(cd ${BASE_PATH}/${elsver}; ln -sf ../apt/${elsver} apt)
 done
