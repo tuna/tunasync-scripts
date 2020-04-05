@@ -4,9 +4,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+alias apt-sync="${_here}/apt-sync.py" 
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.percona.com"}
@@ -14,25 +12,14 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repo.percona.com"}
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=("wheezy" "jessie" "trusty" "xenial" "stretch" "bionic" "buster")
 EL_VERSIONS=("6" "7")
 
-mkdir -p ${YUM_PATH} ${APT_PATH}
-
-
 # =================== APT repos ===============================
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
-base_url="${BASE_URL}/apt"
-for version in ${APT_VERSIONS[@]}; do
-	for arch in "amd64" "i386"; do
-		apt-download-binary ${base_url} "$version" "main" "$arch" "${APT_PATH}" || true
-	done
-done
+apt-sync "${BASE_URL}/apt" @debian-current,@ubuntu-lts main amd64,i386 "${APT_PATH}"
 echo "APT finished"
 
 # =================== YUM/DNF repos ==========================
+mkdir -p ${YUM_PATH}
 
 cache_dir="/tmp/yum-percona-cache/"
 cfg="/tmp/yum-percona.conf"

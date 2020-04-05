@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+_here=`dirname $(realpath $0)`
+. ${_here}/apt-download
+
+exec apt-download-binary $@
