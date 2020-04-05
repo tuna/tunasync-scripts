@@ -22,7 +22,7 @@ mkdir -p ${YUM_PATH} ${APT_PATH}
 for elsver in "${ELASTIC_VERSION[@]}"; do
 	"$apt_sync" "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
 	
-	(cd ${BASE_PATH}/${elsver}; ln -sf ../apt/${elsver} apt)
+	(cd ${BASE_PATH}/${elsver}; ln -sfn ../apt/${elsver} apt)
 done
 
 # # ================ YUM/DNF repos ===============================
@@ -52,7 +52,7 @@ if [[ -z ${DRY_RUN:-} ]]; then
 	reposync -c $cfg -d -p ${YUM_PATH} -e ${cache_dir}
 	for elsver in ${ELASTIC_VERSION[@]}; do
 		createrepo --update -v -c ${cache_dir} -o ${YUM_PATH}/elastic-${elsver}/ ${YUM_PATH}/elastic-${elsver}/
-		(cd ${BASE_PATH}/${elsver}; ln -sf ../yum/elastic-${elsver} yum)
+		(cd ${BASE_PATH}/${elsver}; ln -sfn ../yum/elastic-${elsver} yum)
 	done
 fi
 rm $cfg
