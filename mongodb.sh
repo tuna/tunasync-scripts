@@ -2,18 +2,15 @@
 set -e
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+apt_sync="${_here}/apt-sync.py" 
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://repo.mongodb.org"}
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
 RHEL_VERSIONS=("6" "7" "8")
-UBUNTU_VERSIONS=("trusty" "precise" "xenial" "bionic")
-DEBIAN_VERSIONS=("wheezy" "jessie" "stretch" "buster")
 MONGO_VERSIONS=("4.2" "4.0" "3.6")
 STABLE_VERSION="4.2"
 
@@ -67,29 +64,12 @@ if [[ ! -z ${DRY_RUN:-} ]]; then
 	export APT_DRY_RUN=1
 fi
 
-base_url="http://repo.mongodb.org/apt/ubuntu"
-for ubver in ${UBUNTU_VERSIONS[@]}; do
-	for mgver in ${MONGO_VERSIONS[@]}; do
-		version="$ubver/mongodb-org/$mgver"
-		apt-download-binary ${base_url} "$version" "multiverse" "amd64" "${UBUNTU_PATH}" || true
-		apt-download-binary ${base_url} "$version" "multiverse" "i386" "${UBUNTU_PATH}" || true
-	done
-	mg_basepath="${UBUNTU_PATH}/dists/$ubver/mongodb-org"
-	[ -e ${mg_basepath}/stable ] || (cd ${mg_basepath}; ln -s ${STABLE_VERSION} stable)
+base_url="http://repo.mongodb.org"
+for mgver in ${MONGO_VERSIONS[@]}; do
+	"$apt_sync" "$BASE_URL/apt/ubuntu" "@{ubuntu-lts}/mongodb-org/$mgver" multiverse amd64,i386 "$UBUNTU_PATH"
+	"$apt_sync" "$BASE_URL/apt/debian" "@{debian-current}/mongodb-org/$mgver" main amd64,i386 "$DEBIAN_PATH"
 done
-echo "Ubuntu finished"
-
-base_url="http://repo.mongodb.org/apt/debian"
-for dbver in ${DEBIAN_VERSIONS[@]}; do
-	for mgver in ${MONGO_VERSIONS[@]}; do
-		version="$dbver/mongodb-org/$mgver"
-		apt-download-binary ${base_url} "$version" "main" "amd64" "${DEBIAN_PATH}" || true
-		apt-download-binary ${base_url} "$version" "main" "i386" "${DEBIAN_PATH}" || true
-	done
-	mg_basepath="${DEBIAN_PATH}/dists/$dbver/mongodb-org"
-	[ -e ${mg_basepath}/stable ] || (cd ${mg_basepath}; ln -s ${STABLE_VERSION} stable)
-done
-echo "Debian finished"
+echo "APT finished"
 
 
 # vim: ts=4 sts=4 sw=4

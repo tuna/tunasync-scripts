@@ -3,6 +3,7 @@ import hashlib
 import traceback
 import json
 import os
+import re
 import shutil
 import subprocess as sp
 import tempfile
@@ -16,6 +17,8 @@ OS_TEMPLATE = {
     'debian-current': ["jessie", "stretch", "buster"],
 }
 
+pattern_os_template = re.compile(r"@\{(.+)\}")
+
 apt_download = Path(__file__).parent / "helpers" / "apt-download-binary"
 if not apt_download.is_file():
     raise OSError(f"File not found: {apt_download}")
@@ -28,7 +31,11 @@ def check_args(prop: str, lst: List[str]):
 def replace_os_template(os_list: List[str]) -> List[str]:
     ret = []
     for i in os_list:
-        if i.startswith('@'):
+        matched = pattern_os_template.search(i)
+        if matched:
+            for os in OS_TEMPLATE[matched.group(1)]:
+                ret.append(pattern_os_template.sub(os, i))
+        elif i.startswith('@'):
             ret.extend(OS_TEMPLATE[i[1:]])
         else:
             ret.append(i)
@@ -68,10 +75,10 @@ def main():
                     os, comp, arch,
                     str(args.working_dir.absolute()),
                     filelist[1] ]
-                # print(shell_args)
-                ret = sp.run(shell_args)
-                if ret.returncode != 0:
-                    failed.append((os, comp, arch))
+                print(shell_args)
+                # ret = sp.run(shell_args)
+                # if ret.returncode != 0:
+                #     failed.append((os, comp, arch))
     if len(failed) > 0:
         print("Failed APT repos: ", failed)
     if args.delete:
