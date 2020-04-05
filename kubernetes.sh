@@ -4,9 +4,7 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+apt_sync="${_here}/apt-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.cloud.google.com"}
@@ -14,23 +12,14 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.cloud.google.com"}
 YUM_PATH="${BASE_PATH}/yum/repos"
 APT_PATH="${BASE_PATH}/apt"
 
-APT_VERSIONS=(kubernetes-jessie kubernetes-stretch kubernetes-trusty kubernetes-xenial minikube-jessie minikube-trusty)
+APT_VERSIONS=kubernetes-jessie,kubernetes-stretch,kubernetes-trusty,kubernetes-xenial,minikube-jessie,minikube-trusty
 EL_VERSIONS=(kubernetes-el7-aarch64 kubernetes-el7-armhfp kubernetes-el7-x86_64)
 
 mkdir -p ${YUM_PATH} ${APT_PATH}
 
 
 # =================== APT repos ===============================
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
-base_url="${BASE_URL}/apt"
-for version in ${APT_VERSIONS[@]}; do
-	for arch in "amd64" "i386" "arm64" "armhf"; do
-		echo "=== Syncing $version $arch"
-		apt-download-binary ${base_url} "$version" "main" "$arch" "${APT_PATH}" || true
-	done
-done
+"$apt_sync" "${BASE_URL}/apt" $APT_VERSIONS main amd64,i386,armhf,arm64 "$APT_PATH"
 echo "APT finished"
 
 # =================== YUM/DNF repos ==========================

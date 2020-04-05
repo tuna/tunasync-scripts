@@ -4,27 +4,14 @@ set -e
 set -o pipefail
 
 _here=`dirname $(realpath $0)`
-. ${_here}/helpers/apt-download
-
-[ -z "${LOADED_APT_DOWNLOAD}" ] && (echo "failed to load apt-download"; exit 1)
+apt_sync="${_here}/apt-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://packages.ros.org/ros2"}
 
 APT_PATH="${BASE_PATH}/ubuntu"
-
-APT_VERSIONS=(bionic buster cosmic disco eoan focal stretch xenial)
+APT_VERSIONS=@ubuntu-lts,disco,eoan,focal,@debian-current
 
 # =================== APT repos ===============================
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
-mkdir -p ${APT_PATH}
-base_url="${BASE_URL}/ubuntu"
-for version in ${APT_VERSIONS[@]}; do
-	for arch in "amd64" "arm64" "armhf"; do
-		echo "=== Syncing $version $arch"
-		apt-download-binary "${base_url}" "$version" "main" "$arch" "${APT_PATH}" || true
-	done
-done
+"$apt_sync" "${BASE_URL}/ubuntu" $APT_VERSIONS main amd64,armhf,arm64 "$APT_PATH"
 echo "APT finished"
