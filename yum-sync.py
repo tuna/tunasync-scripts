@@ -63,11 +63,12 @@ def main():
                 name = substitute_vars(args.repo_name, vardict)
                 url = substitute_vars(args.base_url, vardict)
                 try:
-                    r = requests.head((url+"/repodata/repomd.xml").replace("//", "/"), timeout=(7,7))
+                    probe_url = url + ('' if url.endswith('/') else '/') + "repodata/repomd.xml"
+                    r = requests.head(probe_url, timeout=(7,7))
                     if r.status_code < 400 or r.status_code == 403:
                         yield (name, url)
                     else:
-                        print(url, "->", r.status_code)
+                        print(probe_url, "->", r.status_code)
                 except:
                     traceback.print_exc()
 
