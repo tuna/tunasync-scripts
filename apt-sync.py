@@ -67,7 +67,7 @@ def main():
                     os, comp, arch,
                     str(args.working_dir.absolute()),
                     filelist[1] ]
-                print(shell_args)
+                # print(shell_args)
                 sp.run(shell_args)
     if args.delete:
         pass #TODO
