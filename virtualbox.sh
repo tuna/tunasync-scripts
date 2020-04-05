@@ -5,6 +5,7 @@ set -o pipefail
 
 _here=`dirname $(realpath $0)`
 apt_sync="${_here}/apt-sync.py" 
+yum_sync="${_here}/yum-sync.py"
 
 MAX_RETRY=${MAX_RETRY:-"3"}
 DOWNLOAD_TIMEOUT=${DOWNLOAD_TIMEOUT:-"1800"}
@@ -15,37 +16,10 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 RPM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
 
-EL_VERSIONS=("5" "6" "7" "8")
-
-mkdir -p ${RPM_PATH} ${APT_PATH}
-
 # === download rhel packages ====
-cache_dir="/tmp/yum-virtualbox-el-cache/"
-cfg="/tmp/virtualbox-el-yum.conf"
-cat <<EOF > ${cfg}
-[main]
-keepcache=0
 
-EOF
-
-for releasever in ${EL_VERSIONS[@]}; do
-cat <<EOF >> ${cfg}
-[el${releasever}]
-name=Oracle Linux / RHEL / CentOS-5 / x86_64 - VirtualBox
-baseurl=${BASE_URL}/rpm/el/$releasever/x86_64
-repo_gpgcheck=0
-gpgcheck=0
-enabled=1
-EOF
-done
-
-if [[ -z ${DRY_RUN:-} ]]; then
-	reposync -c $cfg -d -p ${RPM_PATH} -e $cache_dir
-	for releasever in ${EL_VERSIONS[@]}; do
-		createrepo --update -v -c $cache_dir -o ${RPM_PATH}/el$releasever ${RPM_PATH}/el$releasever
-	done
-fi
-rm $cfg
+"$yum_sync" "${BASE_URL}/rpm/el/@{os_ver}/@{arch}" 5-8 VirtualBox x86_64 "el@{os_ver}" "$YUM_PATH"
+echo "YUM finished"
 
 # === download deb packages ====
 
