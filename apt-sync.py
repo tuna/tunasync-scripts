@@ -57,6 +57,7 @@ def main():
 
     args.working_dir.mkdir(parents=True, exist_ok=True)
     filelist = tempfile.mkstemp()
+    failed = []
 
     for os in os_list:
         for comp in component_list:
@@ -68,7 +69,11 @@ def main():
                     str(args.working_dir.absolute()),
                     filelist[1] ]
                 # print(shell_args)
-                sp.run(shell_args)
+                ret = sp.run(shell_args)
+                if ret.returncode != 0:
+                    failed.append((os, comp, arch))
+    if len(failed) > 0:
+        print("Failed APT repos: ", failed)
     if args.delete:
         pass #TODO
 
