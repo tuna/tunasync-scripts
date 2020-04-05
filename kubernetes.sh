@@ -21,5 +21,5 @@ echo "APT finished"
 
 # =================== YUM/DNF repos ==========================
 
-"$yum_sync" "${BASE_URL}/yum/repos/@{os_ver}/" 7 kubernetes x86_64,armhfp,aarch64 "@{comp}-el@{os_ver}-@{arch}" "$YUM_PATH"
+"$yum_sync" "${BASE_URL}/yum/repos/@{comp}-el@{os_ver}-@{arch}/" 7 kubernetes x86_64,armhfp,aarch64 "@{comp}-el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"

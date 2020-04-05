@@ -63,9 +63,11 @@ def main():
                 name = substitute_vars(args.repo_name, vardict)
                 url = substitute_vars(args.base_url, vardict)
                 try:
-                    r = requests.head(url, timeout=(7,7))
+                    r = requests.head((url+"/repodata/repomd.xml").replace("//", "/"), timeout=(7,7))
                     if r.status_code < 400 or r.status_code == 403:
                         yield (name, url)
+                    else:
+                        print(url, "->", r.status_code)
                 except:
                     traceback.print_exc()
 
@@ -92,7 +94,7 @@ enabled=1
 
         if len(dest_dirs) == 0:
             print("Nothing to sync")
-            failed.append((name, arch))
+            failed.append(('', arch))
             continue
 
         cmd_args = ["reposync", "-a", arch, "-c", conf.name, "-d", "-p", str(args.working_dir.absolute()), "-e", cache_dir]
