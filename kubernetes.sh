@@ -13,8 +13,6 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.cloud.google.com"}
 YUM_PATH="${BASE_PATH}/yum/repos"
 APT_PATH="${BASE_PATH}/apt"
 
-EL_VERSIONS=(kubernetes-el7-aarch64 kubernetes-el7-armhfp kubernetes-el7-x86_64)
-
 # =================== APT repos ===============================
 "$apt_sync" "${BASE_URL}/apt" "kubernetes-@{debian-current},kubernetes-@{ubuntu-lts}" main amd64,i386,armhf,arm64 "$APT_PATH"
 echo "APT finished"

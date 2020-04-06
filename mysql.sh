@@ -34,7 +34,7 @@ echo "Debian finished"
 
 # =================== YUM/DNF repos ==========================
 COMPONENTS="mysql-connectors-community,mysql-tools-community,mysql-8.0-community,mysql-5.6-community,mysql-5.7-community"
-"$yum_sync" "${BASE_URL}/yum/@{comp}/el/@{os_ver}/@{arch}/" 6-8 "$COMPONENTS" x86_64,aarch64 "@{comp}-el@{os_ver}" "$YUM_PATH"
+"$yum_sync" "${BASE_URL}/yum/@{comp}/el/@{os_ver}/@{arch}/" 6-8 "$COMPONENTS" x86_64,aarch64 "@{comp}-el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
 # --------- dev.mysql.com --------
