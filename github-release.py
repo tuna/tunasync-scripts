@@ -32,6 +32,7 @@ REPOS = [
     {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
     "FreeCAD/FreeCAD",
     "goharbor/harbor",
+    {"repo": "xueruini/thuthesis", "flat": True},
 ]
 
 # connect and read timeout value
