@@ -417,8 +417,14 @@ def garbage_collect():
 
         if DELETE_OLD:
             narinfo = parse_narinfo(path.read_text())
-            path.unlink(missing_ok=True)
-            (working_dir / STORE_DIR / narinfo['URL']).unlink(missing_ok=True)
+            try:
+                path.unlink()
+            except:
+                pass
+            try:
+                (working_dir / STORE_DIR / narinfo['URL']).unlink()
+            except:
+                pass
 
     if DELETE_OLD:
         logging.info(f'  - {deleted} paths deleted')
