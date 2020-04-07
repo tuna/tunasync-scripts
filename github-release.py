@@ -31,6 +31,7 @@ REPOS = [
     "kubernetes/minikube",
     {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
     "FreeCAD/FreeCAD",
+    "goharbor/harbor",
 ]
 
 # connect and read timeout value

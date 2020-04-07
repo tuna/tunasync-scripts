@@ -80,7 +80,7 @@ def main():
                 if ret.returncode != 0:
                     failed.append((os, comp, arch))
     if len(failed) > 0:
-        print("Failed APT repos: ", failed)
+        print(f"Failed APT repos of {args.base_url}: ", failed)
     if args.delete:
         pass #TODO
 
