@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import threading
 import queue
 import traceback
@@ -52,7 +53,11 @@ class RemoteSite:
             yield base_url
             return
 
-        r = requests.get(base_url, timeout=TIMEOUT_OPTION)
+        try:
+            r = requests.get(base_url, timeout=TIMEOUT_OPTION)
+        except:
+            print("Panic: failed to get file list");
+            sys.exit(1)
         if not r.ok:
             return
 
