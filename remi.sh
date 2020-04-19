@@ -8,7 +8,7 @@ set -o pipefail
 UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"rsync://rpms.remirepo.net"}
 REPOS=("enterprise" "fedora")
 
-RSYNC_OPTS="-aHvh --no-o --no-g --stats --exclude .~tmp~/ --delete --delete-after --delay-updates --safe-links --timeout=120 --contimeout=120"
+RSYNC_OPTS="-aHvh --no-o --no-g --stats --exclude .~tmp~/ --delete --delete-excluded --delete-after --delay-updates --safe-links --timeout=120 --contimeout=120"
 
 USE_IPV6=${USE_IPV6:-"0"}
 if [[ $USE_IPV6 == "1" ]]; then
