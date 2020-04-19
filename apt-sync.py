@@ -85,7 +85,8 @@ def move_files_in(src: Path, dst: Path):
     for file in src.glob('*'):
         empty = False
         print(f"moving {file} to {dst}")
-        shutil.move(str(file), str(dst))
+        # shutil.move(str(file), str(dst))
+        file.rename(dst / file.name) # Overwrite files
     if empty:
         print(f"{src} is empty")
 
