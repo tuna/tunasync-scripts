@@ -4,13 +4,10 @@
 DEST_DIR="${TUNASYNC_WORKING_DIR}"
 SYNC_FLUTTER_ENGINES=latest_tags
 
-mkdir -p "${DEST_DIR}/download.flutter.io" \
-    "${DEST_DIR}/dart-archive/channels/stable/release" \
+mkdir "${DEST_DIR}/dart-archive/channels/stable/release" \
     "${DEST_DIR}/flutter_infra/releases" \
     2>/dev/null || true
 
-gsutil rsync -d -C -r gs://download.flutter.io/ \
-    "${DEST_DIR}/download.flutter.io"
 gsutil rsync -d -C -r -x '(1\..+/|\d{5}/|.+/api-docs)' gs://dart-archive/channels/stable/release \
     "${DEST_DIR}/dart-archive/channels/stable/release"
 gsutil rsync -d -C -r -x '(dev|beta)' gs://flutter_infra/releases \
@@ -60,7 +57,8 @@ done
 
 for path in "flutter_infra/ios-usb-dependencies" \
             "flutter_infra/flutter/fonts" \
-            "flutter_infra/gradle-wrapper"
+            "flutter_infra/gradle-wrapper" \
+            "download.flutter.io"
 do
     mkdir -p "${DEST_DIR}/$path" 2>/dev/null || true
     gsutil rsync -d -C -r "gs://$path" "${DEST_DIR}/$path"
