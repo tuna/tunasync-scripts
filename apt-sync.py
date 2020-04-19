@@ -164,6 +164,8 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     err = 0
     deb_count = 0
     for pkg in pkgidx_content.split('\n\n'):
+        if len(pkg) < 10: # ignore blanks
+            continue
         try:
             pkg_filename = pattern_package_name.search(pkg).group(1)
             pkg_size = int(pattern_package_size.search(pkg).group(1))
