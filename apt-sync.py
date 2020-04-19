@@ -119,12 +119,14 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                 if len(fields) != 3 or len(fields[0]) != 64: # 64 is SHA-256 checksum length
                     break
                 checksum, filesize, filename = tuple(fields)
-                if not (filename.startswith(f"{repo}/binary-{arch}") or \
-                    filename.startswith(f"{repo}/Contents-{arch}") or \
-                    filename.startswith(f"Contents-{arch}") ):
+                if filename.startswith(f"{repo}/binary-{arch}/") or \
+                   filename.startswith(f"{repo}/Contents-{arch}") or \
+                   filename.startswith(f"Contents-{arch}"):
+                    fn = Path(filename)
+                    pkgidx_file = dist_dir / fn.parent / ".tmp" / fn.name
+                else:
                     print(f"Ignore the file {filename}")
                     continue
-                pkgidx_file = dist_tmp_dir / filename
                 pkglist_url = f"{base_url}/dists/{dist}/{filename}"
                 if check_and_download(pkglist_url, pkgidx_file) != 0:
                     print("Failed to download:", pkglist_url)
