@@ -13,7 +13,7 @@ import gzip
 import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, IO
 
 import requests
 
@@ -67,8 +67,8 @@ def check_and_download(url: str, dst_file: Path)->int:
             if remote_ts is not None:
                 os.utime(dst_file, (remote_ts, remote_ts))
         return 0
-    except:
-        traceback.print_exc()
+    except BaseException as e:
+        print(e)
         if dst_file.is_file():
             dst_file.unlink()
     return 1
@@ -76,7 +76,7 @@ def check_and_download(url: str, dst_file: Path)->int:
 def mkdir_with_dot_tmp(folder: Path)->Tuple[Path, Path]:
     tmpdir = folder / ".tmp"
     if tmpdir.is_dir():
-        shutil.rmtree(tmpdir)
+        shutil.rmtree(str(tmpdir))
     tmpdir.mkdir(parents=True, exist_ok=True)
     return (folder, tmpdir)
 
@@ -84,12 +84,12 @@ def move_files_in(src: Path, dst: Path):
     empty = True
     for file in src.glob('*'):
         empty = False
-        print(f"move {file} to {dst}")
-        shutil.move(file, dst)
+        print(f"moving {file} to {dst}")
+        shutil.move(str(file), str(dst))
     if empty:
-        raise ValueError(f"{src} is empty")
+        print(f"{src} is empty")
 
-def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Path, filelist: str = '/dev/null')->int:
+def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Path, filelist: IO[str])->int:
     if not dest_base_dir.is_dir():
         print("Destination directory is empty, cannot continue")
         return 1
@@ -128,7 +128,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                     pkglist_url = f"{base_url}/dists/{dist}/{filename}"
                     if check_and_download(pkglist_url, pkgidx_file) != 0:
                         print("Failed to download:", pkglist_url)
-                        return 1
+                        continue
                     
                     with pkgidx_file.open('rb') as t: content = t.read()
                     if len(content) != int(filesize):
@@ -161,6 +161,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
 
     # Download packages
     err = 0
+    deb_count = 0
     for pkg in pkgidx_content.split('\n\n'):
         try:
             pkg_filename = pattern_package_name.search(pkg).group(1)
@@ -172,6 +173,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             err = 1
             continue
         
+        filelist.write(pkg_filename + '\n')
         dest_filename = dest_base_dir / pkg_filename
         dest_dir = dest_filename.parent
         if not dest_dir.is_dir():
@@ -198,11 +200,17 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         else:
             print(f"Failed to download {dest_filename}")
             err = 1
-
+        deb_count += 1
+        # if deb_count == 2:
+        #     break
     try:
         move_files_in(pkgidx_tmp_dir, pkgidx_dir)
         move_files_in(comp_tmp_dir, comp_dir)
         move_files_in(dist_tmp_dir, dist_dir)
+
+        shutil.rmtree(str(pkgidx_tmp_dir))
+        shutil.rmtree(str(comp_tmp_dir))
+        shutil.rmtree(str(dist_tmp_dir))
     except:
         traceback.print_exc()
         return 1
@@ -252,8 +260,9 @@ def main():
                 # ret = sp.run(shell_args)
                 # if ret.returncode != 0:
                 #     failed.append((os, comp, arch))
-                if apt_mirror(args.base_url, os, comp, arch, args.working_dir, filelist[1]) != 0:
-                    failed.append((os, comp, arch))
+                with open(filelist[1], "w") as pkg_file_list:
+                    if apt_mirror(args.base_url, os, comp, arch, args.working_dir, pkg_file_list) != 0:
+                        failed.append((os, comp, arch))
     if len(failed) > 0:
         print(f"Failed APT repos of {args.base_url}: ", failed)
     if args.delete:
