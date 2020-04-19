@@ -1,4 +1,6 @@
 #!/bin/bash
+# ftpsync wrapper for tunasync
+# requires: ftpsync, rsync
 set -e 
 set -o pipefail
 set -u
