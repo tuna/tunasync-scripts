@@ -10,6 +10,7 @@ import tempfile
 import argparse
 import bz2
 import gzip
+import lzma
 import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -141,7 +142,9 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                     if pkgidx_content is None:
                         print("getting packages index content")
                         suffix = pkgidx_file.suffix
-                        if suffix == '.bz2':
+                        if suffix == '.xz':
+                            pkgidx_content = lzma.decompress(content).decode('utf-8')
+                        elif suffix == '.bz2':
                             pkgidx_content = bz2.decompress(content).decode('utf-8')
                         elif suffix == '.gz':
                             pkgidx_content = gzip.decompress(content).decode('utf-8')
