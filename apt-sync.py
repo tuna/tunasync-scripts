@@ -14,7 +14,7 @@ import lzma
 import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import List, Tuple, IO
+from typing import List, Set, Tuple, IO
 
 import requests
 
@@ -91,7 +91,7 @@ def move_files_in(src: Path, dst: Path):
     if empty:
         print(f"{src} is empty")
 
-def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Path, filelist: IO[str])->int:
+def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Path, deb_set: Set[str])->int:
     if not dest_base_dir.is_dir():
         print("Destination directory is empty, cannot continue")
         return 1
@@ -182,11 +182,12 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             err = 1
             continue
         
-        filelist.write(pkg_filename + '\n')
         dest_filename = dest_base_dir / pkg_filename
         dest_dir = dest_filename.parent
         if not dest_dir.is_dir():
             dest_dir.mkdir(parents=True, exist_ok=True)
+        if dest_filename.suffix == '.deb':
+            deb_set.add(str(dest_filename.relative_to(dest_base_dir)))
         if dest_filename.is_file() and dest_filename.stat().st_size == pkg_size:
             print(f"Skipping {pkg_filename}, size {pkg_size}")
             continue
@@ -194,6 +195,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         pkg_url=f"{base_url}/{pkg_filename}"
         for retry in range(MAX_RETRY):
             print(f"downloading {pkg_url} to {dest_filename}")
+            # break # dry run
             if check_and_download(pkg_url, dest_filename) != 0:
                 continue
 
@@ -211,8 +213,6 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             err = 1
         deb_count += 1
         deb_size += pkg_size
-        # if deb_count == 2:
-        #     break
     try:
         move_files_in(pkgidx_tmp_dir, pkgidx_dir)
         move_files_in(comp_tmp_dir, comp_dir)
@@ -229,6 +229,19 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     print(f"{deb_count} packages, {deb_size} bytes in total")
     return err
 
+def apt_delete_old_debs(dest_base_dir: Path, remote_set: Set[str], dry_run: bool):
+    on_disk = set([
+        str(i.relative_to(dest_base_dir)) for i in dest_base_dir.glob('**/*.deb')])
+    deleting = on_disk - remote_set
+    # print(on_disk)
+    # print(remote_set)
+    for i in deleting:
+        if dry_run:
+            print("Will delete", i)
+        else:
+            print("Deleting", i)
+            (dest_base_dir/i).unlink()
+
 def main():
 
     parser = argparse.ArgumentParser()
@@ -239,6 +252,8 @@ def main():
     parser.add_argument("working_dir", type=Path, help="working directory")
     parser.add_argument("--delete", action='store_true',
                         help='delete unreferenced package files')
+    parser.add_argument("--delete-dry-run", action='store_true',
+                        help='print package files to be deleted only')
     args = parser.parse_args()
 
     os_list = args.os_version.split(',')
@@ -251,33 +266,20 @@ def main():
     os_list = replace_os_template(os_list)
 
     args.working_dir.mkdir(parents=True, exist_ok=True)
-    filelist = tempfile.mkstemp()
     failed = []
-
-    # apt_download = Path(__file__).parent / "helpers" / "apt-download-binary"
-    # if not apt_download.is_file():
-    #     raise OSError(f"File not found: {apt_download}")
+    deb_set = set()
 
     for os in os_list:
         for comp in component_list:
             for arch in arch_list:
-                # shell_args = [
-                #     str(apt_download.absolute()),
-                #     args.base_url,
-                #     os, comp, arch,
-                #     str(args.working_dir.absolute()),
-                #     filelist[1] ]
-                # # print(shell_args)
-                # ret = sp.run(shell_args)
-                # if ret.returncode != 0:
-                #     failed.append((os, comp, arch))
-                with open(filelist[1], "w") as pkg_file_list:
-                    if apt_mirror(args.base_url, os, comp, arch, args.working_dir, pkg_file_list) != 0:
-                        failed.append((os, comp, arch))
+                if apt_mirror(args.base_url, os, comp, arch, args.working_dir, deb_set=deb_set) != 0:
+                    failed.append((os, comp, arch))
     if len(failed) > 0:
         print(f"Failed APT repos of {args.base_url}: ", failed)
-    if args.delete:
-        pass #TODO
+        return
+    if args.delete or args.delete_dry_run:
+        print("Deleting debs not in the index")
+        apt_delete_old_debs(args.working_dir, deb_set, args.delete_dry_run)
 
 if __name__ == "__main__":
     main()
