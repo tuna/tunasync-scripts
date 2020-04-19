@@ -6,7 +6,7 @@ apt_sync="${_here}/apt-sync.py"
 
 WORKING_DIR="${TUNASYNC_WORKING_DIR}"
 
-ARCH_LIST="aarch64,all,arm,i686,x86_64"
+ARCH_LIST="aarch64,arm,i686,x86_64"
 
 "$apt_sync" --delete-dry-run "https://dl.bintray.com/termux/termux-packages-24"       stable main    $ARCH_LIST "${WORKING_DIR}/termux-packages-24" 
 "$apt_sync" --delete-dry-run "https://dl.bintray.com/xeffyr/unstable-packages"        unstable main  $ARCH_LIST "${WORKING_DIR}/unstable-packages" 
