@@ -218,9 +218,9 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         move_files_in(comp_tmp_dir, comp_dir)
         move_files_in(dist_tmp_dir, dist_dir)
 
-        shutil.rmtree(str(pkgidx_tmp_dir))
-        shutil.rmtree(str(comp_tmp_dir))
-        shutil.rmtree(str(dist_tmp_dir))
+        pkgidx_tmp_dir.rmdir()
+        comp_tmp_dir.rmdir()
+        dist_tmp_dir.rmdir()
     except:
         traceback.print_exc()
         return 1
