@@ -106,11 +106,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         return 1
     check_and_download(f"{base_url}/dists/{dist}/Release.gpg",dist_tmp_dir / "Release.gpg")
 
-	# download Contents files
     comp_dir,comp_tmp_dir = mkdir_with_dot_tmp(dist_dir / repo)
-    check_and_download(f"{base_url}/dists/{dist}/{repo}/Contents-{arch}", comp_tmp_dir/f"Contents-{arch}")
-    check_and_download(f"{base_url}/dists/{dist}/{repo}/Contents-{arch}.gz", comp_tmp_dir/f"Contents-{arch}.gz")
-    check_and_download(f"{base_url}/dists/{dist}/{repo}/Contents-{arch}.bz2", comp_tmp_dir/f"Contents-{arch}.bz2")
 
 	# load Package Index URLs from the Release file
     release_file = dist_tmp_dir / "Release"
@@ -124,32 +120,36 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                 if len(fields) != 3 or len(fields[0]) != 64: # 64 is SHA-256 checksum length
                     break
                 checksum, filesize, filename = tuple(fields)
-                if filename.startswith(f"{repo}/binary-{arch}"):
-                    pkgidx_filename = Path(filename).name # base name
-                    pkgidx_file = pkgidx_tmp_dir / pkgidx_filename
-                    pkglist_url = f"{base_url}/dists/{dist}/{filename}"
-                    if check_and_download(pkglist_url, pkgidx_file) != 0:
-                        print("Failed to download:", pkglist_url)
-                        continue
-                    
-                    with pkgidx_file.open('rb') as t: content = t.read()
-                    if len(content) != int(filesize):
-                        print(f"Invalid size of {pkgidx_file}, expected {filesize}")
-                        return 1
-                    if hashlib.sha256(content).hexdigest() != checksum:
-                        print(f"Invalid checksum of {pkgidx_file}, expected {checksum}")
-                        return 1
-                    if pkgidx_content is None:
-                        print("getting packages index content")
-                        suffix = pkgidx_file.suffix
-                        if suffix == '.xz':
-                            pkgidx_content = lzma.decompress(content).decode('utf-8')
-                        elif suffix == '.bz2':
-                            pkgidx_content = bz2.decompress(content).decode('utf-8')
-                        elif suffix == '.gz':
-                            pkgidx_content = gzip.decompress(content).decode('utf-8')
-                        elif suffix == '':
-                            pkgidx_content = content.decode('utf-8')
+                if not (filename.startswith(f"{repo}/binary-{arch}") or \
+                    filename.startswith(f"{repo}/Contents")):
+                    print(f"Ignore the file {filename}")
+                    continue
+                pkgidx_file = dist_tmp_dir / filename
+                pkglist_url = f"{base_url}/dists/{dist}/{filename}"
+                if check_and_download(pkglist_url, pkgidx_file) != 0:
+                    print("Failed to download:", pkglist_url)
+                    continue
+                
+                with pkgidx_file.open('rb') as t: content = t.read()
+                if len(content) != int(filesize):
+                    print(f"Invalid size of {pkgidx_file}, expected {filesize}")
+                    return 1
+                if hashlib.sha256(content).hexdigest() != checksum:
+                    print(f"Invalid checksum of {pkgidx_file}, expected {checksum}")
+                    return 1
+                if pkgidx_content is None and pkgidx_file.stem == 'Packages':
+                    print(f"getting packages index content from {pkgidx_file.name}")
+                    suffix = pkgidx_file.suffix
+                    if suffix == '.xz':
+                        pkgidx_content = lzma.decompress(content).decode('utf-8')
+                    elif suffix == '.bz2':
+                        pkgidx_content = bz2.decompress(content).decode('utf-8')
+                    elif suffix == '.gz':
+                        pkgidx_content = gzip.decompress(content).decode('utf-8')
+                    elif suffix == '':
+                        pkgidx_content = content.decode('utf-8')
+                    else:
+                        print("unsupported format")
 
             # Currently only support SHA-256 checksum, because
             # "Clients may not use the MD5Sum and SHA1 fields for security purposes, and must require a SHA256 or a SHA512 field."
