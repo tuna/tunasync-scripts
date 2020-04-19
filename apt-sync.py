@@ -181,6 +181,8 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             traceback.print_exc()
             err = 1
             continue
+        deb_count += 1
+        deb_size += pkg_size
         
         dest_filename = dest_base_dir / pkg_filename
         dest_dir = dest_filename.parent
@@ -211,8 +213,6 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         else:
             print(f"Failed to download {dest_filename}")
             err = 1
-        deb_count += 1
-        deb_size += pkg_size
     try:
         move_files_in(pkgidx_tmp_dir, pkgidx_dir)
         move_files_in(comp_tmp_dir, comp_dir)
