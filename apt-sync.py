@@ -99,7 +99,6 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
 
 	# download Release files
     dist_dir,dist_tmp_dir = mkdir_with_dot_tmp(dest_base_dir / "dists" / dist)
-    check_and_download(f"{base_url}/dists/{dist}/Contents-{arch}.gz",dist_tmp_dir / f"Contents-{arch}.gz")
     check_and_download(f"{base_url}/dists/{dist}/InRelease",dist_tmp_dir / "InRelease")
     if check_and_download(f"{base_url}/dists/{dist}/Release",dist_tmp_dir / "Release") != 0:
         print("Invalid Repository")
@@ -121,7 +120,8 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                     break
                 checksum, filesize, filename = tuple(fields)
                 if not (filename.startswith(f"{repo}/binary-{arch}") or \
-                    filename.startswith(f"{repo}/Contents")):
+                    filename.startswith(f"{repo}/Contents-{arch}") or \
+                    filename.startswith(f"Contents-{arch}") ):
                     print(f"Ignore the file {filename}")
                     continue
                 pkgidx_file = dist_tmp_dir / filename
