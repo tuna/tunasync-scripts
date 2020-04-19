@@ -168,6 +168,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     # Download packages
     err = 0
     deb_count = 0
+    deb_size = 0
     for pkg in pkgidx_content.split('\n\n'):
         if len(pkg) < 10: # ignore blanks
             continue
@@ -209,6 +210,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             print(f"Failed to download {dest_filename}")
             err = 1
         deb_count += 1
+        deb_size += pkg_size
         # if deb_count == 2:
         #     break
     try:
@@ -224,6 +226,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         return 1
 
     print(f"Mirroring {base_url} {dist}, {repo}, {arch} done!")
+    print(f"{deb_count} packages, {deb_size} bytes in total")
     return err
 
 def main():
