@@ -102,6 +102,9 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     check_and_download(f"{base_url}/dists/{dist}/InRelease",dist_tmp_dir / "InRelease")
     if check_and_download(f"{base_url}/dists/{dist}/Release",dist_tmp_dir / "Release") != 0:
         print("Invalid Repository")
+        if not (dist_dir/"Release").is_file():
+            print(f"{dist_dir/'Release'} never existed, upstream may not provide packages for {dist}, ignore this error")
+            return 0
         return 1
     check_and_download(f"{base_url}/dists/{dist}/Release.gpg",dist_tmp_dir / "Release.gpg")
 
@@ -163,6 +166,9 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         return 1
     if pkgidx_content is None:
         print("index is empty, failed")
+        if len(list(pkgidx_dir.glob('Packages*'))) == 0:
+            print(f"{pkgidx_dir/'Packages'} never existed, upstream may not provide {dist}/{repo}/{arch}, ignore this error")
+            return 0
         return 1
 
     # Download packages
