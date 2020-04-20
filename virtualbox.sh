@@ -23,7 +23,7 @@ echo "YUM finished"
 
 # === download deb packages ====
 
-"$apt_sync" "${BASE_URL}/debian" @debian-current,@ubuntu-lts contrib,non-free amd64,i386 "$APT_PATH"
+"$apt_sync" --delete-dry-run "${BASE_URL}/debian" @debian-current,@ubuntu-lts contrib,non-free amd64,i386 "$APT_PATH"
 echo "Debian and ubuntu finished"
 
 # === download standalone packages ====

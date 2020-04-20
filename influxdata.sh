@@ -18,9 +18,9 @@ wget -O ${BASE_PATH}/influxdb.key ${BASE_URL}/influxdb.key
 
 # =================== APT repos ===============================
 
-"$apt_sync" "${BASE_URL}/ubuntu" @ubuntu-lts stable amd64,i386,armhf,arm64 "$UBUNTU_PATH"
+"$apt_sync" --delete-dry-run "${BASE_URL}/ubuntu" @ubuntu-lts stable amd64,i386,armhf,arm64 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-"$apt_sync" "${BASE_URL}/debian" @debian-current stable amd64,i386,armhf,arm64 "$DEBIAN_PATH"
+"$apt_sync" --delete-dry-run "${BASE_URL}/debian" @debian-current stable amd64,i386,armhf,arm64 "$DEBIAN_PATH"
 echo "Debian finished"
 
 

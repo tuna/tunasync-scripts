@@ -14,7 +14,7 @@ YUM_PATH="${BASE_PATH}/yum/repos"
 APT_PATH="${BASE_PATH}/apt"
 
 # =================== APT repos ===============================
-"$apt_sync" "${BASE_URL}/apt" "kubernetes-@{debian-current},kubernetes-@{ubuntu-lts}" main amd64,i386,armhf,arm64 "$APT_PATH"
+"$apt_sync" --delete-dry-run "${BASE_URL}/apt" "kubernetes-@{debian-current},kubernetes-@{ubuntu-lts}" main amd64,i386,armhf,arm64 "$APT_PATH"
 echo "APT finished"
 
 # =================== YUM/DNF repos ==========================

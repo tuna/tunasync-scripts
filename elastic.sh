@@ -19,7 +19,7 @@ APT_PATH="${BASE_PATH}/apt"
 # =================== APT repos ===============================
 
 for elsver in "${ELASTIC_VERSION[@]}"; do
-	"$apt_sync" "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
+	"$apt_sync" --delete-dry-run "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
 	
 	(cd ${BASE_PATH}/${elsver}; ln -sfn ../apt/${elsver} apt)
 done

@@ -13,5 +13,5 @@ APT_PATH="${BASE_PATH}/ubuntu"
 APT_VERSIONS=@ubuntu-lts,disco,eoan,focal,@debian-current
 
 # =================== APT repos ===============================
-"$apt_sync" "${BASE_URL}/ubuntu" $APT_VERSIONS main amd64,armhf,arm64 "$APT_PATH"
+"$apt_sync" --delete-dry-run "${BASE_URL}/ubuntu" $APT_VERSIONS main amd64,armhf,arm64 "$APT_PATH"
 echo "APT finished"

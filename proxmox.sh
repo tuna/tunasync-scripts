@@ -13,7 +13,7 @@ APT_PATH="${BASE_PATH}/debian"
 
 # === download deb packages ====
 
-"$apt_sync" "${BASE_URL}/debian" @debian-current pve-no-subscription,pvetest amd64 "$APT_PATH"
+"$apt_sync" --delete-dry-run "${BASE_URL}/debian" @debian-current pve-no-subscription,pvetest amd64 "$APT_PATH"
 echo "Debian finished"
 
 # === download standalone files ====

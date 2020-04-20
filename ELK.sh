@@ -19,9 +19,6 @@ declare -A REPO_VERSIONS=(
 )
 
 # =================== APT repos ===============================
-if [[ ! -z ${DRY_RUN:-} ]]; then
-	export APT_DRY_RUN=1
-fi
  
 for repo in "${!REPO_VERSIONS[@]}"; do
 	# magic here, don't quote ${REPO_VERSIONS[$repo][@]}
@@ -30,7 +27,7 @@ for repo in "${!REPO_VERSIONS[@]}"; do
 		echo $repo-$version
 		apt_url="${BASE_URL}/${repo}/${version}/debian"
 		dest_path="${APT_PATH}/${repo}/${version}"
-		"$apt_sync" "$apt_url" stable main amd64,i386 "$dest_path"
+		"$apt_sync" --delete-dry-run "$apt_url" stable main amd64,i386 "$dest_path"
 	done
 done
 
