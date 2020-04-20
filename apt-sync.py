@@ -19,8 +19,8 @@ from typing import List, Set, Tuple, IO
 import requests
 
 OS_TEMPLATE = {
-    'ubuntu-current': ["trusty", "xenial", "bionic", "eoan"],
-    'ubuntu-lts': ["trusty", "xenial", "bionic"],
+    'ubuntu-current': ["xenial", "bionic", "eoan", "focal"],
+    'ubuntu-lts': ["xenial", "bionic", "focal"],
     'debian-current': ["jessie", "stretch", "buster"],
 }
 MAX_RETRY=int(os.getenv('MAX_RETRY', '3'))
