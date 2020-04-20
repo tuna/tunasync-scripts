@@ -12,7 +12,7 @@ BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://repo.mysql.com"}"
 
 MYSQL_DOWNLOAD_PATH="${BASE_PATH}/downloads/"
 MYSQL_RSYNC_UPSTREAM="rsync://ftp5.gwdg.de/pub/linux/mysql/Downloads/"
-RSYNC_OPTS="-aHvh --no-o --no-g --stats --exclude .~tmp~/ --delete --delete-after --delay-updates --safe-links --timeout=120 --contimeout=120"
+RSYNC_OPTS="-aHvh --no-o --no-g --stats --exclude .~tmp~/ --delete --delete-excluded --delete-after --delay-updates --safe-links --timeout=120 --contimeout=120"
 USE_IPV6=${USE_IPV6:-"0"}
 if [[ $USE_IPV6 == "1" ]]; then
 	RSYNC_OPTS="-6 ${RSYNC_OPTS}"
