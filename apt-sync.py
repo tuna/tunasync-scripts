@@ -241,7 +241,7 @@ def apt_delete_old_debs(dest_base_dir: Path, remote_set: Set[str], dry_run: bool
     deleting = on_disk - remote_set
     # print(on_disk)
     # print(remote_set)
-    print(f"Deleting {len(deleting)} packages not in the index")
+    print(f"Deleting {len(deleting)} packages not in the index{' (dry run)' if dry_run else ''}")
     for i in deleting:
         if dry_run:
             print("Will delete", i)
