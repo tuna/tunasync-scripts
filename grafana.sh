@@ -14,7 +14,7 @@ YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
 # =================== APT repos ===============================
-"$apt_sync" --delete-dry-run "${BASE_URL}/deb" stable,beta main amd64,armhf,arm64 "$APT_PATH"
+"$apt_sync" --delete "${BASE_URL}/deb" stable,beta main amd64,armhf,arm64 "$APT_PATH"
 echo "APT finished"
 
 

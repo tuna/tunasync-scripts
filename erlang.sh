@@ -14,9 +14,9 @@ UBUNTU_PATH="${BASE_PATH}/ubuntu"
 DEBIAN_PATH="${BASE_PATH}/debian"
 
 # =================== APT repos ===============================
-"$apt_sync" --delete-dry-run "${BASE_URL}/ubuntu" @ubuntu-lts contrib amd64,i386 "$UBUNTU_PATH"
+"$apt_sync" --delete "${BASE_URL}/ubuntu" @ubuntu-lts contrib amd64,i386 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-"$apt_sync" --delete-dry-run "${BASE_URL}/debian" @debian-current contrib amd64,i386 "$DEBIAN_PATH"
+"$apt_sync" --delete "${BASE_URL}/debian" @debian-current contrib amd64,i386 "$DEBIAN_PATH"
 echo "Debian finished"
 
 # =================== YUM repos ===============================

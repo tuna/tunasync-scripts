@@ -19,7 +19,7 @@ components=${components:1}
 echo "YUM finished"
 
 for ver in ${RUDDER_VERS[@]}; do
-    "$apt_sync" --delete-dry-run "${UPSTREAM}/apt/${ver}" @ubuntu-lts,@debian-current main amd64 "$APT_PATH/${ver}"
+    "$apt_sync" --delete "${UPSTREAM}/apt/${ver}" @ubuntu-lts,@debian-current main amd64 "$APT_PATH/${ver}"
 done
 echo "APT finished"
 
