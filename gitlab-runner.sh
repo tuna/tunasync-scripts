@@ -14,12 +14,12 @@ YUM_PATH="${BASE_PATH}/yum"
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
 
-"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}" 6-8 gitlab-runner x86_64 "el@{os_ver}" "$YUM_PATH"
+"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}" 6-8 gitlab-runner x86_64,aarch64 "el@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
 
-"$apt_sync" --delete-dry-run "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386 "$UBUNTU_PATH"
+"$apt_sync" --delete "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386,arm64 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-"$apt_sync" --delete-dry-run "${UPSTREAM}/debian" @debian-current main amd64,i386 "$DEBIAN_PATH"
+"$apt_sync" --delete "${UPSTREAM}/debian" @debian-current main amd64,i386,arm64 "$DEBIAN_PATH"
 echo "Debian finished"
 
 # vim: ts=4 sts=4 sw=4
