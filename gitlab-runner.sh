@@ -14,7 +14,7 @@ YUM_PATH="${BASE_PATH}/yum"
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
 
-"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}" 6-8 gitlab-runner x86_64,aarch64 "el@{os_ver}" "$YUM_PATH"
+"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}" 6-8 gitlab-runner x86_64,aarch64 "el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
 "$apt_sync" --delete "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386,arm64 "$UBUNTU_PATH"
