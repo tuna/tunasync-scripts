@@ -69,7 +69,7 @@ def check_and_download(url: str, dst_file: Path)->int:
                 os.utime(dst_file, (remote_ts, remote_ts))
         return 0
     except BaseException as e:
-        print(e)
+        print(e, flush=True)
         if dst_file.is_file():
             dst_file.unlink()
     return 1
@@ -95,7 +95,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     if not dest_base_dir.is_dir():
         print("Destination directory is empty, cannot continue")
         return 1
-    print(f"Started mirroring {base_url} {dist}, {repo}, {arch}!")
+    print(f"Started mirroring {base_url} {dist}, {repo}, {arch}!", flush=True)
 
 	# download Release files
     dist_dir,dist_tmp_dir = mkdir_with_dot_tmp(dest_base_dir / "dists" / dist)
@@ -143,7 +143,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                     print(f"Invalid checksum of {pkgidx_file}, expected {checksum}")
                     return 1
                 if pkgidx_content is None and pkgidx_file.stem == 'Packages':
-                    print(f"getting packages index content from {pkgidx_file.name}")
+                    print(f"getting packages index content from {pkgidx_file.name}", flush=True)
                     suffix = pkgidx_file.suffix
                     if suffix == '.xz':
                         pkgidx_content = lzma.decompress(content).decode('utf-8')
@@ -183,7 +183,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             pkg_size = int(pattern_package_size.search(pkg).group(1))
             pkg_checksum = pattern_package_sha256.search(pkg).group(1)
         except:
-            print("Failed to parse one package description")
+            print("Failed to parse one package description", flush=True)
             traceback.print_exc()
             err = 1
             continue
@@ -202,7 +202,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
 
         pkg_url=f"{base_url}/{pkg_filename}"
         for retry in range(MAX_RETRY):
-            print(f"downloading {pkg_url} to {dest_filename}")
+            print(f"downloading {pkg_url} to {dest_filename}", flush=True)
             # break # dry run
             if check_and_download(pkg_url, dest_filename) != 0:
                 continue
@@ -232,7 +232,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         return 1
 
     print(f"Mirroring {base_url} {dist}, {repo}, {arch} done!")
-    print(f"{deb_count} packages, {deb_size} bytes in total")
+    print(f"{deb_count} packages, {deb_size} bytes in total", flush=True)
     return err
 
 def apt_delete_old_debs(dest_base_dir: Path, remote_set: Set[str], dry_run: bool):
@@ -241,7 +241,7 @@ def apt_delete_old_debs(dest_base_dir: Path, remote_set: Set[str], dry_run: bool
     deleting = on_disk - remote_set
     # print(on_disk)
     # print(remote_set)
-    print(f"Deleting {len(deleting)} packages not in the index{' (dry run)' if dry_run else ''}")
+    print(f"Deleting {len(deleting)} packages not in the index{' (dry run)' if dry_run else ''}", flush=True)
     for i in deleting:
         if dry_run:
             print("Will delete", i)

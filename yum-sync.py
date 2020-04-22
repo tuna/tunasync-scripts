@@ -88,17 +88,20 @@ repo_gpgcheck=0
 gpgcheck=0
 enabled=1
 ''')
-            dest_dirs.append((args.working_dir / name).absolute())
+            dst = (args.working_dir / name).absolute()
+            dst.mkdir(parents=True, exist_ok=True)
+            dest_dirs.append(dst)
         conf.flush()
         # sp.run(["cat", conf.name])
         # sp.run(["ls", "-la", cache_dir])
 
         if len(dest_dirs) == 0:
-            print("Nothing to sync")
+            print("Nothing to sync", flush=True)
             failed.append(('', arch))
             continue
 
         cmd_args = ["reposync", "-a", arch, "-c", conf.name, "-d", "-p", str(args.working_dir.absolute()), "-e", cache_dir]
+        print("Launching reposync", flush=True)
         # print(cmd_args)
         ret = sp.run(cmd_args)
         if ret.returncode != 0:
