@@ -27,10 +27,11 @@ done
 popd
 echo "YUM finished"
 
-for mgver in ${MONGO_VERSIONS[@]}; do
-	"$apt_sync" "$BASE_URL/apt/ubuntu" "@{ubuntu-lts}/mongodb-org/$mgver" multiverse amd64,i386 "$UBUNTU_PATH"
-	"$apt_sync" "$BASE_URL/apt/debian" "@{debian-current}/mongodb-org/$mgver" main amd64,i386 "$DEBIAN_PATH"
-done
+components=$(printf ",@{ubuntu-lts}/mongodb-org/%s" "${MONGO_VERSIONS[@]}")
+"$apt_sync" --delete-dry-run "$BASE_URL/apt/ubuntu" "${components:1}" multiverse amd64,i386 "$UBUNTU_PATH"
+components=$(printf ",@{debian-current}/mongodb-org/%s" "${MONGO_VERSIONS[@]}")
+"$apt_sync" --delete-dry-run "$BASE_URL/apt/debian" "${components:1}" main amd64,i386 "$DEBIAN_PATH"
+
 for dist in "$BASE_URL"/apt/*/dists/*/mongodb-org/; do
 	stable=${STABLE_VERSION}
 	if [[ $dist == *"trusty"* ||  $dist == *"jessie"* ]]; then
