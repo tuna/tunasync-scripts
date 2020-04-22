@@ -10,7 +10,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://adoptopenjdk.jfrog.io/adoptopenjdk"}
 
 # =================== APT repos ===============================
-"$apt_sync" --delete "${BASE_URL}/deb" @ubuntu-lts,@debian-current main amd64,armhf,arm64 "$BASE_PATH/apt"
+"$apt_sync" --delete "${BASE_URL}/deb" @ubuntu-lts,@debian-current main amd64,armhf,arm64 "$BASE_PATH/deb"
 echo "APT finished"
 
 # =================== YUM repos ==========================
