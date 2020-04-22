@@ -27,9 +27,9 @@ mkdir -p ${YUM_PATH} ${UBUNTU_PATH} ${DEBIAN_PATH}
 
 # =================== APT repos ===============================
 MYSQL_APT_REPOS="mysql-5.6,mysql-5.7,mysql-tools,connector-python-2.1,mysql-8.0"
-"$apt_sync" --delete-dry-run "${BASE_URL}/apt/ubuntu" @ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
+"$apt_sync" --delete "${BASE_URL}/apt/ubuntu" trusty,@ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
 echo "Ubuntu finished"
-"$apt_sync" --delete-dry-run "${BASE_URL}/apt/debian" @debian-current $MYSQL_APT_REPOS amd64,i386 "${DEBIAN_PATH}"
+"$apt_sync" --delete "${BASE_URL}/apt/debian" @debian-current $MYSQL_APT_REPOS amd64,i386 "${DEBIAN_PATH}"
 echo "Debian finished"
 
 # =================== YUM/DNF repos ==========================
