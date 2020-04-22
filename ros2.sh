@@ -10,8 +10,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://packages.ros.org/ros2"}
 
 APT_PATH="${BASE_PATH}/ubuntu"
-APT_VERSIONS=@ubuntu-lts,disco,eoan,focal,@debian-current
 
 # =================== APT repos ===============================
-"$apt_sync" --delete "${BASE_URL}/ubuntu" $APT_VERSIONS main amd64,armhf,arm64 "$APT_PATH"
+"$apt_sync" --delete "${BASE_URL}/ubuntu" @ubuntu-lts,@debian-current main amd64,armhf,arm64 "$APT_PATH"
 echo "APT finished"
