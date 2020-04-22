@@ -2,8 +2,22 @@
 # requires: curl, sha256sum, awk, jq
 set -e
 
-BASE_PATH="${TUNASYNC_WORKING_DIR}"
+_here=`dirname $(realpath $0)`
+apt_sync="${_here}/apt-sync.py" 
+yum_sync="${_here}/yum-sync.py"
 
+BASE_PATH="${TUNASYNC_WORKING_DIR}"
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://adoptopenjdk.jfrog.io/adoptopenjdk"}
+
+# =================== APT repos ===============================
+"$apt_sync" --delete "${BASE_URL}/deb" @ubuntu-lts,@debian-current main amd64,armhf,arm64 "$BASE_PATH/apt"
+echo "APT finished"
+
+# =================== YUM repos ==========================
+"$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 7-8 AdoptOpenJDK x86_64,aarch64 "centos@{os_ver}-@{arch}" "$BASE_PATH/rpm"
+echo "YUM finished"
+
+# =================== standalone ==========================
 # 参数为版本，比如8,11等
 function downloadRelease() {
   remote_filelist="$BASE_PATH/$1/filelist"
