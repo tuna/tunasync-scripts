@@ -57,12 +57,11 @@ def check_file(dest_filename: Path, pkg_checksum: str, size: int)->bool:
         return False
     return True
 
-def download_release(ver: int, jvm_impl: str):
+def download_release(ver: int, jvm_impl: str, alive_files: Set[str]):
     r = requests.get(f"https://api.adoptopenjdk.net/v3/assets/latest/{ver}/{jvm_impl}", timeout=(5, 10))
     r.raise_for_status()
     rel_list = r.json()
     rel_path = Path(BASE_PATH) / str(ver)
-    alive_files = set()
     for rel in rel_list:
         binary = rel['binary']
         if binary['image_type'] not in ('jre', 'jdk'): continue
@@ -86,6 +85,8 @@ def download_release(ver: int, jvm_impl: str):
             else:
                 print(f"Failed to download {meta['link']}", flush=True)
 
+def delete_old_files(ver: int, alive_files: Set[str]):
+    rel_path = Path(BASE_PATH) / str(ver)
     on_disk = set([
         str(i.relative_to(rel_path)) for i in rel_path.glob('**/*.*')])
     deleting = on_disk - alive_files
@@ -100,8 +101,10 @@ if __name__ == "__main__":
     here = Path(os.path.abspath(__file__)).parent
     # =================== standalone ==========================
     for v in FEATURE_VERSIONS:
+        filelist = set()
         for jvm in ('hotspot', 'openj9'):
-            download_release(v, jvm)
+            download_release(v, jvm, filelist)
+        delete_old_files(v, filelist)
     # =================== APT repos ==========================
     # "$apt_sync" --delete "${BASE_URL}/deb" @ubuntu-lts,@debian-current main amd64,armhf,arm64 "$BASE_PATH/deb"
     sp.run([str(here/"apt-sync.py"),
