@@ -30,6 +30,7 @@ pattern_os_template = re.compile(r"@\{(.+)\}")
 pattern_package_name = re.compile(r"^Filename: (.+)$", re.MULTILINE)
 pattern_package_size = re.compile(r"^Size: (\d+)$", re.MULTILINE)
 pattern_package_sha256 = re.compile(r"^SHA256: (\w{64})$", re.MULTILINE)
+download_cache = dict()
 
 def check_args(prop: str, lst: List[str]):
     for s in lst:
@@ -49,8 +50,15 @@ def replace_os_template(os_list: List[str]) -> List[str]:
             ret.append(i)
     return ret
 
-def check_and_download(url: str, dst_file: Path)->int:
+def check_and_download(url: str, dst_file: Path, caching = False)->int:
     try:
+        if caching:
+            if url in download_cache:
+                print(f"Using cached content: {url}", flush=True)
+                with dst_file.open('wb') as f:
+                    f.write(download_cache[url])
+                return 0
+            download_cache[url] = bytes()
         start = time.time()
         with requests.get(url, stream=True, timeout=(5, 10)) as r:
             r.raise_for_status()
@@ -61,10 +69,12 @@ def check_and_download(url: str, dst_file: Path)->int:
 
             with dst_file.open('wb') as f:
                 for chunk in r.iter_content(chunk_size=1024**2):
-                    if chunk:  # filter out keep-alive new chunks
-                        f.write(chunk)
                     if time.time() - start > DOWNLOAD_TIMEOUT:
                         raise TimeoutError("Download timeout")
+                    if not chunk: continue # filter out keep-alive new chunks
+
+                    f.write(chunk)
+                    if caching: download_cache[url] += chunk
             if remote_ts is not None:
                 os.utime(dst_file, (remote_ts, remote_ts))
         return 0
@@ -72,6 +82,7 @@ def check_and_download(url: str, dst_file: Path)->int:
         print(e, flush=True)
         if dst_file.is_file():
             dst_file.unlink()
+        del download_cache[url]
     return 1
 
 def mkdir_with_dot_tmp(folder: Path)->Tuple[Path, Path]:
@@ -99,14 +110,14 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
 
 	# download Release files
     dist_dir,dist_tmp_dir = mkdir_with_dot_tmp(dest_base_dir / "dists" / dist)
-    check_and_download(f"{base_url}/dists/{dist}/InRelease",dist_tmp_dir / "InRelease")
-    if check_and_download(f"{base_url}/dists/{dist}/Release",dist_tmp_dir / "Release") != 0:
+    check_and_download(f"{base_url}/dists/{dist}/InRelease",dist_tmp_dir / "InRelease", caching=True)
+    if check_and_download(f"{base_url}/dists/{dist}/Release",dist_tmp_dir / "Release", caching=True) != 0:
         print("Invalid Repository")
         if not (dist_dir/"Release").is_file():
             print(f"{dist_dir/'Release'} never existed, upstream may not provide packages for {dist}, ignore this error")
             return 0
         return 1
-    check_and_download(f"{base_url}/dists/{dist}/Release.gpg",dist_tmp_dir / "Release.gpg")
+    check_and_download(f"{base_url}/dists/{dist}/Release.gpg",dist_tmp_dir / "Release.gpg", caching=True)
 
     comp_dir,comp_tmp_dir = mkdir_with_dot_tmp(dist_dir / repo)
 
