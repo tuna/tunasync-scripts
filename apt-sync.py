@@ -80,9 +80,8 @@ def check_and_download(url: str, dst_file: Path, caching = False)->int:
         return 0
     except BaseException as e:
         print(e, flush=True)
-        if dst_file.is_file():
-            dst_file.unlink()
-        del download_cache[url]
+        if dst_file.is_file(): dst_file.unlink()
+        if url in download_cache: del download_cache[url]
     return 1
 
 def mkdir_with_dot_tmp(folder: Path)->Tuple[Path, Path]:
