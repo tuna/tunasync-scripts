@@ -8,7 +8,8 @@ function repo_init() {
 function update_repo_git() {
 	cd $TUNASYNC_WORKING_DIR
 	echo "==== SYNC repo.git START ===="
-	/usr/bin/timeout -s INT 3600 git remote -v update
+	/usr/bin/timeout -s INT 3600 git remote -v update -p
+	git remote set-head origin --auto
 	git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
 	sz=$(($sz*1024))

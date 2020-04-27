@@ -9,7 +9,8 @@ function update_homebrew_git() {
 	repo_dir="$1"
 	cd $repo_dir
 	echo "==== SYNC $repo_dir START ===="
-	/usr/bin/timeout -s INT 3600 git remote -v update
+	/usr/bin/timeout -s INT 3600 git remote -v update -p
+	git remote set-head origin --auto
 	objs=$(find objects/ -type f | wc -l)
 	[[ "$objs" -gt 8 ]] && git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
