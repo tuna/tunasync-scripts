@@ -10,9 +10,11 @@ function repo_init() {
 }
 
 function update_font_git() {
-        repo_dir="$1"
+	UPSTREAM="$1"
+        repo_dir="$2"
         cd "$repo_dir"
         echo "==== SYNC $repo_dir START ===="
+	git remote set-url origin "$UPSTREAM"
         /usr/bin/timeout -s INT 3600 git remote -v update -p
 	git remote set-head origin --auto
         objs=$(find objects -type f | wc -l)
@@ -44,7 +46,7 @@ for repo in ${REPOS[@]}; do
                 echo "Initializing ${repo}.git"
                 repo_init "${UPSTREAM_BASE}/${repo}.git" "$TUNASYNC_WORKING_DIR/${repo}.git"
         fi
-        update_font_git "$TUNASYNC_WORKING_DIR/${repo}.git"
+        update_font_git "${UPSTREAM_BASE}/${repo}.git" "$TUNASYNC_WORKING_DIR/${repo}.git"
 	checkout_font_branch "$TUNASYNC_WORKING_DIR/${repo}.git" "$TUNASYNC_WORKING_DIR/${repo}" "release"
 done
 

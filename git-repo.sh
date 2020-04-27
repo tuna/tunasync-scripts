@@ -8,6 +8,7 @@ function repo_init() {
 function update_repo_git() {
 	cd $TUNASYNC_WORKING_DIR
 	echo "==== SYNC repo.git START ===="
+	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
 	git remote set-head origin --auto
 	git repack -a -b -d

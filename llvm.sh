@@ -6,9 +6,11 @@ function repo_init() {
 }
 
 function repo_update() {
-	repo_dir="$1"
+	UPSTREAM=$1
+	repo_dir="$2"
 	cd $repo_dir
 	echo "==== SYNC $repo_dir START ===="
+	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
 	git remote set-head origin --auto
 	objs=$(find objects/ -type f | wc -l)
@@ -27,7 +29,7 @@ for repo in ${repos[@]}; do
 		echo "Initializing ${repo}.git"
 		repo_init "${UPSTREAM_BASE}/${repo}" "$TUNASYNC_WORKING_DIR/${repo}.git"
 	fi
-	repo_update "$TUNASYNC_WORKING_DIR/${repo}.git"
+	repo_update "${UPSTREAM_BASE}/${repo}" "$TUNASYNC_WORKING_DIR/${repo}.git"
 done
 
 echo "Total size is" $(numfmt --to=iec $total_size)

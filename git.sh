@@ -6,12 +6,13 @@ if [[ -z "$UPSTREAM" ]];then
 fi
 
 function repo_init() {
-	git clone --mirror $UPSTREAM $TUNASYNC_WORKING_DIR
+	git clone --mirror "$UPSTREAM" "$TUNASYNC_WORKING_DIR"
 }
 
 function update_linux_git() {
-	cd $TUNASYNC_WORKING_DIR
+	cd "$TUNASYNC_WORKING_DIR"
 	echo "==== SYNC $UPSTREAM START ===="
+	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
 	git remote set-head origin --auto
 	objs=$(find objects -type f | wc -l)
