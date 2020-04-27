@@ -1,3 +1,4 @@
 #!/bin/bash
-sz=`bc <$1`
+sz=$(cat $1)
+sz=$(echo $sz | bc)
 echo "size-sum:" $(numfmt --to=iec $sz)
