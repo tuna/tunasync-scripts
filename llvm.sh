@@ -18,13 +18,14 @@ function repo_update() {
 	echo "==== SYNC $repo_dir DONE ===="
 }
 
+UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL:-"https://llvm.org/git"}
 repos=("llvm" "clang" "libcxx" "lldb" "clang-tools-extra" "polly" "zorg" "compiler-rt" "libcxxabi" "lld" "lnt")
 total_size=0
 
 for repo in ${repos[@]}; do
 	if [[ ! -d "$TUNASYNC_WORKING_DIR/${repo}.git" ]]; then
 		echo "Initializing ${repo}.git"
-		repo_init "http://llvm.org/git/${repo}" "$TUNASYNC_WORKING_DIR/${repo}.git"
+		repo_init "${UPSTREAM_BASE}/${repo}" "$TUNASYNC_WORKING_DIR/${repo}.git"
 	fi
 	repo_update "$TUNASYNC_WORKING_DIR/${repo}.git"
 done
