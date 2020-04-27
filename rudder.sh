@@ -12,6 +12,7 @@ RUDDER_VERS=(4.3 5.0 6.0)
 
 YUM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 components=$(printf ",%s" "${RUDDER_VERS[@]}")
 components=${components:1}
@@ -22,5 +23,7 @@ for ver in ${RUDDER_VERS[@]}; do
     "$apt_sync" --delete "${UPSTREAM}/apt/${ver}" @ubuntu-lts,@debian-current main amd64 "$APT_PATH/${ver}"
 done
 echo "APT finished"
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
 
 # vim: ts=4 sts=4 sw=4

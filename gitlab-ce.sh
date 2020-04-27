@@ -13,6 +13,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 YUM_PATH="${BASE_PATH}/yum"
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 "$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}/" 6-8 "gitlab" x86_64 "el@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
@@ -22,5 +23,6 @@ echo "Ubuntu finished"
 "$apt_sync" --delete-dry-run "${UPSTREAM}/debian" @debian-current main amd64,i386 "$DEBIAN_PATH"
 echo "Debian finished"
 
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
 
 # vim: ts=4 sts=4 sw=4

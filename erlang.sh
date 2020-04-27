@@ -12,6 +12,7 @@ BASE_URL="https://packages.erlang-solutions.com"
 YUM_PATH="${BASE_PATH}/centos"
 UBUNTU_PATH="${BASE_PATH}/ubuntu"
 DEBIAN_PATH="${BASE_PATH}/debian"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # =================== APT repos ===============================
 "$apt_sync" --delete "${BASE_URL}/ubuntu" @ubuntu-lts contrib amd64,i386 "$UBUNTU_PATH"
@@ -22,3 +23,5 @@ echo "Debian finished"
 # =================== YUM repos ===============================
 "$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 6-8 erlang x86_64 "@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE

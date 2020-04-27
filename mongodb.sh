@@ -15,6 +15,7 @@ YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 UBUNTU_PATH="${APT_PATH}/ubuntu"
 DEBIAN_PATH="${APT_PATH}/debian"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 components=$(printf ",%s" "${MONGO_VERSIONS[@]}")
 components=${components:1}
@@ -42,5 +43,6 @@ for dist in "$BASE_URL"/apt/*/dists/*/mongodb-org/; do
 done
 echo "APT finished"
 
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
 
 # vim: ts=4 sts=4 sw=4

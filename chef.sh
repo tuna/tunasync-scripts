@@ -11,11 +11,14 @@ UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://packages.chef.io/repos"}
 
 YUM_PATH="${BASE_PATH}/yum/stable"
 APT_PATH="${BASE_PATH}/apt/stable"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 "$yum_sync" "${UPSTREAM}/yum/stable/el/@{os_ver}/@{arch}" 6-8 chef x86_64 "stable-el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
 "$apt_sync" --delete-dry-run "${UPSTREAM}/apt/stable" @ubuntu-lts,@debian-current main amd64,i386,aarch64 "$APT_PATH"
 echo "APT finished"
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
 
 # vim: ts=4 sts=4 sw=4

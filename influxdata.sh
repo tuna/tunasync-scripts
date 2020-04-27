@@ -13,6 +13,7 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://repos.influxdata.com"}
 YUM_PATH="${BASE_PATH}/yum"
 UBUNTU_PATH="${BASE_PATH}/ubuntu"
 DEBIAN_PATH="${BASE_PATH}/debian"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 wget -O ${BASE_PATH}/influxdb.key ${BASE_URL}/influxdb.key
 
@@ -27,3 +28,5 @@ echo "Debian finished"
 # =================== YUM/DNF repos ==========================
 "$yum_sync" "${BASE_URL}/rhel/@{os_ver}/@{arch}/stable/" 6-8 influxdata x86_64 "el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE

@@ -5,6 +5,7 @@ _here=`dirname $(realpath $0)`
 apt_sync="${_here}/apt-sync.py" 
 
 WORKING_DIR="${TUNASYNC_WORKING_DIR}"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 ARCH_LIST="aarch64,arm,i686,x86_64"
 
@@ -16,3 +17,5 @@ ARCH_LIST="aarch64,arm,i686,x86_64"
 "$apt_sync" --delete "https://dl.bintray.com/grimler/termux-root-packages-24" root stable    $ARCH_LIST "${WORKING_DIR}/termux-root-packages-24" 
 
 echo "finished"
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
