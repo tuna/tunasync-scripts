@@ -38,6 +38,12 @@ REPOS = [
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
 
+def sizeof_fmt(num, suffix='iB'):
+    for unit in ['','K','M','G','T','P','E','Z']:
+        if abs(num) < 1024.0:
+            return "%3.2f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.2f%s%s" % (num, 'Y', suffix)
 
 # wrap around requests.get to use token if available
 def github_get(*args, **kwargs):
@@ -117,6 +123,7 @@ def main():
     task_queue = create_workers(args.workers)
     remote_filelist = []
     cleaning = False
+    total_size = 0
 
     def download(release, release_dir, tarball = False):
 
@@ -139,6 +146,7 @@ def main():
                 asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
             dst_file = release_dir / ensure_safe_name(asset['name'])
             remote_filelist.append(dst_file.relative_to(working_dir))
+            total_size += asset['size']
 
             if dst_file.is_file():
                 if args.fast_skip:
@@ -244,6 +252,8 @@ def main():
                     local_dir.rmdir()
                 except:
                     pass
+
+        print("Total size is", sizeof_fmt(total_size, suffix=""))
 
 if __name__ == "__main__":
     main()
