@@ -13,7 +13,6 @@ YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
-echo -n 0 >$REPO_SIZE_FILE
 
 declare -A REPO_VERSIONS=(
 	["elasticsearch"]="2.x"

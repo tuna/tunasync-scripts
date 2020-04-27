@@ -1,4 +1,5 @@
 #!/bin/bash
+# requires: coreutils
 sz=$(cat $1)
-sz=$(echo $sz | bc)
+sz=$(($sz))
 echo "size-sum:" $(numfmt --to=iec $sz)
