@@ -8,9 +8,46 @@ import shutil
 import subprocess as sp
 import tempfile
 import argparse
+import bz2
+import gzip
+import sqlite3
 from pathlib import Path
 from typing import List, Dict
 import requests
+
+REPO_SIZE_FILE = os.getenv('REPO_SIZE_FILE', '')
+REPO_STAT = {}
+
+def calc_repo_size(path: Path):
+    dbfiles = path.glob('repodata/*primary.sqlite*')
+    with tempfile.NamedTemporaryFile() as tmp:
+        for db in dbfiles:
+            with db.open('rb') as f:
+                suffix = db.suffix
+                if suffix == '.bz2':
+                    tmp.write(bz2.decompress(f.read()))
+                    break
+                elif suffix == '.gz':
+                    tmp.write(gzip.decompress(f.read()))
+                    break
+                elif suffix == '':
+                    tmp.write(f.read())
+                    break
+        else:
+            print(f"Failed to read DB from {path}: {dbfiles}", flush=True)
+            return
+
+        conn = sqlite3.connect(tmp.name)
+        c = conn.cursor()
+        c.execute("select sum(size_package),count(1) from packages")
+        res = c.fetchone()
+        conn.close()
+        print(f"Repository {path}:")
+        print(f"  {res[1]} packages, {res[0]} bytes in total", flush=True)
+
+        global REPO_STAT
+        REPO_STAT[str(path)] = res
+
 
 def check_args(prop: str, lst: List[str]):
     for s in lst:
@@ -30,7 +67,7 @@ def main():
     parser.add_argument("os_version", type=str, help="e.g. 6-8")
     parser.add_argument("component", type=str, help="e.g. mysql56-community,mysql57-community")
     parser.add_argument("arch", type=str, help="e.g. x86_64")
-    parser.add_argument("repo_name", type=str, help="e.g. @{comp}-el@{os_ver}}")
+    parser.add_argument("repo_name", type=str, help="e.g. @{comp}-el@{os_ver}")
     parser.add_argument("working_dir", type=Path, help="working directory")
     args = parser.parse_args()
 
@@ -113,9 +150,15 @@ enabled=1
             cmd_args = ["createrepo", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
             # print(cmd_args)
             ret = sp.run(cmd_args)
+            calc_repo_size(path)
 
     if len(failed) > 0:
         print("Failed YUM repos: ", failed)
+    else:
+        if len(REPO_SIZE_FILE) > 0:
+            with open(REPO_SIZE_FILE, "a") as fd:
+                total_size = sum([r[0] for r in REPO_STAT.values()])
+                fd.write(f"+{total_size}")
 
 if __name__ == "__main__":
     main()
