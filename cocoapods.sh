@@ -14,7 +14,7 @@ function update_cocoapods_git() {
 	echo "==== SYNC $repo_dir START ===="
 	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
-	git remote set-head origin --auto
+	git remote set-head origin --auto || true
 	objs=$(find objects -type f | wc -l)
 	[[ "$objs" -gt 8 ]] && git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
