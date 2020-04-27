@@ -46,7 +46,7 @@ def calc_repo_size(path: Path):
         print(f"  {res[1]} packages, {res[0]} bytes in total", flush=True)
 
         global REPO_STAT
-        REPO_STAT[str(path)] = res
+        REPO_STAT[str(path)] = res if res[1] > 0 else (0, 0) # res[0] can be None
 
 
 def check_args(prop: str, lst: List[str]):
