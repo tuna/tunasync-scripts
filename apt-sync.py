@@ -14,7 +14,7 @@ import lzma
 import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import List, Set, Tuple, IO
+from typing import List, Dict, Set, Tuple, IO
 
 import requests
 
@@ -25,6 +25,7 @@ OS_TEMPLATE = {
 }
 MAX_RETRY=int(os.getenv('MAX_RETRY', '3'))
 DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
+REPO_SIZE_FILE = os.getenv('REPO_SIZE_FILE', '')
 
 pattern_os_template = re.compile(r"@\{(.+)\}")
 pattern_package_name = re.compile(r"^Filename: (.+)$", re.MULTILINE)
@@ -101,7 +102,7 @@ def move_files_in(src: Path, dst: Path):
     if empty:
         print(f"{src} is empty")
 
-def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Path, deb_set: Set[str])->int:
+def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Path, deb_set: Dict[str, int])->int:
     if not dest_base_dir.is_dir():
         print("Destination directory is empty, cannot continue")
         return 1
@@ -205,7 +206,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         if not dest_dir.is_dir():
             dest_dir.mkdir(parents=True, exist_ok=True)
         if dest_filename.suffix == '.deb':
-            deb_set.add(str(dest_filename.relative_to(dest_base_dir)))
+            deb_set[str(dest_filename.relative_to(dest_base_dir))] = pkg_size
         if dest_filename.is_file() and dest_filename.stat().st_size == pkg_size:
             print(f"Skipping {pkg_filename}, size {pkg_size}")
             continue
@@ -245,10 +246,10 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     print(f"{deb_count} packages, {deb_size} bytes in total", flush=True)
     return err
 
-def apt_delete_old_debs(dest_base_dir: Path, remote_set: Set[str], dry_run: bool):
+def apt_delete_old_debs(dest_base_dir: Path, remote_set: Dict[str, int], dry_run: bool):
     on_disk = set([
         str(i.relative_to(dest_base_dir)) for i in dest_base_dir.glob('**/*.deb')])
-    deleting = on_disk - remote_set
+    deleting = on_disk - remote_set.keys()
     # print(on_disk)
     # print(remote_set)
     print(f"Deleting {len(deleting)} packages not in the index{' (dry run)' if dry_run else ''}", flush=True)
@@ -284,7 +285,7 @@ def main():
 
     args.working_dir.mkdir(parents=True, exist_ok=True)
     failed = []
-    deb_set = set()
+    deb_set = {}
 
     for os in os_list:
         for comp in component_list:
@@ -296,6 +297,11 @@ def main():
         return
     if args.delete or args.delete_dry_run:
         apt_delete_old_debs(args.working_dir, deb_set, args.delete_dry_run)
+    
+    if len(REPO_SIZE_FILE) > 0:
+        with open(REPO_SIZE_FILE, "a") as fd:
+            total_size = sum(deb_set.values())
+            fd.write(f"+{total_size}")
 
 if __name__ == "__main__":
     main()
