@@ -15,6 +15,7 @@ ELASTIC_VERSION=("5.x" "6.x" "7.x")
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # =================== APT repos ===============================
 
@@ -32,3 +33,5 @@ components=${components// /,}
 for elsver in ${ELASTIC_VERSION[@]}; do
 	(cd ${BASE_PATH}/${elsver}; ln -sfn ../yum/elastic-${elsver} yum)
 done
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
