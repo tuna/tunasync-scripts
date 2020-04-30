@@ -22,6 +22,8 @@ OS_TEMPLATE = {
     'ubuntu-current': ["xenial", "bionic", "eoan", "focal"],
     'ubuntu-lts': ["xenial", "bionic", "focal"],
     'debian-current': ["jessie", "stretch", "buster"],
+    'debian-latest2': ["stretch", "buster"],
+    'debian-latest': ["buster"],
 }
 MAX_RETRY=int(os.getenv('MAX_RETRY', '3'))
 DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
