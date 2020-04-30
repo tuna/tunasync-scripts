@@ -41,4 +41,4 @@ for repo in "${!REPO_VERSIONS[@]}"; do
 	"$yum_sync" "${BASE_URL}/${repo}/@{comp}/centos/" 7 "$components" x86_64 "${repo}-@{comp}" "$YUM_PATH"
 done
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

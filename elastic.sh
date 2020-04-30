@@ -34,4 +34,4 @@ for elsver in ${ELASTIC_VERSION[@]}; do
 	(cd ${BASE_PATH}/${elsver}; ln -sfn ../yum/elastic-${elsver} yum)
 done
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

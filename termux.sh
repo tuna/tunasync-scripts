@@ -18,4 +18,4 @@ ARCH_LIST="aarch64,arm,i686,x86_64"
 
 echo "finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

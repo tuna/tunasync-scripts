@@ -23,6 +23,6 @@ echo "Ubuntu finished"
 "$apt_sync" --delete-dry-run "${UPSTREAM}/debian" @debian-current main amd64,i386 "$DEBIAN_PATH"
 echo "Debian finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
 
 # vim: ts=4 sts=4 sw=4

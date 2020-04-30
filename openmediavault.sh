@@ -16,4 +16,4 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 "$apt_sync" --delete "${BASE_URL}" "$DISTS" main,partner amd64,i386,arm64,armel,armhf "$APT_PATH"
 echo "APT finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

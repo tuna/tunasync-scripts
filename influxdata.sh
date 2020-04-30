@@ -29,4 +29,4 @@ echo "Debian finished"
 "$yum_sync" "${BASE_URL}/rhel/@{os_ver}/@{arch}/stable/" 6-8 influxdata x86_64 "el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

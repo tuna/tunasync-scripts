@@ -23,4 +23,4 @@ echo "APT finished"
 "$yum_sync" "${BASE_URL}/@{comp}" 7 rpm,rpm-beta x86_64 "@{comp}" "$YUM_PATH"
 echo "YUM finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

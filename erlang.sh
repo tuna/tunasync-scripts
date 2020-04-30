@@ -24,4 +24,4 @@ echo "Debian finished"
 "$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 6-8 erlang x86_64 "@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

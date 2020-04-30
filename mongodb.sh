@@ -43,6 +43,6 @@ for dist in "$BASE_URL"/apt/*/dists/*/mongodb-org/; do
 done
 echo "APT finished"
 
-"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE; rm $REPO_SIZE_FILE
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
 
 # vim: ts=4 sts=4 sw=4
