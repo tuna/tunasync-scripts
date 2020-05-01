@@ -290,7 +290,8 @@ def update_channels(channels):
 
         logging.info(f'    - {len(paths)} paths listed')
 
-        todo = {}
+        todo = []
+        seen_paths = set()
         channel_failure = False
 
         # Batch paths to avoid E2BIG
@@ -313,7 +314,14 @@ def update_channels(channels):
                 infos = json.loads(process.stdout)
                 for info in infos:
                     ha = hash_part(info['path'])
-                    todo[ha] = (info['url'], f'{ha}.narinfo')
+                    one_todo = [
+                        name
+                        for name in [info['url'], f'{ha}.narinfo']
+                        if name not in seen_paths
+                    ]
+                    seen_paths.update(one_todo)
+                    if one_todo:
+                        todo.append(one_todo)
         else:
             logging.info(f'    - {len(todo)} paths to download')
 
@@ -336,7 +344,7 @@ def update_channels(channels):
             with ThreadPoolExecutor(max_workers=THREADS) as executor:
                 results = executor.map(
                     lambda job: try_mirror(*job),
-                    enumerate(todo.values())
+                    enumerate(todo)
                 )
                 if not all(results):
                     channel_failure = True
