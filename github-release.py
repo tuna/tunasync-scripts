@@ -38,6 +38,7 @@ REPOS = [
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
+total_size = 0
 
 def sizeof_fmt(num, suffix='iB'):
     for unit in ['','K','M','G','T','P','E','Z']:
@@ -124,9 +125,9 @@ def main():
     task_queue = create_workers(args.workers)
     remote_filelist = []
     cleaning = False
-    total_size = 0
 
     def download(release, release_dir, tarball = False):
+        global total_size
 
         if tarball:
             url = release['tarball_url']
