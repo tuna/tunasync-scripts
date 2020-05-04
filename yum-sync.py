@@ -21,21 +21,23 @@ REPO_STAT = {}
 def calc_repo_size(path: Path):
     dbfiles = path.glob('repodata/*primary.sqlite*')
     with tempfile.NamedTemporaryFile() as tmp:
+        dec = None
+        dbfile = None
         for db in dbfiles:
-            with db.open('rb') as f:
-                suffix = db.suffix
-                if suffix == '.bz2':
-                    tmp.write(bz2.decompress(f.read()))
-                    break
-                elif suffix == '.gz':
-                    tmp.write(gzip.decompress(f.read()))
-                    break
-                elif suffix == '':
-                    tmp.write(f.read())
-                    break
-        else:
+            dbfile = db
+            suffix = db.suffix
+            if suffix == '.bz2':
+                dec = bz2.decompress
+            elif suffix == '.gz':
+                dec = gzip.decompress
+            elif suffix == '.sqlite':
+                dec = lambda x: x
+        if dec is None:
             print(f"Failed to read DB from {path}: {dbfiles}", flush=True)
             return
+        with db.open('rb') as f:
+            tmp.write(dec(f.read()))
+            tmp.flush()
 
         conn = sqlite3.connect(tmp.name)
         c = conn.cursor()
