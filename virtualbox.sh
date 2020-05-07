@@ -15,6 +15,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 YUM_PATH="${BASE_PATH}/rpm"
 APT_PATH="${BASE_PATH}/apt"
+export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # === download rhel packages ====
 
@@ -77,6 +78,7 @@ for((major=4;major<=6;major++));do
 			echo "failed to download ${pkg_url} to ${dest_filename}"
 			exit 1
 		fi
+		stat -c "+%s" "${dest_filename}" >>$REPO_SIZE_FILE
 
 	done < "${LATEST_PATH}/MD5SUMS"
 	echo "Virtualbox ${LATEST_VERSION} finished"
@@ -94,3 +96,5 @@ for filename in ${BASE_PATH}/${LATEST_VERSION}/*.*; do
 			;;
 	esac
 done
+
+"${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
