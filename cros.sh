@@ -20,6 +20,7 @@ function git_clone_or_pull {
     URL=$1
     DIRECTORY=$2
     BARE=$3
+    name=$(basename $2)
     if [[ -z $BARE ]]; then
         if [[ -d $DIRECTORY ]]; then
             git -C $DIRECTORY pull
@@ -28,7 +29,7 @@ function git_clone_or_pull {
         fi
     else
         if [[ -d $DIRECTORY ]]; then
-            git -C $DIRECTORY fetch --force --prune
+            git -C $DIRECTORY fetch --force --prune 2>&1 | sed "s/^/$name: /"
         else
             git clone --bare $URL $DIRECTORY
         fi
