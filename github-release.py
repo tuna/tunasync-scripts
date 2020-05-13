@@ -34,6 +34,7 @@ REPOS = [
     "goharbor/harbor",
     {"repo": "xueruini/thuthesis", "versions": -1, "flat": True},
     "cmderdev/cmder",
+    "balena-io/etcher",
 ]
 
 # connect and read timeout value
