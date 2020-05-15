@@ -23,15 +23,17 @@ function git_clone_or_pull {
     name=$(basename $2)
     if [[ -z $BARE ]]; then
         if [[ -d $DIRECTORY ]]; then
-            git -C $DIRECTORY pull
+            git -C "$DIRECTORY" remote set-url origin "$URL"
+            git -C "$DIRECTORY" pull
         else
-            git clone $URL $DIRECTORY
+            git clone "$URL" "$DIRECTORY"
         fi
     else
-        if [[ -d $DIRECTORY ]]; then
-            git -C $DIRECTORY fetch --force --prune 2>&1 | sed "s/^/$name: /"
+        if [[ -d "$DIRECTORY" ]]; then
+            git -C "$DIRECTORY" remote set-url origin "$URL"
+            git -C "$DIRECTORY" fetch --force --prune 2>&1 | sed "s/^/$name: /"
         else
-            git clone --bare $URL $DIRECTORY
+            git clone --bare "$URL" "$DIRECTORY"
         fi
     fi
 }
