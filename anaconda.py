@@ -32,6 +32,7 @@ CONDA_ARCHES = (
 CONDA_CLOUD_REPOS = (
     "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/win-64", "conda-forge/noarch",
     "msys2/linux-64", "msys2/win-64", "msys2/noarch",
+    "rapidsai/linux-64", "rapidsai/noarch",
     "bioconda/linux-64", "bioconda/osx-64", "bioconda/win-64", "bioconda/noarch",
     "menpo/linux-64", "menpo/osx-64", "menpo/win-64", "menpo/win-32", "menpo/noarch",
     "pytorch/linux-64", "pytorch/osx-64", "pytorch/win-64", "pytorch/win-32", "pytorch/noarch",
