@@ -23,6 +23,7 @@ REPOS = [
     "VSCodium/vscodium",
     "openark/orchestrator",
     "git-lfs/git-lfs",
+    "git-for-windows/git",
     "prometheus/prometheus",
     "commercialhaskell/stackage-content",  # Used by stackage
     {"repo": "xxr3376/Learn-Project", "versions": -1},
