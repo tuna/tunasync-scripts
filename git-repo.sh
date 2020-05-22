@@ -10,7 +10,8 @@ function update_repo_git() {
 	echo "==== SYNC repo.git START ===="
 	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
-	git remote set-head origin --auto
+	head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
+	[[ -n "$head" ]] && echo "ref: refs/heads/$head" > HEAD
 	git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
 	sz=$(($sz*1024))
