@@ -2,10 +2,10 @@ FROM debian:buster
 MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
 RUN apt-get update && \
-        apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 awscli ack composer php-curl php-zip
+        apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip
         
 RUN STATIC_DEPS=true pip3 install pyquery
-RUN pip3 install requests[socks] pyyaml gsutil bandersnatch
+RUN pip3 install requests[socks] pyyaml gsutil bandersnatch awscli
 
 RUN cd /usr/local && git clone --depth 1 https://github.com/tuna/composer-mirror.git && cd composer-mirror && composer i
 COPY composer-mirror.config.php /usr/local/composer-mirror/config.php
