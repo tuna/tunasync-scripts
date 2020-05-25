@@ -27,7 +27,7 @@ RUN jill install 1.4 --confirm
 # The API is likely to be changed in the future, so we fix the version here for stability consideration
 RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageServer.jl#v0.1.0-beta.1"'
 
-RUN chown -R 2000 /tmp/julia/
+RUN adduser --gecos '' --uid 2000 --disabled-password tunasync && chown -R tunasync /tmp/julia/
 
 WORKDIR /julia
 CMD /bin/bash
