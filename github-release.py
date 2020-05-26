@@ -36,6 +36,7 @@ REPOS = [
     {"repo": "xueruini/thuthesis", "versions": -1, "flat": True},
     "cmderdev/cmder",
     "balena-io/etcher",
+    "llvm/llvm-project",
 ]
 
 # connect and read timeout value
