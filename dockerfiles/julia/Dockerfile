@@ -19,7 +19,7 @@ ENV JULIA_CLONES_DIR="/julia/clones"
 
 # StorageServer.jl is an experimental toolkit and it won't be registered in General
 # The API is likely to be changed in the future, so we fix the version here for stability consideration
-RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageServer.jl#v0.1.0-beta"'
+RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageServer.jl#v0.1.0-rc1"'
 
 RUN chown -R 2000 /tmp/julia/
 
