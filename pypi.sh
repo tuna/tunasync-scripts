@@ -22,6 +22,17 @@ workers = 10
 hash-index = false
 stop-on-error = false
 delete-packages = true
+
+[plugins]
+enabled =
+    blacklist_project
+
+[blacklist]
+packages =
+    tf-nightly-gpu
+	tf-nightly
+	tensorflow-io-nightly
+	tf-nightly-cpu
 EOF
 	/usr/bin/timeout -s INT 36000 $BANDERSNATCH -c $CONF mirror 
 	if [[ $? == 124 ]]; then
