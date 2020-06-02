@@ -17,8 +17,8 @@ if [[ $INIT == "0" ]]; then
 directory = ${TUNASYNC_WORKING_DIR}
 master = ${TUNASYNC_UPSTREAM}
 json = true
-timeout = 15
-workers = 10
+timeout = 300
+workers = 5
 hash-index = false
 stop-on-error = false
 delete-packages = true
