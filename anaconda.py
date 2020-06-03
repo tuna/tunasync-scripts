@@ -57,6 +57,7 @@ CONDA_CLOUD_REPOS = (
     "dglteam/linux-64", "dglteam/win-64", "dglteam/osx-64", "dglteam/noarch",
     "rdkit/linux-64", "rdkit/win-64", "rdkit/osx-64", "rdkit/noarch",
     "mordred-descriptor/linux-64", "mordred-descriptor/win-64", "mordred-descriptor/win-32", "mordred-descriptor/osx-64", "mordred-descriptor/noarch",
+    "ohmeta/linux-64", "ohmeta/osx-64", "ohmeta/noarch",
 )
 
 EXCLUDED_PACKAGES = (
