@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 BANDERSNATCH=${BANDERSNATCH:-"/usr/local/bin/bandersnatch"}
 TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://pypi.org/"}
 CONF="/tmp/bandersnatch.conf"
@@ -34,11 +35,7 @@ packages =
 	tensorflow-io-nightly
 	tf-nightly-cpu
 EOF
-	/usr/bin/timeout -s INT 36000 $BANDERSNATCH -c $CONF mirror 
-	if [[ $? == 124 ]]; then
-		echo 'Sync timeout (/_\\)'
-		exit 1
-	fi
+	exec $BANDERSNATCH -c $CONF mirror 
 else
 	cat > $CONF << EOF
 [mirror]
@@ -52,17 +49,6 @@ stop-on-error = false
 delete-packages = false
 EOF
 
-	$BANDERSNATCH -c $CONF mirror
+	exec $BANDERSNATCH -c $CONF mirror
 fi
 
-TODOFILE="${TUNASYNC_WORKING_DIR}/todo"
-if [[ -f $TODOFILE ]]; then
-	rsize=`stat -c "%s" ${TODOFILE}`
-	if [[ "$rsize" != "0" ]]; then
-		echo "Sync Failed T_T"
-		exit 1
-	fi
-fi
-
-echo "Sync Done ^_-"
-exit 0
