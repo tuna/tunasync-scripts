@@ -33,7 +33,7 @@ REPOS = [
     {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
     "FreeCAD/FreeCAD",
     "goharbor/harbor",
-    {"repo": "xueruini/thuthesis", "versions": -1, "flat": True},
+    {"repo": "tuna/thuthesis", "versions": -1, "flat": True},
     "cmderdev/cmder",
     "balena-io/etcher",
     "llvm/llvm-project",
