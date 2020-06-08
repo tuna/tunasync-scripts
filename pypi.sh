@@ -34,6 +34,7 @@ packages =
 	tf-nightly
 	tensorflow-io-nightly
 	tf-nightly-cpu
+    pyagrum-nightly
 EOF
 	exec $BANDERSNATCH -c $CONF mirror 
 else
