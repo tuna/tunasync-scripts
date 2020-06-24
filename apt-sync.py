@@ -150,11 +150,13 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                 
                 with pkgidx_file.open('rb') as t: content = t.read()
                 if len(content) != int(filesize):
-                    print(f"Invalid size of {pkgidx_file}, expected {filesize}")
-                    return 1
+                    print(f"Invalid size of {pkgidx_file}, expected {filesize}, skipped")
+                    pkgidx_file.unlink()
+                    continue
                 if hashlib.sha256(content).hexdigest() != checksum:
-                    print(f"Invalid checksum of {pkgidx_file}, expected {checksum}")
-                    return 1
+                    print(f"Invalid checksum of {pkgidx_file}, expected {checksum}, skipped")
+                    pkgidx_file.unlink()
+                    continue
                 if pkgidx_content is None and pkgidx_file.stem == 'Packages':
                     print(f"getting packages index content from {pkgidx_file.name}", flush=True)
                     suffix = pkgidx_file.suffix
