@@ -24,7 +24,8 @@ class StackageSession(object):
             print('{} exists, skipping'.format(file_path), flush=True)
         else:
             args = [
-                'aria2c', url, '--dir={}'.format(dir_path), '--out={}.tmp'.format(url.split('/')[-1]),
+                'aria2c', url, '--dir={}'.format(
+                    dir_path), '--out={}.tmp'.format(url.split('/')[-1]),
                 '--file-allocation=none', '--quiet=true'
             ]
             if sha1:
@@ -48,14 +49,14 @@ class StackageSession(object):
                 )
                 d['ghc'][platform][ver]['url'] = (
                     'http://mirrors.tuna.tsinghua.edu.cn/stackage/ghc/{}'
-                        .format(d['ghc'][platform][ver]['url'].split('/')[-1])
+                    .format(d['ghc'][platform][ver]['url'].split('/')[-1])
                 )
 
         if 'msys2' in d:
             for os in d['msys2']:
                 print(os)
                 d['msys2'][os]['url'] = d['msys2'][os]['url'].replace(
-                    'https://github.com/fpco/stackage-content/releases/download/', 
+                    'https://github.com/fpco/stackage-content/releases/download/',
                     'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
 
         for i in ['portable-git', 'stack', 'ghcjs']:
@@ -82,7 +83,19 @@ class StackageSession(object):
         print('Loaded snapshots.json', flush=True)
 
 
+def stackage_snapshots_git_sync():
+    base_path = pathlib.Path(os.environ['TUNASYNC_WORKING_DIR'])
+    working_dir = base_path / "stackage-snapshots"
+    if working_dir.is_dir():
+        subprocess.run(
+            ['git', '-C', working_dir.as_posix(), 'pull'], check=True)
+    else:
+        subprocess.run(['git', '-C', base_path.as_posix(), 'clone', '--depth', '1',
+                        'https://github.com/commercialhaskell/stackage-snapshots.git'], check=True)
+
+
 if __name__ == '__main__':
     s = StackageSession()
+    stackage_snapshots_git_sync()
     s.load_stackage_snapshots()
     s.load_stack_setup()
