@@ -9,7 +9,7 @@ export JULIA_CLONES_DIR="$PWD/clones"
 
 # timeout (seconds) for individual package instead of the whole mirror process
 # initialization should use a larger timeout, e.g., 7200
-PKG_TIMEOUT=600
+PKG_TIMEOUT=1800
 
 # update and mirror the General registry
 git -C registries/General fetch --all
