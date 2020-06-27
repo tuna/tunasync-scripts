@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://pkg.julialang.org"}
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://us-east.storage.julialang.org"}
 [[ -d "${TUNASYNC_WORKING_DIR}" ]]
 cd "${TUNASYNC_WORKING_DIR}"
 
@@ -9,7 +9,7 @@ export JULIA_CLONES_DIR="$PWD/clones"
 
 # timeout (seconds) for individual package instead of the whole mirror process
 # initialization should use a larger timeout, e.g., 7200
-PKG_TIMEOUT=600
+PKG_TIMEOUT=1800
 
 # update and mirror the General registry
 git -C registries/General fetch --all
