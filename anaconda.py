@@ -59,6 +59,7 @@ CONDA_CLOUD_REPOS = (
     "mordred-descriptor/linux-64", "mordred-descriptor/win-64", "mordred-descriptor/win-32", "mordred-descriptor/osx-64", "mordred-descriptor/noarch",
     "ohmeta/linux-64", "ohmeta/osx-64", "ohmeta/noarch",
     "c4aarch64/linux-aarch64", "c4aarch64/noarch",
+    "pytorch3d/linux-64", "pytorch3d/noarch",
 )
 
 EXCLUDED_PACKAGES = (
