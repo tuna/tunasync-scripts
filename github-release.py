@@ -37,6 +37,7 @@ REPOS = [
     "cmderdev/cmder",
     "balena-io/etcher",
     "llvm/llvm-project",
+    "conda-forge/miniforge",
 ]
 
 # connect and read timeout value
