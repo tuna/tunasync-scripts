@@ -1,18 +1,16 @@
 #!/bin/bash
 set -e
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://us-east.storage.julialang.org"}
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://us-east.storage.juliahub.com"}
 [[ -d "${TUNASYNC_WORKING_DIR}" ]]
 cd "${TUNASYNC_WORKING_DIR}"
 
-export JULIA_STATIC_DIR="$PWD/static"
-export JULIA_CLONES_DIR="$PWD/clones"
+OUTPUT_DIR="$PWD/static"
 
-# timeout (seconds) for individual package instead of the whole mirror process
-# initialization should use a larger timeout, e.g., 7200
-PKG_TIMEOUT=1800
+REGISTRY_NAME="General"
+REGISTRY_UUID="23338594-aafe-5451-b93e-139f81909106"
+REGISTRY_UPSTREAM="https://github.com/JuliaRegistries/General"
+REGISTRY="(\"$REGISTRY_NAME\", \"$REGISTRY_UUID\", \"$REGISTRY_UPSTREAM\")"
 
-# update and mirror the General registry
-git -C registries/General fetch --all
-git -C registries/General reset --hard origin/master
-exec julia -e "using StorageServer; mirror_tarball(\"registries/General\", [\"$BASE_URL\"]; timeout=$PKG_TIMEOUT)"
-
+# For more usage of `mirror_tarball`, please refer to
+# https://github.com/johnnychen94/StorageMirrorServer.jl/blob/master/examples/gen_static_full.example.jl
+exec julia -e "using StorageMirrorServer; mirror_tarball($REGISTRY, [\"$BASE_URL\"], \"$OUTPUT_DIR\")"
