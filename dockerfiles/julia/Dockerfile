@@ -4,11 +4,16 @@
 
 # StorageServer.jl is used to set up a *static* storage server for julia packages, it requires at least Julia 1.4
 # The details of the storage protocol can be found in https://github.com/JuliaLang/Pkg.jl/issues/1377
-FROM julia:1.4
+FROM julia:1.5
 LABEL description="A community maintained docker script to set up julia mirror easily."
 LABEL maintainer="Johnny Chen <johnnychen94@hotmail.com>"
 
-RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc3"'
+ENV JULIA_DEPOT_PATH="/opt/julia"
+
+RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc3"' && \
+    chmod a+rx -R $JULIA_DEPOT_PATH
+
+COPY startup.jl /usr/local/julia/etc/julia/startup.jl
 
 WORKDIR /julia
 CMD /bin/bash
