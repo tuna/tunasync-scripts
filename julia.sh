@@ -12,7 +12,7 @@ REGISTRY_UPSTREAM="https://github.com/JuliaRegistries/General"
 REGISTRY="(\"$REGISTRY_NAME\", \"$REGISTRY_UUID\", \"$REGISTRY_UPSTREAM\")"
 
 julia -e "using InteractiveUtils; versioninfo(); @show DEPOT_PATH LOAD_PATH"
-julia -e "using Pkg; Pkg.status(\"StorageMirrorServer\")"
+julia -e "using Pkg; Pkg.status()"
 
 # For more usage of `mirror_tarball`, please refer to
 # https://github.com/johnnychen94/StorageMirrorServer.jl/blob/master/examples/gen_static_full.example.jl
