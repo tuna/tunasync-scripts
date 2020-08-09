@@ -13,7 +13,7 @@ ENV JULIA_DEPOT_PATH="/opt/julia"
 RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc3"' && \
     chmod a+rx -R $JULIA_DEPOT_PATH
 
-COPY startup.jl /usr/local/julia/etc/julia/startup.jl
+COPY dockerfiles/julia/startup.jl /usr/local/julia/etc/julia/startup.jl
 
 WORKDIR /julia
 CMD /bin/bash
