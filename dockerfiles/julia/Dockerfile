@@ -10,7 +10,5 @@ LABEL maintainer="Johnny Chen <johnnychen94@hotmail.com>"
 
 RUN julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc3"'
 
-RUN chown -R 2000 /tmp/julia/
-
 WORKDIR /julia
 CMD /bin/bash
