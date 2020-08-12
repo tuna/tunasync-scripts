@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://us-east.storage.juliahub.com"}
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://mirrors.sjtug.sjtu.edu.cn/julia"}
 [[ -d "${TUNASYNC_WORKING_DIR}" ]]
 cd "${TUNASYNC_WORKING_DIR}"
 
