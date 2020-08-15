@@ -212,15 +212,17 @@ def sync_installer(repo_url, local_dir: Path):
         dst_file_wip = local_dir / ('.downloading.' + filename)
 
         if dst_file.is_file():
-            r = requests.head(pkg_url, timeout=TIMEOUT_OPTION)
-            remote_filesize = int(r.headers['content-length'])
+            r = requests.head(pkg_url, allow_redirects=True, timeout=TIMEOUT_OPTION)
+            len_avail = 'content-length' in r.headers
+            if len_avail:
+                remote_filesize = int(r.headers['content-length'])
             remote_date = parsedate_to_datetime(r.headers['last-modified'])
             stat = dst_file.stat()
             local_filesize = stat.st_size
             local_mtime = stat.st_mtime
 
             # Do content verification on ~5% of files (see issue #25)
-            if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime and\
+            if (not len_avail or remote_filesize == local_filesize) and remote_date.timestamp() == local_mtime and \
                     (random.random() < 0.95 or md5_check(dst_file, md5)):
                 logging.info("Skipping {}".format(filename))
 
