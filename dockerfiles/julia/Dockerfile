@@ -18,7 +18,7 @@ RUN adduser --uid 2000 tunasync && \
 # packages. Here we provide a system-wide startup.jl that modifies the DEPOT_PATH and LOAD_PATH
 # variables for each user.
 # For more information about this, please refer to https://github.com/JuliaLang/Pkg.jl/issues/1952
-COPY startup.jl /usr/local/julia/etc/julia/startup.jl
+COPY dockerfiles/julia/startup.jl /usr/local/julia/etc/julia/startup.jl
 
 WORKDIR /julia
 CMD /bin/bash
