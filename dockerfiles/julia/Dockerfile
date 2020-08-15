@@ -11,7 +11,7 @@ LABEL maintainer="Johnny Chen <johnnychen94@hotmail.com>"
 ENV JULIA_DEPOT_PATH="/opt/julia"
 
 RUN adduser --uid 2000 tunasync && \
-    julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc3"' && \
+    julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc4"' && \
     chmod a+rx -R $JULIA_DEPOT_PATH
 
 COPY dockerfiles/julia/startup.jl /usr/local/julia/etc/julia/startup.jl
