@@ -11,10 +11,14 @@ LABEL maintainer="Johnny Chen <johnnychen94@hotmail.com>"
 ENV JULIA_DEPOT_PATH="/opt/julia"
 
 RUN adduser --uid 2000 tunasync && \
-    julia -e 'using Pkg; pkg"add https://github.com/johnnychen94/StorageMirrorServer.jl#v0.1.1-rc4"' && \
+    julia -e 'using Pkg; pkg"add StorageMirrorServer@0.1.4"' && \
     chmod a+rx -R $JULIA_DEPOT_PATH
 
-COPY dockerfiles/julia/startup.jl /usr/local/julia/etc/julia/startup.jl
+# Julia doesn't not yet have a nice solution for centralized package system with preinstalled
+# packages. Here we provide a system-wide startup.jl that modifies the DEPOT_PATH and LOAD_PATH
+# variables for each user.
+# For more information about this, please refer to https://github.com/JuliaLang/Pkg.jl/issues/1952
+COPY startup.jl /usr/local/julia/etc/julia/startup.jl
 
 WORKDIR /julia
 CMD /bin/bash
