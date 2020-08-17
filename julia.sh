@@ -15,4 +15,4 @@ REGISTRY="(\"$REGISTRY_NAME\", \"$REGISTRY_UUID\", \"$REGISTRY_UPSTREAM\")"
 
 # For more usage of `mirror_tarball`, please refer to
 # https://github.com/johnnychen94/StorageMirrorServer.jl/blob/master/examples/gen_static_full.example.jl
-exec julia -e "using StorageMirrorServer; mirror_tarball($REGISTRY, $UPSTREAMS, \"$OUTPUT_DIR\")"
+exec julia -e "using StorageMirrorServer; mirror_tarball($REGISTRY, $UPSTREAMS, \"$OUTPUT_DIR\", skip_duration=120)"
