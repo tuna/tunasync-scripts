@@ -1,6 +1,6 @@
-FROM alpine:3
+FROM alpine:3.11
 
-RUN apk add --no-cache bash ruby ruby-bigdecimal git curl ncurses ruby-json ruby-etc ruby-irb ruby-json ruby-test-unit
+RUN apk add --no-cache bash git curl ncurses ruby ruby-bigdecimal ruby-fiddle ruby-json ruby-etc ruby-irb ruby-json ruby-test-unit
 
 RUN git clone --depth 1 https://github.com/Homebrew/brew.git /home/homebrew/.linuxbrew/homebrew && cd /home/homebrew/.linuxbrew && mkdir bin && ln -s /home/homebrew/.linuxbrew/homebrew/bin/brew /home/homebrew/.linuxbrew/bin
 
