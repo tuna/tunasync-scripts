@@ -11,7 +11,7 @@ LABEL maintainer="Johnny Chen <johnnychen94@hotmail.com>"
 ENV JULIA_DEPOT_PATH="/opt/julia"
 
 RUN adduser --uid 2000 tunasync && \
-    julia -e 'using Pkg; pkg"add StorageMirrorServer@0.1.6"' && \
+    julia -e 'using Pkg; pkg"add StorageMirrorServer@0.2.0"' && \
     chmod a+rx -R $JULIA_DEPOT_PATH
 
 # Julia doesn't not yet have a nice solution for centralized package system with preinstalled
