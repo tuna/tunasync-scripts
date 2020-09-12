@@ -3,6 +3,10 @@ MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
 RUN apt-get update && \
         apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip
+
+RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
+      apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev libssl-dev libffi-dev ;\
+    fi
         
 RUN STATIC_DEPS=true pip3 install pyquery
 RUN pip3 install requests[socks] pyyaml gsutil awscli bandersnatch==3.6.0
