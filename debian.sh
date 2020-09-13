@@ -5,6 +5,7 @@ set -e
 set -o pipefail
 set -u
 
+
 export LOGNAME=tunasync
 FTPSYNC="${FTPSYNC:-"ftpsync"}"
 FTPSYNC_LOG_DIR="${FTPSYNC_LOG_DIR:-"/var/log/ftpsync"}"
