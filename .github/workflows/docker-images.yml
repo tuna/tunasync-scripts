@@ -5,6 +5,10 @@ on:
     branches: 
     - master
     - docker-test
+  pull_request:
+    branches: 
+    - master
+    - docker-test
 
 jobs:
   multi:
@@ -72,6 +76,7 @@ jobs:
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
+        if: github.event_name == 'push'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -82,7 +87,7 @@ jobs:
           context: .
           file: ${{ env.docker_file }}/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: tunathu/${{ matrix.image }}:${{ env.docker_tag }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
