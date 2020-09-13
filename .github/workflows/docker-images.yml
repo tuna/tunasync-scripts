@@ -67,12 +67,28 @@ jobs:
       -
         name: Cache Docker layers
         uses: actions/cache@v2
+        if: github.event_name == 'push'
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ matrix.image }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-${{ matrix.image }}-
-            ${{ runner.os }}-buildx-
+      -
+        name: Cache Docker layers
+        uses: actions/cache@v2
+        if: github.event_name == 'pull_request'
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-
+            ${{ runner.os }}-buildx-${{ matrix.image }}-
+      -
+        name: Cache Docker layers
+        if: github.event_name != 'push' && github.event_name != 'pull_request'
+        run: |
+          echo "I do not know how to setup cache"
+          exit -1
       -
         name: Login to DockerHub
         uses: docker/login-action@v1 
