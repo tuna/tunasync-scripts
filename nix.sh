@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TUNASYNC_WORKING_DIR="${TUNASYNC_WORKING_DIR:-nix}"
+
 TUNASYNC_UPSTREAM_URL="${TUNASYNC_UPSTREAM_URL:-s3://nix-releases/nix/}"
 MIRROR_BASE_URL="${MIRROR_BASE_URL:-https://mirrors.tuna.tsinghua.edu.cn/nix}"
 ORIG_BASE_URL="https://nixos.org/releases/nix"
