@@ -24,6 +24,7 @@ do
         repo_name="homebrew-${tap}"
         args="mac"
     fi
+    mkdir -p "$HOMEBREW_CACHE"
     remote_filelist="$HOMEBREW_CACHE/filelist.txt"
 
     echo "===== SYNC STARTED AT $(date -R) ====="
