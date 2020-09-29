@@ -11,11 +11,16 @@ import argparse
 import bz2
 import gzip
 import sqlite3
+import traceback
+import time
+from email.utils import parsedate_to_datetime
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import List, Dict
 import requests
 
 REPO_SIZE_FILE = os.getenv('REPO_SIZE_FILE', '')
+DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 REPO_STAT = {}
 
 def calc_repo_size(path: Path):
@@ -33,7 +38,7 @@ def calc_repo_size(path: Path):
             elif suffix == '.sqlite':
                 dec = lambda x: x
         if dec is None:
-            print(f"Failed to read DB from {path}: {dbfiles}", flush=True)
+            print(f"Failed to read DB from {path}: {list(dbfiles)}", flush=True)
             return
         with db.open('rb') as f:
             tmp.write(dec(f.read()))
@@ -50,6 +55,60 @@ def calc_repo_size(path: Path):
         global REPO_STAT
         REPO_STAT[str(path)] = res if res[1] > 0 else (0, 0) # res[0] can be None
 
+def check_and_download(url: str, dst_file: Path)->int:
+    try:
+        start = time.time()
+        with requests.get(url, stream=True, timeout=(5, 10)) as r:
+            r.raise_for_status()
+            if 'last-modified' in r.headers:
+                remote_ts = parsedate_to_datetime(
+                    r.headers['last-modified']).timestamp()
+            else: remote_ts = None
+
+            with dst_file.open('wb') as f:
+                for chunk in r.iter_content(chunk_size=1024**2):
+                    if time.time() - start > DOWNLOAD_TIMEOUT:
+                        raise TimeoutError("Download timeout")
+                    if not chunk: continue # filter out keep-alive new chunks
+
+                    f.write(chunk)
+            if remote_ts is not None:
+                os.utime(dst_file, (remote_ts, remote_ts))
+        return 0
+    except BaseException as e:
+        print(e, flush=True)
+        if dst_file.is_file(): dst_file.unlink()
+    return 1
+
+def download_repodata(url: str, path: Path) -> int:
+    path = path / "repodata"
+    path.mkdir(exist_ok=True)
+    oldfiles = set(path.glob('*.*'))
+    newfiles = set()
+    if check_and_download(url + "/repodata/repomd.xml", path / ".repomd.xml") != 0:
+        print(f"Failed to download the repomd.xml of {url}")
+        return 1
+    try:
+        tree = ET.parse(path / ".repomd.xml")
+        root = tree.getroot()
+        assert root.tag.endswith('repomd')
+        for location in root.findall('./{http://linux.duke.edu/metadata/repo}data/{http://linux.duke.edu/metadata/repo}location'):
+                href = location.attrib['href']
+                assert len(href) > 9 and href[:9] == 'repodata/'
+                fn = path / href[9:]
+                newfiles.add(fn)
+                if check_and_download(url + '/' + href, fn) != 0:
+                    print(f"Failed to download the {href}")
+                    return 1
+    except BaseException as e:
+        traceback.print_exc()
+        return 1
+
+    (path / ".repomd.xml").rename(path / "repomd.xml") # update the repomd.xml
+    newfiles.add(path / "repomd.xml")
+    for i in (oldfiles - newfiles):
+        print(f"Deleting old files: {i}")
+        i.unlink()
 
 def check_args(prop: str, lst: List[str]):
     for s in lst:
@@ -71,6 +130,8 @@ def main():
     parser.add_argument("arch", type=str, help="e.g. x86_64")
     parser.add_argument("repo_name", type=str, help="e.g. @{comp}-el@{os_ver}")
     parser.add_argument("working_dir", type=Path, help="working directory")
+    parser.add_argument("--download-repodata", action='store_true',
+                        help='download repodata files instead of generating them')
     args = parser.parse_args()
 
     if '-' in args.os_version:
@@ -149,9 +210,12 @@ enabled=1
 
         for path in dest_dirs:
             path.mkdir(exist_ok=True)
-            cmd_args = ["createrepo", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
-            # print(cmd_args)
-            ret = sp.run(cmd_args)
+            if args.download_repodata:
+                download_repodata(url, path)
+            else:
+                cmd_args = ["createrepo", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
+                # print(cmd_args)
+                ret = sp.run(cmd_args)
             calc_repo_size(path)
 
     if len(failed) > 0:
