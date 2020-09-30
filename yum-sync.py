@@ -24,36 +24,55 @@ DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 REPO_STAT = {}
 
 def calc_repo_size(path: Path):
-    dbfiles = path.glob('repodata/*primary.sqlite*')
+    dbfiles = path.glob('repodata/*primary.*')
     with tempfile.NamedTemporaryFile() as tmp:
         dec = None
         dbfile = None
         for db in dbfiles:
             dbfile = db
-            suffix = db.suffix
-            if suffix == '.bz2':
+            suffixes = db.suffixes
+            if suffixes[-1] == '.bz2':
                 dec = bz2.decompress
-            elif suffix == '.gz':
+                suffixes = suffixes[:-1]
+            elif suffixes[-1] == '.gz':
                 dec = gzip.decompress
-            elif suffix == '.sqlite':
+                suffixes = suffixes[:-1]
+            elif suffixes[-1] in ('.sqlite', '.xml'):
                 dec = lambda x: x
         if dec is None:
-            print(f"Failed to read DB from {path}: {list(dbfiles)}", flush=True)
+            print(f"Failed to read from {path}: {list(dbfiles)}", flush=True)
             return
         with db.open('rb') as f:
             tmp.write(dec(f.read()))
             tmp.flush()
 
-        conn = sqlite3.connect(tmp.name)
-        c = conn.cursor()
-        c.execute("select sum(size_package),count(1) from packages")
-        res = c.fetchone()
-        conn.close()
+        if suffixes[-1] == '.sqlite':
+            conn = sqlite3.connect(tmp.name)
+            c = conn.cursor()
+            c.execute("select sum(size_package),count(1) from packages")
+            size, cnt = c.fetchone()
+            conn.close()
+        elif suffixes[-1] == '.xml':
+            try:
+                tree = ET.parse(tmp.name)
+                root = tree.getroot()
+                assert root.tag.endswith('metadata')
+                cnt, size = 0, 0
+                for location in root.findall('./{http://linux.duke.edu/metadata/common}package/{http://linux.duke.edu/metadata/common}size'):
+                    size += int(location.attrib['package'])
+                    cnt += 1
+            except:
+                traceback.print_exc()
+                return
+        else:
+            print(f"Unknown suffix {suffixes}")
+            return
+
         print(f"Repository {path}:")
-        print(f"  {res[1]} packages, {res[0]} bytes in total", flush=True)
+        print(f"  {cnt} packages, {size} bytes in total", flush=True)
 
         global REPO_STAT
-        REPO_STAT[str(path)] = res if res[1] > 0 else (0, 0) # res[0] can be None
+        REPO_STAT[str(path)] = (size, cnt) if cnt > 0 else (0, 0) # size can be None
 
 def check_and_download(url: str, dst_file: Path)->int:
     try:
