@@ -38,6 +38,7 @@ REPOS = [
     "balena-io/etcher",
     "llvm/llvm-project",
     "conda-forge/miniforge",
+    "texstudio-org/texstudio",
 ]
 
 # connect and read timeout value
