@@ -39,6 +39,7 @@ REPOS = [
     "llvm/llvm-project",
     "conda-forge/miniforge",
     "texstudio-org/texstudio",
+    "Stellarium/stellarium",
 ]
 
 # connect and read timeout value
