@@ -62,6 +62,7 @@ CONDA_CLOUD_REPOS = (
     "biobakery/linux-64", "biobakery/osx-64", "biobakery/noarch",
     "c4aarch64/linux-aarch64", "c4aarch64/noarch",
     "pytorch3d/linux-64", "pytorch3d/noarch",
+    "idaholab/linux-64", "idaholab/noarch",
 )
 
 EXCLUDED_PACKAGES = (
