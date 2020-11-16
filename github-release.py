@@ -40,6 +40,7 @@ REPOS = [
     "conda-forge/miniforge",
     "texstudio-org/texstudio",
     "Stellarium/stellarium",
+    "UNIDY2002/THUInfo",
 ]
 
 # connect and read timeout value
