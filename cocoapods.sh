@@ -15,8 +15,8 @@ function update_cocoapods_git() {
 	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
 	head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
-	[[ -n "$head" ]] && echo "ref: refs/heads/$head" > HEAD
-	objs=$(find objects -type f | wc -l)
+	[[ -n "$head" ]] && echo "ref: refs/heads/$head" > .git/HEAD
+	objs=$(find .git/objects -type f | wc -l)
 	[[ "$objs" -gt 8 ]] && git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
 	total_size=$(($total_size+1024*$sz))
