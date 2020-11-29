@@ -20,7 +20,7 @@ echo "YUM finished"
 
 "$apt_sync" --delete "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386,arm64 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-"$apt_sync" --delete "${UPSTREAM}/debian" @debian-current main amd64,i386,arm64 "$DEBIAN_PATH"
+"$apt_sync" --delete "${UPSTREAM}/debian" @debian-current main amd64,i386,arm64,armhf "$DEBIAN_PATH"
 echo "Debian finished"
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
