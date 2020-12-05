@@ -12,7 +12,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 for os in "xenial" "bionic" "focal" "stretch" "buster"; do
     prefix=llvm-toolchain-$os
-    "$apt_sync" --delete "$BASE_URL/$os" $prefix,$prefix-9,$prefix-10 main amd64 "$BASE_PATH/$os"
+    "$apt_sync" --delete "$BASE_URL/$os" $prefix,$prefix-9,$prefix-10,$prefix-11 main amd64 "$BASE_PATH/$os"
 done
 
 echo "APT finished"
