@@ -1,4 +1,6 @@
-FROM cybercode/alpine-ruby:2.3
+FROM ruby:2.7-alpine
 RUN gem install rubygems-mirror
-ENV BUSYBOX=1
+RUN apk add bash
+# the command timeout provided by old verison of busybox was incompatible with that from coreutils and is compatible now. 
+ENV BUSYBOX=0
 ENV HOME=/tmp
