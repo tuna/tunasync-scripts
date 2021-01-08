@@ -216,20 +216,22 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             continue
 
         pkg_url=f"{base_url}/{pkg_filename}"
+        dest_tmp_filename = dest_filename.with_name('._syncing_.' + dest_filename.name)
         for retry in range(MAX_RETRY):
             print(f"downloading {pkg_url} to {dest_filename}", flush=True)
             # break # dry run
-            if check_and_download(pkg_url, dest_filename) != 0:
+            if check_and_download(pkg_url, dest_tmp_filename) != 0:
                 continue
 
             sha = hashlib.sha256()
-            with dest_filename.open("rb") as f:
+            with dest_tmp_filename.open("rb") as f:
                 for block in iter(lambda: f.read(1024**2), b""):
                     sha.update(block)
             if sha.hexdigest() != pkg_checksum:
                 print(f"Invalid checksum of {dest_filename}, expected {pkg_checksum}")
-                dest_filename.unlink()
+                dest_tmp_filename.unlink()
                 continue
+            dest_tmp_filename.rename(dest_filename)
             break
         else:
             print(f"Failed to download {dest_filename}")
