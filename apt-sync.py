@@ -19,7 +19,7 @@ from typing import List, Dict, Set, Tuple, IO
 import requests
 
 OS_TEMPLATE = {
-    'ubuntu-current': ["xenial", "bionic", "eoan", "focal"],
+    'ubuntu-current': ["xenial", "bionic", "focal", "groovy"],
     'ubuntu-lts': ["xenial", "bionic", "focal"],
     'debian-current': ["jessie", "stretch", "buster"],
     'debian-latest2': ["stretch", "buster"],
