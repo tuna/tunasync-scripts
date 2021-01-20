@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import hashlib
 import json
 import logging
@@ -18,51 +19,52 @@ import requests
 DEFAULT_CONDA_REPO_BASE = "https://repo.continuum.io"
 DEFAULT_CONDA_CLOUD_BASE = "https://conda.anaconda.org"
 
-CONDA_REPO_BASE_URL = os.getenv("CONDA_REPO_URL", "https://repo.continuum.io")
-CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL", "https://conda.anaconda.org")
+CONDA_REPO_BASE_URL = os.getenv("CONDA_REPO_URL",
+                                "https://repo.continuum.io")
+CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL",
+                                 "https://conda.anaconda.org")
 
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 
 CONDA_REPOS = ("main", "free", "r", "msys2")
 CONDA_ARCHES = (
-    "noarch", "linux-64", "linux-32", "linux-armv6l", "linux-armv7l",
-    "linux-ppc64le", "osx-64", "osx-32", "win-64", "win-32"
+    "linux-32", "linux-64", "linux-armv6l", "linux-armv7l", "linux-ppc64le",
+    "noarch", "osx-32", "osx-64", "win-32", "win-64"
 )
-
 CONDA_CLOUD_REPOS = (
-    "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/win-64", "conda-forge/noarch",
-    "msys2/linux-64", "msys2/win-64", "msys2/noarch",
-    "rapidsai/linux-64", "rapidsai/noarch",
-    "bioconda/linux-64", "bioconda/osx-64", "bioconda/win-64", "bioconda/noarch",
-    "menpo/linux-64", "menpo/osx-64", "menpo/win-64", "menpo/win-32", "menpo/noarch",
-    "pytorch/linux-64", "pytorch/osx-64", "pytorch/win-64", "pytorch/win-32", "pytorch/noarch",
-    "pytorch-test/linux-64", "pytorch-test/osx-64", "pytorch-test/win-64", "pytorch-test/win-32", "pytorch-test/noarch",
-    "stackless/linux-64", "stackless/win-64", "stackless/win-32", "stackless/linux-32", "stackless/osx-64", "stackless/noarch",
-    "fermi/linux-64", "fermi/osx-64", "fermi/win-64", "fermi/noarch",
-    "fastai/linux-64", "fastai/osx-64", "fastai/win-64", "fastai/noarch",
-    "omnia/linux-64", "omnia/osx-64", "omnia/win-64", "omnia/noarch",
-    "simpleitk/linux-64", "simpleitk/linux-32", "simpleitk/osx-64", "simpleitk/win-64", "simpleitk/win-32", "simpleitk/noarch",
-    "caffe2/linux-64", "caffe2/osx-64", "caffe2/win-64", "caffe2/noarch",
-    "plotly/linux-64", "plotly/linux-32", "plotly/osx-64", "plotly/win-64", "plotly/win-32", "plotly/noarch",
-    "intel/linux-64", "intel/linux-32", "intel/osx-64", "intel/win-64", "intel/win-32", "intel/noarch",
-    "auto/linux-64", "auto/linux-32", "auto/osx-64", "auto/win-64", "auto/win-32", "auto/noarch",
-    "ursky/linux-64", "ursky/osx-64", "ursky/noarch",
-    "matsci/linux-64", "matsci/osx-64", "matsci/win-64", "matsci/noarch",
-    "psi4/linux-64", "psi4/osx-64", "psi4/win-64", "psi4/noarch",
-    "Paddle/linux-64", "Paddle/linux-32", "Paddle/osx-64", "Paddle/win-64", "Paddle/win-32", "Paddle/noarch",
-    "deepmodeling/linux-64", "deepmodeling/noarch",
-    "numba/linux-64", "numba/linux-32", "numba/osx-64", "numba/win-64", "numba/win-32", "numba/noarch",
-    "numba/label/dev/win-64", "numba/label/dev/noarch",
-    "pyviz/linux-64", "pyviz/linux-32", "pyviz/win-64", "pyviz/win-32", "pyviz/osx-64", "pyviz/noarch",
-    "dglteam/linux-64", "dglteam/win-64", "dglteam/osx-64", "dglteam/noarch",
-    "rdkit/linux-64", "rdkit/win-64", "rdkit/osx-64", "rdkit/noarch",
-    "mordred-descriptor/linux-64", "mordred-descriptor/win-64", "mordred-descriptor/win-32", "mordred-descriptor/osx-64", "mordred-descriptor/noarch",
-    "ohmeta/linux-64", "ohmeta/osx-64", "ohmeta/noarch",
-    "qiime2/linux-64", "qiime2/osx-64", "qiime2/noarch",
-    "biobakery/linux-64", "biobakery/osx-64", "biobakery/noarch",
-    "c4aarch64/linux-aarch64", "c4aarch64/noarch",
-    "pytorch3d/linux-64", "pytorch3d/noarch",
-    "idaholab/linux-64", "idaholab/noarch",
+    "Paddle",
+    "auto",
+    "biobakery",
+    "bioconda",
+    "c4aarch64",
+    "caffe2",
+    "conda-forge",
+    "deepmodeling",
+    "dglteam",
+    "fastai",
+    "fermi",
+    "hcc",
+    "idaholab",
+    "intel",
+    "matsci",
+    "menpo",
+    "mordred-descriptor",
+    "msys2",
+    "numba",
+    "ohmeta",
+    "omnia",
+    "plotly",
+    "psi4",
+    "pytorch",
+    "pytorch-test",
+    "pytorch3d",
+    "pyviz",
+    "qiime2",
+    "rapidsai",
+    "rdkit",
+    "simpleitk",
+    "stackless",
+    "ursky",
 )
 
 EXCLUDED_PACKAGES = (
@@ -77,14 +79,16 @@ logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
 )
 
-def sizeof_fmt(num, suffix='iB'):
-    for unit in ['','K','M','G','T','P','E','Z']:
+
+def sizeof_fmt(num, suffix: str = 'iB'):
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
             return "%3.2f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.2f%s%s" % (num, 'Y', suffix)
 
-def md5_check(file: Path, md5: str = None):
+
+def md5_check(file: Path, md5: str = ''):
     m = hashlib.md5()
     with file.open('rb') as f:
         while True:
@@ -95,7 +99,7 @@ def md5_check(file: Path, md5: str = None):
     return m.hexdigest() == md5
 
 
-def curl_download(remote_url: str, dst_file: Path, md5: str = None):
+def curl_download(remote_url: str, dst_file: Path, md5: str = ''):
     sp.check_call([
         "curl", "-o", str(dst_file),
         "-sL", "--remote-time", "--show-error",
@@ -169,7 +173,6 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
                 break
             logging.error("Failed to download {}: {}".format(filename, err))
 
-
     shutil.move(str(tmp_repodata), str(local_dir / "repodata.json"))
     shutil.move(str(tmp_bz2_repodata), str(local_dir / "repodata.json.bz2"))
     if tmp_current_repodata.is_file():
@@ -193,10 +196,11 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
         repodata_url, len(remote_filelist), sizeof_fmt(total_size)))
     return total_size
 
-def sync_installer(repo_url, local_dir: Path):
+
+def sync_installer(repo_url: str, local_dir: Path):
     logging.info("Start syncing {}".format(repo_url))
     local_dir.mkdir(parents=True, exist_ok=True)
-    full_scan = random.random() < 0.1 # Do full version check less frequently
+    full_scan = random.random() < 0.1  # Do full version check less frequently
 
     def remote_list():
         r = requests.get(repo_url, timeout=TIMEOUT_OPTION)
@@ -215,7 +219,8 @@ def sync_installer(repo_url, local_dir: Path):
         dst_file_wip = local_dir / ('.downloading.' + filename)
 
         if dst_file.is_file():
-            r = requests.head(pkg_url, allow_redirects=True, timeout=TIMEOUT_OPTION)
+            r = requests.head(pkg_url, allow_redirects=True,
+                              timeout=TIMEOUT_OPTION)
             len_avail = 'content-length' in r.headers
             if len_avail:
                 remote_filesize = int(r.headers['content-length'])
@@ -225,8 +230,9 @@ def sync_installer(repo_url, local_dir: Path):
             local_mtime = stat.st_mtime
 
             # Do content verification on ~5% of files (see issue #25)
-            if (not len_avail or remote_filesize == local_filesize) and remote_date.timestamp() == local_mtime and \
-                    (random.random() < 0.95 or md5_check(dst_file, md5)):
+            if ((not len_avail or remote_filesize == local_filesize) and
+                    remote_date.timestamp() == local_mtime and
+                    (random.random() < 0.95 or md5_check(dst_file, md5))):
                 logging.info("Skipping {}".format(filename))
 
                 # Stop the scanning if the most recent version is present
@@ -252,8 +258,8 @@ def sync_installer(repo_url, local_dir: Path):
                 break
             logging.error("Failed to download {}: {}".format(filename, err))
 
+
 def main():
-    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--working-dir", default=WORKING_DIR)
     parser.add_argument("--delete", action='store_true',
@@ -280,32 +286,36 @@ def main():
 
     for repo in CONDA_REPOS:
         for arch in CONDA_ARCHES:
-            remote_url = "{}/pkgs/{}/{}".format(CONDA_REPO_BASE_URL, repo, arch)
+            remote_url = "{}/pkgs/{}/{}".format(CONDA_REPO_BASE_URL,
+                                                repo, arch)
             local_dir = working_dir / "pkgs" / repo / arch
 
             tmpdir = tempfile.mkdtemp()
             try:
-                size_statistics += sync_repo(remote_url,
-                                             local_dir, Path(tmpdir), args.delete)
+                size_statistics += sync_repo(remote_url, local_dir,
+                                             Path(tmpdir), args.delete)
             except Exception:
-                logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
+                logging.exception(
+                    "Failed to sync repo: {}/{}".format(repo, arch))
             finally:
                 shutil.rmtree(tmpdir)
 
     for repo in CONDA_CLOUD_REPOS:
-        remote_url = "{}/{}".format(CONDA_CLOUD_BASE_URL, repo)
-        local_dir = working_dir / "cloud" / repo
+        for arch in CONDA_ARCHES:
+            remote_url = "{}/{}/{}".format(CONDA_CLOUD_BASE_URL, repo, arch)
+            local_dir = working_dir / "cloud" / repo / arch
 
-        tmpdir = tempfile.mkdtemp()
-        try:
-            size_statistics += sync_repo(remote_url,
-                                         local_dir, Path(tmpdir), args.delete)
-        except Exception:
-            logging.exception("Failed to sync repo: {}".format(repo))
-        finally:
-            shutil.rmtree(tmpdir)
+            tmpdir = tempfile.mkdtemp()
+            try:
+                size_statistics += sync_repo(remote_url, local_dir,
+                                             Path(tmpdir), args.delete)
+            except Exception:
+                logging.exception("Failed to sync repo: {}".format(repo))
+            finally:
+                shutil.rmtree(tmpdir)
 
     print("Total size is", sizeof_fmt(size_statistics, suffix=""))
+
 
 if __name__ == "__main__":
     main()
