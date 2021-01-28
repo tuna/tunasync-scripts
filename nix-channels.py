@@ -373,7 +373,7 @@ def garbage_collect():
 
     for release in (working_dir / RELEASES_DIR).iterdir():
         # This release never finished downloading
-        if (release / 'binary-cache-url').exists(): continue
+        if not (release / 'binary-cache-url').exists(): continue
 
         channel = release.name.split('@')[0]
         date_str = (release / '.released-time').read_text()
