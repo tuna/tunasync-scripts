@@ -372,6 +372,9 @@ def garbage_collect():
     alive = set()
 
     for release in (working_dir / RELEASES_DIR).iterdir():
+        # This release never finished downloading
+        if (release / 'binary-cache-url').exists(): continue
+
         channel = release.name.split('@')[0]
         date_str = (release / '.released-time').read_text()
         released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
