@@ -6,5 +6,6 @@ echo "rustup sync started"
 
 BASE_URL=${MIRROR_BASE_URL:-"https://mirrors.tuna.tsinghua.edu.cn/rustup"}
 
-/usr/local/cargo/bin/rustup-mirror -u "${BASE_URL}" -m "${TUNASYNC_WORKING_DIR}" --gc 45
+/usr/local/cargo/bin/rustup-mirror -u "${BASE_URL}" -m "${TUNASYNC_WORKING_DIR}" --gc 30
 echo "finished"
+
