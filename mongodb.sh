@@ -29,7 +29,7 @@ popd
 echo "YUM finished"
 
 components=$(printf ",@{ubuntu-lts}/mongodb-org/%s" "${MONGO_VERSIONS[@]}")
-"$apt_sync" --delete-dry-run "$BASE_URL/apt/ubuntu" "${components:1}" multiverse amd64,i386 "$UBUNTU_PATH"
+"$apt_sync" --delete-dry-run "$BASE_URL/apt/ubuntu" "${components:1}" multiverse amd64,i386,arm64 "$UBUNTU_PATH"
 components=$(printf ",@{debian-current}/mongodb-org/%s" "${MONGO_VERSIONS[@]}")
 "$apt_sync" --delete-dry-run "$BASE_URL/apt/debian" "${components:1}" main amd64,i386 "$DEBIAN_PATH"
 
