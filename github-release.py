@@ -41,6 +41,7 @@ REPOS = [
     "texstudio-org/texstudio",
     "Stellarium/stellarium",
     "UNIDY2002/THUInfo",
+    {"repo": "obsproject/obs-studio", "versions": 5, "pre_release": False},
 ]
 
 # connect and read timeout value
