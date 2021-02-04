@@ -31,9 +31,9 @@ enabled =
 [blacklist]
 packages =
     tf-nightly-gpu
-	tf-nightly
-	tensorflow-io-nightly
-	tf-nightly-cpu
+    tf-nightly
+    tensorflow-io-nightly
+    tf-nightly-cpu
     pyagrum-nightly
 EOF
 	exec $BANDERSNATCH -c $CONF mirror 
