@@ -14,7 +14,9 @@ function update_linux_git() {
 	echo "==== SYNC $UPSTREAM START ===="
 	git remote set-url origin "$UPSTREAM"
 	/usr/bin/timeout -s INT 3600 git remote -v update -p
-	head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
+	local ret=$?
+	[[ $ret -ne 0 ]] && echo "git update failed with rc=$ret"
+	local head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
 	[[ -n "$head" ]] && echo "ref: refs/heads/$head" > HEAD
 	objs=$(find objects -type f | wc -l)
 	[[ "$objs" -gt 8 ]] && git repack -a -b -d
@@ -22,6 +24,7 @@ function update_linux_git() {
 	sz=$(($sz*1024))
 	echo "size-pack:" $(numfmt --to=iec $sz)
 	echo "==== SYNC $UPSTREAM DONE ===="
+	return $ret
 }
 
 if [[ ! -f "$TUNASYNC_WORKING_DIR/HEAD" ]]; then

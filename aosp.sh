@@ -8,6 +8,8 @@ UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://android.googlesource.com/mirror/manif
 git config --global user.email "mirrors@tuna"
 git config --global user.name "tuna mirrors"
 
+repo_sync_rc=0
+
 function repo_init() {
 	mkdir -p $TUNASYNC_WORKING_DIR
 	cd $TUNASYNC_WORKING_DIR
@@ -16,7 +18,11 @@ function repo_init() {
 
 function repo_sync() {
 	cd $TUNASYNC_WORKING_DIR
-	$REPO sync -f -j1 || echo "WARNING: repo-sync may fail, but we just ignore it."
+	set +e
+	$REPO sync -f -j1
+	repo_sync_rc=$?
+	set -e
+	[[ "$repo_sync_rc" -ne 0 ]] && echo "WARNING: repo-sync may fail, but we just ignore it."
 }
 
 function git_repack() {
@@ -44,3 +50,4 @@ if [[ "$USE_BITMAP_INDEX" == "1" ]]; then
 	git_repack
 	echo "Total size is" $(numfmt --to=iec $total_size)
 fi
+exit $repo_sync_rc
