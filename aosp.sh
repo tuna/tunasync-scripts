@@ -22,7 +22,9 @@ function repo_sync() {
 	$REPO sync -f -j1
 	repo_sync_rc=$?
 	set -e
-	[[ "$repo_sync_rc" -ne 0 ]] && echo "WARNING: repo-sync may fail, but we just ignore it."
+	if [[ "$repo_sync_rc" -ne 0 ]]; then
+		echo "WARNING: repo-sync may fail, but we just ignore it."
+	fi
 }
 
 function git_repack() {
