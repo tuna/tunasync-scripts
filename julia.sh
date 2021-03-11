@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://us-east.storage.juliahub.com"}
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://us-east.pkg.julialang.com"}
 [[ -d "${TUNASYNC_WORKING_DIR}" ]]
 cd "${TUNASYNC_WORKING_DIR}"
 
-UPSTREAMS="[\"https://us-east.storage.juliahub.com\", \"https://kr.storage.juliahub.com\"]"
+UPSTREAMS="[\"https://us-east.pkg.julialang.com\", \"https://kr.pkg.julialang.com\"]"
 
 OUTPUT_DIR="$PWD/static"
 
