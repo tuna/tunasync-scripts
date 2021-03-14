@@ -65,7 +65,7 @@ def github_get(*args, **kwargs):
     return requests.get(*args, **kwargs)
 
 
-def do_download(remote_url: str, dst_file: Path, remote_ts: float):
+def do_download(remote_url: str, dst_file: Path, remote_ts: float, remote_size: int):
     # NOTE the stream=True parameter below
     with github_get(remote_url, stream=True) as r:
         r.raise_for_status()
@@ -74,6 +74,10 @@ def do_download(remote_url: str, dst_file: Path, remote_ts: float):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
                     # f.flush()
+        # check for downloaded size
+        downloaded_size = dst_file.stat().st_size
+        if remote_size != -1 and downloaded_size != remote_size:
+            raise Exception(f'File {dst_file.as_posix()} size mismatch: downloaded {downloaded_size} bytes, expected {remote_size} bytes')
         os.utime(dst_file, (remote_ts, remote_ts))
 
 
@@ -148,7 +152,8 @@ def main():
                 print("skipping", dst_file.relative_to(working_dir), flush=True)
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
-                task_queue.put((url, dst_file, working_dir, updated))
+                # tarball has no size information, use -1 to skip size check
+                task_queue.put((url, dst_file, working_dir, updated, -1))
 
         for asset in release['assets']:
             url = asset['browser_download_url']
@@ -156,7 +161,8 @@ def main():
                 asset['updated_at'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
             dst_file = release_dir / ensure_safe_name(asset['name'])
             remote_filelist.append(dst_file.relative_to(working_dir))
-            total_size += asset['size']
+            remote_size = asset['size']
+            total_size += remote_size
 
             if dst_file.is_file():
                 if args.fast_skip:
@@ -170,14 +176,14 @@ def main():
                     # print(f"{local_filesize} vs {asset['size']}")
                     # print(f"{local_mtime} vs {updated}")
                     if local_mtime > updated or \
-                        asset['size'] == local_filesize and local_mtime == updated:
+                        remote_size == local_filesize and local_mtime == updated:
                         print("skipping", dst_file.relative_to(
                             working_dir), flush=True)
                         continue
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
 
-            task_queue.put((url, dst_file, working_dir, updated))
+            task_queue.put((url, dst_file, working_dir, updated, remote_size))
 
     def link_latest(name, repo_dir):
         try:
