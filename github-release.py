@@ -87,12 +87,12 @@ def downloading_worker(q):
         if item is None:
             break
 
-        url, dst_file, working_dir, updated = item
+        url, dst_file, working_dir, updated, remote_size = item
 
         print("downloading", url, "to",
               dst_file.relative_to(working_dir), flush=True)
         try:
-            do_download(url, dst_file, updated)
+            do_download(url, dst_file, updated, remote_size)
         except Exception:
             print("Failed to download", url, flush=True)
             if dst_file.is_file():
