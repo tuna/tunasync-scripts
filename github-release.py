@@ -6,6 +6,7 @@ import traceback
 import queue
 from pathlib import Path
 from datetime import datetime
+import tempfile
 
 import requests
 
@@ -69,16 +70,25 @@ def do_download(remote_url: str, dst_file: Path, remote_ts: float, remote_size: 
     # NOTE the stream=True parameter below
     with github_get(remote_url, stream=True) as r:
         r.raise_for_status()
-        with open(dst_file, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024**2):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-                    # f.flush()
-        # check for downloaded size
-        downloaded_size = dst_file.stat().st_size
-        if remote_size != -1 and downloaded_size != remote_size:
-            raise Exception(f'File {dst_file.as_posix()} size mismatch: downloaded {downloaded_size} bytes, expected {remote_size} bytes')
-        os.utime(dst_file, (remote_ts, remote_ts))
+        tmp_dst_file = None
+        try:
+            with tempfile.NamedTemporaryFile(prefix="." + dst_file.name + ".", suffix=".tmp", dir=dst_file.parent, delete=False) as f:
+                tmp_dst_file = Path(f.name)
+                for chunk in r.iter_content(chunk_size=1024**2):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
+                        # f.flush()
+            # check for downloaded size
+            downloaded_size = tmp_dst_file.stat().st_size
+            if remote_size != -1 and downloaded_size != remote_size:
+                raise Exception(f'File {dst_file.as_posix()} size mismatch: downloaded {downloaded_size} bytes, expected {remote_size} bytes')
+            os.utime(tmp_dst_file, (remote_ts, remote_ts))
+            tmp_dst_file.chmod(0o644)
+            tmp_dst_file.replace(dst_file)
+        finally:
+            if not tmp_dst_file is None:
+                if tmp_dst_file.is_file():
+                    tmp_dst_file.unlink()
 
 
 def downloading_worker(q):
