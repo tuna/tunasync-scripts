@@ -26,11 +26,11 @@ WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 CONDA_REPOS = ("main", "free", "r", "msys2")
 CONDA_ARCHES = (
     "noarch", "linux-64", "linux-32", "linux-armv6l", "linux-armv7l",
-    "linux-ppc64le", "osx-64", "osx-32", "win-64", "win-32"
+    "linux-ppc64le", "osx-64", "osx-32", "osx-arm64", "win-64", "win-32"
 )
 
 CONDA_CLOUD_REPOS = (
-    "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/win-64", "conda-forge/noarch",
+    "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/osx-arm64", "conda-forge/win-64", "conda-forge/noarch",
     "msys2/linux-64", "msys2/win-64", "msys2/noarch",
     "rapidsai/linux-64", "rapidsai/noarch",
     "bioconda/linux-64", "bioconda/osx-64", "bioconda/win-64", "bioconda/noarch",
