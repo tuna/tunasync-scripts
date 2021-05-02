@@ -26,9 +26,9 @@ delete-packages = true
 
 [plugins]
 enabled =
-    blacklist_project
+    blocklist_project
 
-[blacklist]
+[blocklist]
 packages =
     tf-nightly-gpu
     tf-nightly
