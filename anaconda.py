@@ -30,6 +30,16 @@ CONDA_ARCHES = (
 )
 
 CONDA_CLOUD_REPOS = (
+    "ncar/geocat-comp",
+    "ncar/geocat-f2py",
+    "ncar/geocat-datafiles",
+    "ncar/geocat-viz",
+    "ncar/geocat-ncomp",
+    "ncar/libncomp",
+    "ncar/ncomp",
+    "ncar/ncl",
+    "ncar/pynio",
+    "ncar/libgdal",
     "conda-forge/linux-64", "conda-forge/osx-64", "conda-forge/osx-arm64", "conda-forge/win-64", "conda-forge/noarch",
     "msys2/linux-64", "msys2/win-64", "msys2/noarch",
     "rapidsai/linux-64", "rapidsai/noarch",
