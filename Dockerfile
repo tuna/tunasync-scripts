@@ -2,7 +2,7 @@ FROM debian:buster
 MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
 RUN apt-get update && \
-        apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip
+        apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip libnss-unknown
 
 RUN pip3 install --upgrade pip        
 RUN STATIC_DEPS=true python3 -m pip install pyquery
