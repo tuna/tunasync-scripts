@@ -42,7 +42,7 @@ jobs:
           else
             tag=build-test
           fi
-          echo "::set-env name=docker_tag::${tag}"
+          echo "docker_tag=${tag}" >> $GITHUB_ENV
       - 
         name: Determin dockerfile
         env:
@@ -52,7 +52,7 @@ jobs:
           if [ -z "${DF}" ]; then
             DF="dockerfiles/${IMG}"
           fi
-          echo "::set-env name=docker_file::${DF}"
+          echo "docker_file=${DF}" >> $GITHUB_ENV
       -
         name: Checkout
         uses: actions/checkout@v2
