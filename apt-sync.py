@@ -25,6 +25,7 @@ OS_TEMPLATE = {
     'debian-latest2': ["stretch", "buster"],
     'debian-latest': ["buster"],
 }
+ARCH_NO_PKGIDX = ['dep11', 'i18n']
 MAX_RETRY=int(os.getenv('MAX_RETRY', '3'))
 DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 REPO_SIZE_FILE = os.getenv('REPO_SIZE_FILE', '')
@@ -125,7 +126,8 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
 
 	# load Package Index URLs from the Release file
     release_file = dist_tmp_dir / "Release"
-    pkgidx_dir,pkgidx_tmp_dir = mkdir_with_dot_tmp(comp_dir / f"binary-{arch}")
+    arch_dir = arch if arch in ARCH_NO_PKGIDX else f"binary-{arch}"
+    pkgidx_dir,pkgidx_tmp_dir = mkdir_with_dot_tmp(comp_dir / arch_dir)
     with open(release_file, "r") as fd:
         pkgidx_content=None
         cnt_start=False
@@ -135,7 +137,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                 if len(fields) != 3 or len(fields[0]) != 64: # 64 is SHA-256 checksum length
                     break
                 checksum, filesize, filename = tuple(fields)
-                if filename.startswith(f"{repo}/binary-{arch}/") or \
+                if filename.startswith(f"{repo}/{arch_dir}/") or \
                    filename.startswith(f"{repo}/Contents-{arch}") or \
                    filename.startswith(f"Contents-{arch}"):
                     fn = Path(filename)
@@ -179,6 +181,26 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
     if not cnt_start:
         print("Cannot find SHA-256 checksum")
         return 1
+
+    def collect_tmp_dir():
+        try:
+            move_files_in(pkgidx_tmp_dir, pkgidx_dir)
+            move_files_in(comp_tmp_dir, comp_dir)
+            move_files_in(dist_tmp_dir, dist_dir)
+
+            pkgidx_tmp_dir.rmdir()
+            comp_tmp_dir.rmdir()
+            dist_tmp_dir.rmdir()
+            return 0
+        except:
+            traceback.print_exc()
+            return 1
+    if arch in ARCH_NO_PKGIDX:
+        if collect_tmp_dir() == 1:
+            return 1
+        print(f"Mirroring {base_url} {dist}, {repo}, {arch} done!")
+        return 0
+
     if pkgidx_content is None:
         print("index is empty, failed")
         if len(list(pkgidx_dir.glob('Packages*'))) == 0:
@@ -236,18 +258,9 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
         else:
             print(f"Failed to download {dest_filename}")
             err = 1
-    try:
-        move_files_in(pkgidx_tmp_dir, pkgidx_dir)
-        move_files_in(comp_tmp_dir, comp_dir)
-        move_files_in(dist_tmp_dir, dist_dir)
 
-        pkgidx_tmp_dir.rmdir()
-        comp_tmp_dir.rmdir()
-        dist_tmp_dir.rmdir()
-    except:
-        traceback.print_exc()
+    if collect_tmp_dir() == 1:
         return 1
-
     print(f"Mirroring {base_url} {dist}, {repo}, {arch} done!")
     print(f"{deb_count} packages, {deb_size} bytes in total", flush=True)
     return err
