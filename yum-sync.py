@@ -197,6 +197,7 @@ def main():
         conf.write('''
 [main]
 keepcache=0
+cachedir={cache_dir}
 ''')
         for name, url in combination_os_comp(arch):
             conf.write(f'''
@@ -219,7 +220,7 @@ enabled=1
             failed.append(('', arch))
             continue
 
-        cmd_args = ["reposync", "-a", arch, "-c", conf.name, "-d", "-p", str(args.working_dir.absolute()), "-e", cache_dir]
+        cmd_args = ["dnf", "reposync", "-a", arch, "-c", conf.name, "--delete", "-p", str(args.working_dir.absolute())]
         print("Launching reposync", flush=True)
         # print(cmd_args)
         ret = sp.run(cmd_args)
@@ -232,7 +233,7 @@ enabled=1
             if args.download_repodata:
                 download_repodata(url, path)
             else:
-                cmd_args = ["createrepo", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
+                cmd_args = ["createrepo_c", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
                 # print(cmd_args)
                 ret = sp.run(cmd_args)
             calc_repo_size(path)
