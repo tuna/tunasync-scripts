@@ -108,7 +108,7 @@ def downloading_worker(q):
             url, dst_file, working_dir = item
             if dst_file.is_file():
                 print("checking", url, flush=True)
-                r = requests.head(url, timeout=TIMEOUT_OPTION)
+                r = requests.head(url, timeout=TIMEOUT_OPTION, allow_redirects=True)
                 remote_filesize = int(r.headers['content-length'])
                 remote_date = parsedate_to_datetime(r.headers['last-modified'])
                 stat = dst_file.stat()
