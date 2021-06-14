@@ -1,8 +1,14 @@
-FROM debian:buster
+FROM debian:bullseye
 MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
+RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+RUN sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+
 RUN apt-get update && \
-        apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip libnss-unknown
+        apt-get install -y wget curl rsync lftp git jq python3-dev python3-pip dnf createrepo-c aria2 ack composer php-curl php-zip libnss-unknown
+
+COPY dnf-plugins-core_4.0.21-0\~unreleased_all.deb /
+RUN dpkg -i /dnf-plugins-core_4.0.21-0\~unreleased_all.deb
 
 RUN pip3 install --upgrade pip        
 RUN STATIC_DEPS=true python3 -m pip install pyquery
