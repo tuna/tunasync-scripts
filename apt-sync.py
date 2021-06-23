@@ -18,6 +18,10 @@ from typing import List, Dict, Set, Tuple, IO
 
 import requests
 
+
+APT_SYNC_USER_AGENT = os.getenv("APT_SYNC_USER_AGENT", "APT-Mirror-Tool/1.0")
+requests.utils.default_user_agent = lambda: APT_SYNC_USER_AGENT
+
 OS_TEMPLATE = {
     'ubuntu-current': ["xenial", "bionic", "focal", "groovy"],
     'ubuntu-lts': ["xenial", "bionic", "focal"],
@@ -149,7 +153,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                 if check_and_download(pkglist_url, pkgidx_file) != 0:
                     print("Failed to download:", pkglist_url)
                     continue
-                
+
                 with pkgidx_file.open('rb') as t: content = t.read()
                 if len(content) != int(filesize):
                     print(f"Invalid size of {pkgidx_file}, expected {filesize}, skipped")
@@ -226,7 +230,7 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             continue
         deb_count += 1
         deb_size += pkg_size
-        
+
         dest_filename = dest_base_dir / pkg_filename
         dest_dir = dest_filename.parent
         if not dest_dir.is_dir():
@@ -316,7 +320,7 @@ def main():
         return
     if args.delete or args.delete_dry_run:
         apt_delete_old_debs(args.working_dir, deb_set, args.delete_dry_run)
-    
+
     if len(REPO_SIZE_FILE) > 0:
         with open(REPO_SIZE_FILE, "a") as fd:
             total_size = sum(deb_set.values())
