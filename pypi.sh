@@ -13,7 +13,8 @@ fi
 echo "Syncing to $TUNASYNC_WORKING_DIR"
 
 if [[ $INIT == "0" ]]; then
-	cat > $CONF << EOF
+(
+	cat << EOF
 [mirror]
 directory = ${TUNASYNC_WORKING_DIR}
 master = ${TUNASYNC_UPSTREAM}
@@ -36,6 +37,10 @@ packages =
     tf-nightly-cpu
     pyagrum-nightly
 EOF
+	for i in $PYPI_EXCLUDE; do
+		echo "    $i"
+	done
+) > $CONF
 	exec $BANDERSNATCH -c $CONF mirror 
 else
 	cat > $CONF << EOF
