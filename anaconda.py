@@ -63,6 +63,7 @@ CONDA_CLOUD_REPOS = (
     "c4aarch64/linux-aarch64", "c4aarch64/noarch",
     "pytorch3d/linux-64", "pytorch3d/noarch",
     "idaholab/linux-64", "idaholab/noarch",
+    "nvidia/linux-64",
 )
 
 EXCLUDED_PACKAGES = (
