@@ -15,7 +15,7 @@ function update_repo_git() {
 	git repack -a -b -d
 	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
 	sz=$(($sz*1024))
-	echo "size-pack:" $(numfmt --to=iec $sz)
+	echo "Total size is" $(numfmt --to=iec $sz)
 	echo "==== SYNC repo.git DONE ===="
 }
 
