@@ -6,6 +6,8 @@ import queue
 import traceback
 from pathlib import Path
 from email.utils import parsedate_to_datetime
+import re
+import traceback
 
 import requests
 from pyquery import PyQuery as pq
@@ -13,9 +15,13 @@ from pyquery import PyQuery as pq
 
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://download.docker.com/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
+SYNC_USER_AGENT = os.getenv("SYNC_USER_AGENT", "Docker-ce Syncing Tool (https://github.com/tuna/tunasync-scripts)/1.0")
+requests.utils.default_user_agent = lambda: SYNC_USER_AGENT
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
+
+REL_URL_RE = re.compile(r"https?:\/\/.+?\/(.+)")
 
 
 class RemoteSite:
@@ -55,8 +61,20 @@ class RemoteSite:
 
         try:
             r = requests.get(base_url, timeout=TIMEOUT_OPTION)
-        except:
-            print("Panic: failed to get file list");
+            if r.url != base_url:
+                # redirection?
+                # handling CentOS/RHEL directory 30x
+                target_dir = r.url.split("/")[-2]
+                origin_dir = base_url.split("/")[-2]
+                if target_dir != origin_dir:
+                    # here we create a symlink on the fly
+                    from_dir = REL_URL_RE.findall(base_url)[0]
+                    to_dir = REL_URL_RE.findall(r.url)[0]
+                    yield (from_dir, to_dir)  # tuple -> create symlink
+                    return
+        except Exception as e:
+            print("Panic: failed to get file list")
+            traceback.print_exc(e)
             sys.exit(1)
         if not r.ok:
             return
@@ -138,6 +156,22 @@ def create_workers(n):
         t.start()
     return task_queue
 
+def create_symlink(from_dir: Path, to_dir: Path):
+    to_dir = to_dir.relative_to(from_dir.parent)
+    if from_dir.exists():
+        if from_dir.is_symlink():
+            resolved_symlink = from_dir.resolve().relative_to(from_dir.parent.absolute())
+            if resolved_symlink != to_dir:
+                print(f"WARN: The symlink {from_dir} dest changed from {resolved_symlink} to {to_dir}.")
+        else:
+            print(f"WARN: The symlink {from_dir} exists on disk but it is not a symlink.")
+    else:
+        if from_dir.is_symlink():
+            print(f"WARN: The symlink {from_dir} is probably invalid.")
+        else:
+            # create a symlink
+            from_dir.parent.mkdir(parents=True, exist_ok=True)
+            from_dir.symlink_to(to_dir)
 
 def main():
     import argparse
@@ -159,17 +193,21 @@ def main():
     remote_filelist = []
     rs = RemoteSite(args.base_url)
     for url in rs.files:
-        dst_file = working_dir / rs.relpath(url)
-        remote_filelist.append(dst_file.relative_to(working_dir))
-
-        if dst_file.is_file():
-            if args.fast_skip and dst_file.suffix in ['.rpm', '.deb', '.tgz', '.zip']:
-                print("fast skipping", dst_file.relative_to(working_dir), flush=True)
-                continue
+        if isinstance(url, tuple):
+            from_dir, to_dir = url
+            create_symlink(working_dir / from_dir, working_dir / to_dir)
         else:
-            dst_file.parent.mkdir(parents=True, exist_ok=True)
+            dst_file = working_dir / rs.relpath(url)
+            remote_filelist.append(dst_file.relative_to(working_dir))
 
-        task_queue.put((url, dst_file, working_dir))
+            if dst_file.is_file():
+                if args.fast_skip and dst_file.suffix in ['.rpm', '.deb', '.tgz', '.zip']:
+                    print("fast skipping", dst_file.relative_to(working_dir), flush=True)
+                    continue
+            else:
+                dst_file.parent.mkdir(parents=True, exist_ok=True)
+
+            task_queue.put((url, dst_file, working_dir))
 
     # block until all tasks are done
     task_queue.join()
