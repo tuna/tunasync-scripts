@@ -24,6 +24,7 @@ workers = 5
 hash-index = false
 stop-on-error = false
 delete-packages = true
+compare-method = stat
 
 [plugins]
 enabled =
