@@ -99,6 +99,14 @@ def mkdir_with_dot_tmp(folder: Path)->Tuple[Path, Path]:
     tmpdir.mkdir(parents=True, exist_ok=True)
     return (folder, tmpdir)
 
+def CalcFileSha256(filname):
+    ''' calculate file sha256 '''
+    with open(filname, "rb") as f:
+        sha256obj = hashlib.sha256()
+        sha256obj.update(f.read())
+        hash_value = sha256obj.hexdigest()
+        return hash_value
+
 def move_files_in(src: Path, dst: Path):
     empty = True
     for file in src.glob('*'):
@@ -237,8 +245,8 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
             dest_dir.mkdir(parents=True, exist_ok=True)
         if dest_filename.suffix == '.deb':
             deb_set[str(dest_filename.relative_to(dest_base_dir))] = pkg_size
-        if dest_filename.is_file() and dest_filename.stat().st_size == pkg_size:
-            print(f"Skipping {pkg_filename}, size {pkg_size}")
+        if dest_filename.is_file() and ( dest_filename.stat().st_size == pkg_size and CalcFileSha256(dest_filename) == pkg_checksum):
+            print(f"Skipping {pkg_filename}, size {pkg_size}, sha256 {pkg_checksum}")
             continue
 
         pkg_url=f"{base_url}/{pkg_filename}"
