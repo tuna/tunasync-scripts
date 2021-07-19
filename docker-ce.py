@@ -16,12 +16,15 @@ from pyquery import PyQuery as pq
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://download.docker.com/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 SYNC_USER_AGENT = os.getenv("SYNC_USER_AGENT", "Docker-ce Syncing Tool (https://github.com/tuna/tunasync-scripts)/1.0")
-requests.utils.default_user_agent = lambda: SYNC_USER_AGENT
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
+# user agent
+requests.utils.default_user_agent = lambda: SYNC_USER_AGENT
+# retries
+requests.adapters.DEFAULT_RETRIES = 3
 
-REL_URL_RE = re.compile(r"https?:\/\/.+?\/(.+)")
+REL_URL_RE = re.compile(r"https?:\/\/.+?\/(.+?)(\/index\.html)?$")
 
 
 class RemoteSite:
@@ -68,8 +71,8 @@ class RemoteSite:
                 origin_dir = base_url.split("/")[-2]
                 if target_dir != origin_dir:
                     # here we create a symlink on the fly
-                    from_dir = REL_URL_RE.findall(base_url)[0]
-                    to_dir = REL_URL_RE.findall(r.url)[0]
+                    from_dir = REL_URL_RE.findall(base_url)[0][0]
+                    to_dir = REL_URL_RE.findall(r.url)[0][0]
                     yield (from_dir, to_dir)  # tuple -> create symlink
                     return
         except Exception as e:
