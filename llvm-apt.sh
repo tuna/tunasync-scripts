@@ -10,9 +10,9 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://apt.llvm.org"}
 
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
-for os in "xenial" "bionic" "focal" "stretch" "buster"; do
+for os in "xenial" "bionic" "focal" "stretch" "buster" "bullseye"; do
     prefix=llvm-toolchain-$os
-    "$apt_sync" --delete "$BASE_URL/$os" $prefix,$prefix-9,$prefix-10,$prefix-11,$prefix-12 main amd64 "$BASE_PATH/$os"
+    "$apt_sync" --delete "$BASE_URL/$os" $prefix,$prefix-9,$prefix-10,$prefix-11,$prefix-12,$prefix-13 main amd64 "$BASE_PATH/$os"
 done
 
 echo "APT finished"
