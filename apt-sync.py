@@ -145,7 +145,17 @@ def apt_mirror(base_url: str, dist: str, repo: str, arch: str, dest_base_dir: Pa
                    filename.startswith(f"{repo}/Contents-{arch}") or \
                    filename.startswith(f"Contents-{arch}"):
                     fn = Path(filename)
-                    pkgidx_file = dist_dir / fn.parent / ".tmp" / fn.name
+                    if len(fn.parts) <= 3:
+                        # Contents-amd64.gz
+                        # main/Contents-amd64.gz
+                        # main/binary-all/Packages
+                        pkgidx_file = dist_dir / fn.parent / ".tmp" / fn.name
+                    else:
+                        # main/dep11/by-hash/MD5Sum/0af5c69679a24671cfd7579095a9cb5e
+                        # deep_tmp_dir is in pkgidx_tmp_dir hence no extra garbage collection needed
+                        deep_tmp_dir = dist_dir / Path(fn.parts[0]) / Path(fn.parts[1]) / ".tmp" / Path('/'.join(fn.parts[2:-1]))
+                        deep_tmp_dir.mkdir(parents=True, exist_ok=True)
+                        pkgidx_file = deep_tmp_dir / fn.name
                 else:
                     print(f"Ignore the file {filename}")
                     continue
