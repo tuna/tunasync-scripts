@@ -8,8 +8,8 @@ apt_sync="${_here}/apt-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.openmediavault.org/public"}
-DISTS=arrakis-proposed,arrakis,usul-proposed,usul
-EXTRA_DISTS=arrakis-docker,arrakis-plex,arrakis-sync,arrakis-teamviewer,arrakis,usul-beta,usul-extras,usul-testing,usul
+DISTS=shaitan-proposed,shaitan,arrakis-proposed,arrakis,usul-proposed,usul
+EXTRA_DISTS=shaitan-beta,shaitan-testing,shaitan,arrakis-docker,arrakis-plex,arrakis-sync,arrakis-teamviewer,arrakis,usul-beta,usul-extras,usul-testing,usul
 ARCHS=amd64,i386,arm64,armel,armhf
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
