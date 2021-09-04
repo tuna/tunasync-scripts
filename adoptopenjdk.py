@@ -110,7 +110,7 @@ if __name__ == "__main__":
     sp.run([str(here/"apt-sync.py"),
         '--delete',
         f'{BASE_URL}/deb',
-        '@ubuntu-lts,@debian-current,bullseye',
+        '@ubuntu-lts,@debian-current',
         'main',
         'amd64,armhf,arm64',
         f"{BASE_PATH}/deb"
