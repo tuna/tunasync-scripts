@@ -29,7 +29,7 @@ OS_TEMPLATE = {
     'debian-latest2': ["buster", "bullseye"],
     'debian-latest': ["bullseye"],
 }
-ARCH_NO_PKGIDX = ['dep11', 'i18n']
+ARCH_NO_PKGIDX = ['dep11', 'i18n', 'cnf']
 MAX_RETRY=int(os.getenv('MAX_RETRY', '3'))
 DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 REPO_SIZE_FILE = os.getenv('REPO_SIZE_FILE', '')
