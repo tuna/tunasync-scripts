@@ -16,8 +16,8 @@ import requests
 
 DOWNLOAD_TIMEOUT = int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 BASE_PATH = os.getenv('TUNASYNC_WORKING_DIR')
-BASE_URL = os.getenv('TUNASYNC_UPSTREAM_URL', "http://adoptopenjdk.jfrog.io/adoptopenjdk")
-FEATURE_VERSIONS = range(8, 18)
+BASE_URL = os.getenv('TUNASYNC_UPSTREAM_URL', "https://packages.adoptium.net/artifactory")
+FEATURE_VERSIONS = [8, 11, 17, 18]
 
 def download_file(url: str, dst_file: Path)->bool:
     try:
@@ -58,7 +58,9 @@ def check_file(dest_filename: Path, pkg_checksum: str, size: int)->bool:
     return True
 
 def download_release(ver: int, jvm_impl: str, alive_files: Set[str]):
-    r = requests.get(f"https://api.adoptopenjdk.net/v3/assets/latest/{ver}/{jvm_impl}", timeout=(5, 10))
+    r = requests.get(f"https://api.adoptium.net/v3/assets/latest/{ver}/{jvm_impl}",
+            timeout=(5, 10),
+            headers={ 'User-Agent': 'tunasync-scripts (+https://github.com/tuna/tunasync-scripts)' })
     r.raise_for_status()
     rel_list = r.json()
     rel_path = Path(BASE_PATH) / str(ver)
@@ -102,8 +104,7 @@ if __name__ == "__main__":
     # =================== standalone ==========================
     for v in FEATURE_VERSIONS:
         filelist = set()
-        for jvm in ('hotspot', 'openj9'):
-            download_release(v, jvm, filelist)
+        download_release(v, 'hotspot', filelist)
         delete_old_files(v, filelist)
     # =================== APT repos ==========================
     # "$apt_sync" --delete "${BASE_URL}/deb" @ubuntu-lts,@debian-current main amd64,armhf,arm64 "$BASE_PATH/deb"
@@ -118,12 +119,12 @@ if __name__ == "__main__":
         check=True)
     print("APT finished", flush=True)
     # =================== YUM repos ==========================
-    # "$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 7-8 AdoptOpenJDK x86_64,aarch64 "centos@{os_ver}-@{arch}" "$BASE_PATH/rpm"
+    # "$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 7-8 Adopitum x86_64,aarch64 "centos@{os_ver}-@{arch}" "$BASE_PATH/rpm"
     sp.run([str(here/"yum-sync.py"),
         BASE_URL+'/rpm/centos/@{os_ver}/@{arch}',
         "--download-repodata",
         '7-8',
-        'AdoptOpenJDK',
+        'Adoptium',
         'x86_64,aarch64',
         "centos@{os_ver}-@{arch}",
         f"{BASE_PATH}/rpm"
