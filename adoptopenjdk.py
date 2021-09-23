@@ -17,7 +17,7 @@ import requests
 DOWNLOAD_TIMEOUT = int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 BASE_PATH = os.getenv('TUNASYNC_WORKING_DIR')
 BASE_URL = os.getenv('TUNASYNC_UPSTREAM_URL', "http://adoptopenjdk.jfrog.io/adoptopenjdk")
-FEATURE_VERSIONS = range(8, 17)
+FEATURE_VERSIONS = range(8, 18)
 
 def download_file(url: str, dst_file: Path)->bool:
     try:
