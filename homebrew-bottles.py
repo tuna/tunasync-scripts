@@ -33,9 +33,10 @@ def bottles():
                 version = formula["versions"]["stable"]
                 revision = "" if formula["revision"] == 0 else f"_{formula['revision']}"
                 rebuild = "" if bs["rebuild"] == 0 else f".{bs['rebuild']}"
-                b[sha256] = {
+                file = f"{name}-{version}{revision}.{platform}.bottle{rebuild}.tar.gz"
+                b[file] = {
                     "url": url,
-                    "file": f"{name}-{version}{revision}.{platform}.bottle{rebuild}.tar.gz"
+                    "sha256": sha256,
                 }
     return b
 
@@ -75,8 +76,8 @@ if __name__ == "__main__":
         file.unlink()
 
     b = bottles()
-    for sha256 in b:
-        file = b[sha256]["file"]
+    for file in b:
+        sha256 = b[file]["sha256"]
 
         # dark magic for linuxbrew-bottles
         if "https://formulae.brew.sh/api/formula-linux.json" == HOMEBREW_BOTTLE_DOMAIN and\
@@ -87,14 +88,14 @@ if __name__ == "__main__":
         print(f"Downloading {file}", flush=True)
         dst_file = WORKING_DIR / file
         dst_tmp_file = TMP_DIR / file
-        ret = check_and_download(b[sha256]["url"], dst_file, dst_tmp_file)
+        ret = check_and_download(b[file]["url"], dst_file, dst_tmp_file)
         if ret == 0:
             dst_tmp_file.rename(dst_file)
             print(f"Downloaded {file}", flush=True)
         elif ret == 2:
             print(f"Exists {file}, Skip", flush=True)
 
-    files = list(map(lambda x: x["file"], b.values()))
+    files = list(b.keys())
     # garbage collection
     for file in WORKING_DIR.glob("*.tar.gz"):
         if file.name not in files:
