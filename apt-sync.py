@@ -105,7 +105,11 @@ def move_files_in(src: Path, dst: Path):
         empty = False
         print(f"moving {file} to {dst}")
         # shutil.move(str(file), str(dst))
-        file.rename(dst / file.name) # Overwrite files
+        if file.is_dir():
+            (dst / file.name).mkdir(parents=True, exist_ok=True)
+            move_files_in(file, dst / file.name)
+        else:
+            file.rename(dst / file.name) # Overwrite files
     if empty:
         print(f"{src} is empty")
 
