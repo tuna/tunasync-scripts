@@ -108,6 +108,7 @@ def move_files_in(src: Path, dst: Path):
         if file.is_dir():
             (dst / file.name).mkdir(parents=True, exist_ok=True)
             move_files_in(file, dst / file.name)
+            file.rmdir() # rmdir wont fail as all files in it have been moved
         else:
             file.rename(dst / file.name) # Overwrite files
     if empty:
