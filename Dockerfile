@@ -7,7 +7,7 @@ RUN apt-get update && \
 RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
       apt-get install -y libxml2-dev libxslt1-dev zlib1g-dev libssl-dev libffi-dev ;\
     fi
-        
+
 RUN pip3 install --upgrade pip
 RUN STATIC_DEPS=true python3 -m pip install pyquery
 RUN python3 -m pip install requests[socks] pyyaml gsutil awscli
@@ -26,3 +26,14 @@ ENV LC_ALL=en_US.UTF-8
 
 ENV HOME=/tmp
 CMD /bin/bash
+
+RUN lftpver="$(dpkg-query --showformat='${Version}' --show lftp)" && \
+      if dpkg --compare-versions "$lftpver" lt "4.8.4-2+~shankeru1"; then \
+        if [ "$(uname -m)" = "x86_64" ]; then \
+          curl -fsSL 'https://salsa.debian.org/shankerwangmiao/lftp/uploads/44e6d15941d3663de8adfbf293edd343/lftp_4.8.4-2+_shankeru1_amd64.deb'; \
+        elif [ "$(uname -m)" = "aarch64" ]; then \
+          curl -fsSL 'https://salsa.debian.org/shankerwangmiao/lftp/uploads/ce34a68750902ded261c3b61064b4d6b/lftp_4.8.4-2+_shankeru1_arm64.deb'; \
+        fi > /tmp/lftp.deb && \
+        apt-get install -y /tmp/lftp.deb && \
+        rm -f /tmp/lftp.deb; \
+      fi
