@@ -23,7 +23,6 @@ APT_SYNC_USER_AGENT = os.getenv("APT_SYNC_USER_AGENT", "APT-Mirror-Tool/1.0")
 requests.utils.default_user_agent = lambda: APT_SYNC_USER_AGENT
 
 OS_TEMPLATE = {
-    'ubuntu-current': ["xenial", "bionic", "focal", "groovy"],
     'ubuntu-lts': ["xenial", "bionic", "focal"],
     'debian-current': ["jessie", "stretch", "buster", "bullseye"],
     'debian-latest2': ["buster", "bullseye"],
