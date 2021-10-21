@@ -79,12 +79,6 @@ if __name__ == "__main__":
     for file in b:
         sha256 = b[file]["sha256"]
 
-        # dark magic for linuxbrew-bottles
-        if "https://formulae.brew.sh/api/formula-linux.json" == HOMEBREW_BOTTLE_DOMAIN and\
-            "x86_64_linux" not in file:
-            print(f"Ignoring {file}", flush=True)
-            continue
-
         print(f"Downloading {file}", flush=True)
         dst_file = WORKING_DIR / file
         dst_tmp_file = TMP_DIR / file
