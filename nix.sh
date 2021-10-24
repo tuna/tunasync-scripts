@@ -3,7 +3,8 @@
 TUNASYNC_WORKING_DIR="${TUNASYNC_WORKING_DIR:-nix}"
 TUNASYNC_UPSTREAM_URL="${TUNASYNC_UPSTREAM_URL:-s3://nix-releases/nix/}"
 MIRROR_BASE_URL="${MIRROR_BASE_URL:-https://mirrors.tuna.tsinghua.edu.cn/nix}"
-ORIG_BASE_URL="https://nixos.org/releases/nix"
+ORIG_BASE_URL_OLD="https://nixos.org/releases/nix"
+ORIG_BASE_URL="https://releases.nixos.org/nix"
 
 EXCLUDES=(--exclude "*/*/*" \
     --exclude "nix-[01].*" \
@@ -33,7 +34,7 @@ aws --no-sign-request s3 sync ${TUNASYNC_AWS_OPTIONS} \
 for version in $(ls "$INSTALL_TEMP"); do
     [[ ! -d "${version}" ]] && continue # Shouldn't happen
 
-    sed -e "s|${ORIG_BASE_URL}|${MIRROR_BASE_URL}|" \
+    sed -e "s|${ORIG_BASE_URL}|${MIRROR_BASE_URL}|" -e "s|${ORIG_BASE_URL_OLD}|${MIRROR_BASE_URL}|" \
         < "${INSTALL_TEMP}/${version}/install" \
         > "${INSTALL_TEMP}/${version}/.install"
     mv "${INSTALL_TEMP}/${version}/.install" "${version}/install"
