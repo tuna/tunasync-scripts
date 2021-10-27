@@ -50,6 +50,8 @@ function hackage_mirror() {
 	echo "Downloading index..."
 	rm index.tar.gz || true
 	curl -s -S --fail -L "${base_url}/01-index.tar.gz" -o index.tar.gz 
+	rm index-legacy.tar.gz || true
+	curl -s -S --fail -L "${base_url}/00-index.tar.gz" -o index-legacy.tar.gz
 
 	# https://hackage.haskell.org/api#security
 	echo "Dowloading security features..."
@@ -106,7 +108,7 @@ function hackage_mirror() {
 	done
 
 	cp index.tar.gz 01-index.tar.gz
-	ln -sf 01-index.tar.gz 00-index.tar.gz
+	cp index-legacy.tar.gz 00-index.tar.gz
 }
 
 function cleanup () {
