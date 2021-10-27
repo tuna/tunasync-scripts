@@ -43,6 +43,7 @@ REPOS = [
     "Stellarium/stellarium",
     "UNIDY2002/THUInfo",
     {"repo": "obsproject/obs-studio", "versions": 5, "pre_release": False},
+    "com-lihaoyi/mill", # better scala build tool
 ]
 
 # connect and read timeout value
