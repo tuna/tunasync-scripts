@@ -11,6 +11,9 @@ import hashlib
 
 import requests
 
+def raw_to_tuna(s: str) -> str:
+    return s.replace("https://raw.githubusercontent.com/",
+            "https://mirrors.tuna.tsinghua.edu.cn/github-raw/")
 
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
@@ -19,6 +22,13 @@ REPOS = [
     ## for stackage
     ["fpco/minghc", "master", "bin", "7z.exe"],
     ["fpco/minghc", "master", "bin", "7z.dll"],
+    ## for rosdep
+    { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": raw_to_tuna },
+    ["ros/rosdistro", "master", "rosdep", "osx-homebrew.yaml"],
+    ["ros/rosdistro", "master", "rosdep", "base.yaml"],
+    ["ros/rosdistro", "master", "rosdep", "python.yaml"],
+    ["ros/rosdistro", "master", "rosdep", "ruby.yaml"],
+    ["ros/rosdistro", "master", "releases", "fuerte.yaml"],
 ]
 
 # connect and read timeout value
@@ -48,7 +58,7 @@ def github_blob(*args, **kwargs):
     kwargs['headers'] = headers
     return github_get(*args, **kwargs)
 
-def do_download(remote_url: str, dst_file: Path, remote_size: int, sha: str):
+def do_download(remote_url: str, dst_file: Path, remote_size: int, sha: str, filter=None):
     # NOTE the stream=True parameter below
     with github_blob(remote_url, stream=True) as r:
         r.raise_for_status()
@@ -64,6 +74,12 @@ def do_download(remote_url: str, dst_file: Path, remote_size: int, sha: str):
             downloaded_size = tmp_dst_file.stat().st_size
             if remote_size != -1 and downloaded_size != remote_size:
                 raise Exception(f'File {dst_file.as_posix()} size mismatch: downloaded {downloaded_size} bytes, expected {remote_size} bytes')
+            if filter != None:
+                with open(tmp_dst_file, "r+") as f:
+                    s = filter(f.read())
+                    f.seek(0)
+                    f.truncate()
+                    f.write(s)
             tmp_dst_file.chmod(0o644)
             target = dst_file.parent / ".sha" / sha
             print("symlink", dst_file)
@@ -86,6 +102,8 @@ def downloading_worker(q):
         item = q.get()
         if item is None:
             break
+
+        filter = item.pop(0) # remove filter
 
         dst_file = Path('/'.join(item))
         dst_file.parent.mkdir(parents=True, exist_ok=True)
@@ -119,9 +137,8 @@ def downloading_worker(q):
                     else:
                         raise Exception
             if not dst_file.is_symlink() or \
-                dst_file.stat().st_size != size or \
                 Path(os.readlink(dst_file)).name != sha:
-                do_download(url, dst_file, size, sha)
+                do_download(url, dst_file, size, sha, filter)
             else:
                 print("Skip", dst_file)
         except Exception as e:
@@ -155,8 +172,14 @@ def main():
     task_queue = create_workers(args.workers)
 
     for cfg in REPOS:
-        cfg.insert(0, working_dir)
-        task_queue.put(cfg)
+        if isinstance(cfg, list):
+            cfg.insert(0, working_dir)
+            cfg.insert(0, None)
+            task_queue.put(cfg)
+        else:
+            cfg["path"].insert(0, working_dir)
+            cfg["path"].insert(0, cfg["filter"])
+            task_queue.put(cfg["path"])
 
     # block until all tasks are done
     task_queue.join()
