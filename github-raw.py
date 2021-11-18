@@ -16,6 +16,7 @@ BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 REPOS = [
     # owner/repo, tree, tree, tree, blob
+    ## for stackage
     ["fpco/minghc", "master", "bin", "7z.exe"],
     ["fpco/minghc", "master", "bin", "7z.dll"],
 ]

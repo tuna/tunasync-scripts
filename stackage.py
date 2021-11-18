@@ -53,11 +53,22 @@ class StackageSession(object):
                 )
 
         if 'msys2' in d:
-            for os in d['msys2']:
-                print(os)
-                d['msys2'][os]['url'] = d['msys2'][os]['url'].replace(
+            if 'windows32' in d['msys2']:
+                print('windows32')
+                d['msys2']['windows32']['url'] = d['msys2']['windows32']['url'].replace(
                     'https://github.com/fpco/stackage-content/releases/download/',
+                    'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/msys2-')
+            if 'windows64' in d['msys2']:
+                print('windows64')
+                d['msys2']['windows64']['url'] = d['msys2']['windows64']['url'].replace(
+                    'https://github.com/commercialhaskell/stackage-content/releases/download/',
                     'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
+
+        if 'sevenzexe-info' in d:
+            d['sevenzexe-info']['url'] = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/fpco/minghc/master/bin/7z.exe'
+
+        if 'sevenzdll-info' in d:
+            d['sevenzdll-info']['url'] = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/fpco/minghc/master/bin/7z.dll'
 
         for i in ['portable-git', 'stack', 'ghcjs']:
             del d[i]
