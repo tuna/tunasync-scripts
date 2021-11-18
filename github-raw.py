@@ -29,6 +29,7 @@ REPOS = [
     ["ros/rosdistro", "master", "rosdep", "python.yaml"],
     ["ros/rosdistro", "master", "rosdep", "ruby.yaml"],
     ["ros/rosdistro", "master", "releases", "fuerte.yaml"],
+    ["ros/rosdistro", "master", "releases", "targets.yaml"],
 ]
 
 # connect and read timeout value
