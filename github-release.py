@@ -45,6 +45,8 @@ REPOS = [
     {"repo": "obsproject/obs-studio", "versions": 5, "pre_release": False},
     "com-lihaoyi/mill", # better scala build tool,
     "dbeaver/dbeaver", # issue #1348
+    "ibmruntimes/semeru8-binaries",
+    "ibmruntimes/semeru11-binaries",
 ]
 
 # connect and read timeout value
