@@ -47,6 +47,8 @@ REPOS = [
     "dbeaver/dbeaver", # issue #1348
     "ibmruntimes/semeru8-binaries",
     "ibmruntimes/semeru11-binaries",
+    "topjohnwu/Magisk", # issue #1156,
+    "PowerShell/PowerShell", # issue #1136
 ]
 
 # connect and read timeout value
