@@ -47,6 +47,7 @@ REPOS = [
     "dbeaver/dbeaver", # issue #1348
     "ibmruntimes/semeru8-binaries",
     "ibmruntimes/semeru11-binaries",
+    "ibmruntimes/semeru17-binaries",
     "topjohnwu/Magisk", # issue #1156
     "PowerShell/PowerShell", # issue #1136
     "atom/atom", # issue 1187
