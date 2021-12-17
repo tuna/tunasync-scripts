@@ -35,11 +35,8 @@ for I in ${!UPSTREAMS[@]}; do
   rsync ${RSYNC_OPTS} "$upstream" "$dest"
 done
 
-# org-mode
-
 org() {
   dest=${TUNASYNC_WORKING_DIR}/org
-  echo $dest
   [ ! -d "$dest" ] && mkdir -p "$dest"
   cd $dest
 
