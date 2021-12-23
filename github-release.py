@@ -52,6 +52,8 @@ REPOS = [
     "PowerShell/PowerShell", # issue #1136
     "atom/atom", # issue 1187
     "k3s-io/k3s", # issue 1402
+    "laurent22/joplin", # issue 1336
+    "laurent22/joplin-android", # issue 1336
 ]
 
 # connect and read timeout value
