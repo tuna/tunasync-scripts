@@ -51,6 +51,7 @@ REPOS = [
     "topjohnwu/Magisk", # issue #1156
     "PowerShell/PowerShell", # issue #1136
     "atom/atom", # issue 1187
+    "k3s-io/k3s", # issue 1402
 ]
 
 # connect and read timeout value
