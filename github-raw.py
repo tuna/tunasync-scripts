@@ -22,6 +22,7 @@ REPOS = [
     ## for stackage
     ["fpco/minghc", "master", "bin", "7z.exe"],
     ["fpco/minghc", "master", "bin", "7z.dll"],
+    ["fpco/stackage-content", "master", "stack", "global-hints.yaml"],
     ## for rosdep
     { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": raw_to_tuna },
     ["ros/rosdistro", "master", "rosdep", "osx-homebrew.yaml"],
