@@ -51,6 +51,7 @@ CONDA_CLOUD_REPOS = (
     "matsci/linux-64", "matsci/osx-64", "matsci/win-64", "matsci/noarch",
     "psi4/linux-64", "psi4/osx-64", "psi4/win-64", "psi4/noarch",
     "Paddle/linux-64", "Paddle/linux-32", "Paddle/osx-64", "Paddle/win-64", "Paddle/win-32", "Paddle/noarch",
+    "MindSpore/linux-64", "MindSpore/linux-aarch64", "MindSpore/osx-arm64", "MindSpore/osx-64", "MindSpore/win-64", 
     "deepmodeling/linux-64", "deepmodeling/noarch",
     "numba/linux-64", "numba/linux-aarch64", "numba/linux-32", "numba/osx-64", "numba/win-64", "numba/win-32", "numba/noarch",
     "numba/label/dev/win-64", "numba/label/dev/noarch",
