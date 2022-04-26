@@ -11,12 +11,14 @@ import hashlib
 
 import requests
 
-def raw_to_tuna(s: str) -> str:
-    return s.replace("https://raw.githubusercontent.com/",
-            "https://mirrors.tuna.tsinghua.edu.cn/github-raw/")
-
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
+MIRROR_BASE_URL = os.getenv("MIRROR_BASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/')
+
+def raw_to_mirror(s: str) -> str:
+    return s.replace("https://raw.githubusercontent.com/",
+            MIRROR_BASE_URL)
+
 REPOS = [
     # owner/repo, tree, tree, tree, blob
     ## for stackage
@@ -24,7 +26,7 @@ REPOS = [
     ["fpco/minghc", "master", "bin", "7z.dll"],
     ["fpco/stackage-content", "master", "stack", "global-hints.yaml"],
     ## for rosdep
-    { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": raw_to_tuna },
+    { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": raw_to_mirror },
     ["ros/rosdistro", "master", "rosdep", "osx-homebrew.yaml"],
     ["ros/rosdistro", "master", "rosdep", "base.yaml"],
     ["ros/rosdistro", "master", "rosdep", "python.yaml"],
