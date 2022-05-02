@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 BANDERSNATCH=${BANDERSNATCH:-"/usr/local/bin/bandersnatch"}
-TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://pypi.org/"}
+PYPI_MASTER="https://pypi.org/"
+TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-$PYPI_MASTER}
 CONF="/tmp/bandersnatch.conf"
 INIT=${INIT:-"0"}
 
@@ -12,12 +13,19 @@ fi
 
 echo "Syncing to $TUNASYNC_WORKING_DIR"
 
+DOWNLOAD_MIRROR=""
+if [[ $TUNASYNC_UPSTREAM != $PYPI_MASTER ]]; then
+    # see https://github.com/pypa/bandersnatch/pull/928 for more info
+    DOWNLOAD_MIRROR="download-mirror = ${TUNASYNC_UPSTREAM}"
+fi
+
 if [[ $INIT == "0" ]]; then
 (
 	cat << EOF
 [mirror]
 directory = ${TUNASYNC_WORKING_DIR}
-master = ${TUNASYNC_UPSTREAM}
+master = ${PYPI_MASTER}
+${DOWNLOAD_MIRROR}
 json = true
 timeout = 300
 workers = 5
@@ -47,7 +55,8 @@ else
 	cat > $CONF << EOF
 [mirror]
 directory = ${TUNASYNC_WORKING_DIR}
-master = ${TUNASYNC_UPSTREAM}
+master = ${PYPI_MASTER}
+${DOWNLOAD_MIRROR}
 json = true
 timeout = 15
 workers = 10
