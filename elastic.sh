@@ -11,7 +11,7 @@ BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://artifacts.elastic.co"}
 BASE_PATH="${TUNASYNC_WORKING_DIR%/}"
 BASE_URL="${BASE_URL%/}"
 
-ELASTIC_VERSION=("5.x" "6.x" "7.x" "8.x")
+ELASTIC_VERSION=("6.x" "7.x" "8.x")
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
@@ -20,7 +20,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 # =================== APT repos ===============================
 
 for elsver in "${ELASTIC_VERSION[@]}"; do
-	"$apt_sync" --delete-dry-run "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
+	"$apt_sync" --delete "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
 	
 	(cd ${BASE_PATH}/${elsver}; ln -sfn ../apt/${elsver} apt)
 done

@@ -34,15 +34,15 @@ if [[ -z ${DRY_RUN:-} ]]; then
 fi
 
 # =================== APT repos ===============================
-MYSQL_APT_REPOS="mysql-5.6,mysql-5.7,mysql-tools,connector-python-2.1,mysql-8.0"
-"$apt_sync" --delete "${BASE_URL}/apt/ubuntu" trusty,@ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
+MYSQL_APT_REPOS="mysql-5.7,mysql-tools,connector-python-2.1,mysql-8.0"
+"$apt_sync" --delete "${BASE_URL}/apt/ubuntu" @ubuntu-lts $MYSQL_APT_REPOS amd64,i386 "${UBUNTU_PATH}"
 echo "Ubuntu finished"
 "$apt_sync" --delete "${BASE_URL}/apt/debian" @debian-current $MYSQL_APT_REPOS amd64,i386 "${DEBIAN_PATH}"
 echo "Debian finished"
 
 # =================== YUM/DNF repos ==========================
-COMPONENTS="mysql-connectors-community,mysql-tools-community,mysql-8.0-community,mysql-5.6-community,mysql-5.7-community"
-"$yum_sync" "${BASE_URL}/yum/@{comp}/el/@{os_ver}/@{arch}/" 6-8 "$COMPONENTS" x86_64,aarch64 "@{comp}-el@{os_ver}-@{arch}" "$YUM_PATH"
+COMPONENTS="mysql-connectors-community,mysql-tools-community,mysql-8.0-community,mysql-5.7-community"
+"$yum_sync" "${BASE_URL}/yum/@{comp}/el/@{os_ver}/@{arch}/" 7 "$COMPONENTS" x86_64,aarch64 "@{comp}-el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm

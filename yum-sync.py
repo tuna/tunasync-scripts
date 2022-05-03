@@ -144,7 +144,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("base_url", type=str, help="base URL")
-    parser.add_argument("os_version", type=str, help="e.g. 6-8")
+    parser.add_argument("os_version", type=str, help="e.g. 7-8")
     parser.add_argument("component", type=str, help="e.g. mysql56-community,mysql57-community")
     parser.add_argument("arch", type=str, help="e.g. x86_64")
     parser.add_argument("repo_name", type=str, help="e.g. @{comp}-el@{os_ver}")

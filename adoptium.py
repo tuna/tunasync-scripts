@@ -119,11 +119,11 @@ if __name__ == "__main__":
         check=True)
     print("APT finished", flush=True)
     # =================== YUM repos ==========================
-    # "$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 7-8 Adopitum x86_64,aarch64 "centos@{os_ver}-@{arch}" "$BASE_PATH/rpm"
+    # "$yum_sync" "${BASE_URL}/rpm/centos/@{os_ver}/@{arch}" 7 Adopitum x86_64,aarch64 "centos@{os_ver}-@{arch}" "$BASE_PATH/rpm"
     sp.run([str(here/"yum-sync.py"),
         BASE_URL+'/rpm/centos/@{os_ver}/@{arch}',
         "--download-repodata",
-        '7-8',
+        '7',
         'Adoptium',
         'x86_64,aarch64',
         "centos@{os_ver}-@{arch}",

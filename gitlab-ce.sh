@@ -15,12 +15,12 @@ UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
-"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}/" 6-8 "gitlab" x86_64 "el@{os_ver}" "$YUM_PATH"
+"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}/" 7 "gitlab" x86_64 "el@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
 
-"$apt_sync" --delete-dry-run "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386 "$UBUNTU_PATH"
+"$apt_sync" --delete "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-"$apt_sync" --delete-dry-run "${UPSTREAM}/debian" @debian-current main amd64,i386 "$DEBIAN_PATH"
+"$apt_sync" --delete "${UPSTREAM}/debian" @debian-current main amd64,i386 "$DEBIAN_PATH"
 echo "Debian finished"
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
