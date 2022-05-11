@@ -18,8 +18,8 @@ import requests
 DEFAULT_CONDA_REPO_BASE = "https://repo.continuum.io"
 DEFAULT_CONDA_CLOUD_BASE = "https://conda.anaconda.org"
 
-CONDA_REPO_BASE_URL = os.getenv("CONDA_REPO_URL", "https://repo.continuum.io")
-CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL", "https://conda.anaconda.org")
+CONDA_REPO_BASE_URL = os.getenv("CONDA_REPO_URL", DEFAULT_CONDA_REPO_BASE)
+CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL", DEFAULT_CONDA_CLOUD_BASE)
 
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 
@@ -65,6 +65,7 @@ CONDA_CLOUD_REPOS = (
     "pytorch3d/linux-64", "pytorch3d/noarch",
     "idaholab/linux-64", "idaholab/noarch",
     "MindSpore/linux-64", "MindSpore/linux-aarch64", "MindSpore/osx-arm64", "MindSpore/osx-64", "MindSpore/win-64",
+    "pyg/linux-64", "pyg/osx-64", "pyg/win-64",
 )
 
 EXCLUDED_PACKAGES = (
