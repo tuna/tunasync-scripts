@@ -19,6 +19,12 @@ def raw_to_mirror(s: str) -> str:
     return s.replace("https://raw.githubusercontent.com/",
             MIRROR_BASE_URL)
 
+def delete_line_with(w: str, s: str) -> str:
+    return "\n".join(list(filter(lambda x: x.count(w) == 0, s.splitlines())))
+
+def delete_line_with_gbpdistro(s: str) -> str:
+    return delete_line_with("gbpdistro", s)
+
 REPOS = [
     # owner/repo, tree, tree, tree, blob
     ## for stackage
@@ -26,12 +32,11 @@ REPOS = [
     ["fpco/minghc", "master", "bin", "7z.dll"],
     ["fpco/stackage-content", "master", "stack", "global-hints.yaml"],
     ## for rosdep
-    { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": raw_to_mirror },
+    { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": [ raw_to_mirror, delete_line_with_gbpdistro ] },
     ["ros/rosdistro", "master", "rosdep", "osx-homebrew.yaml"],
     ["ros/rosdistro", "master", "rosdep", "base.yaml"],
     ["ros/rosdistro", "master", "rosdep", "python.yaml"],
     ["ros/rosdistro", "master", "rosdep", "ruby.yaml"],
-    ["ros/rosdistro", "master", "releases", "fuerte.yaml"],
     ["ros/rosdistro", "master", "releases", "targets.yaml"],
 ]
 
@@ -80,7 +85,9 @@ def do_download(remote_url: str, dst_file: Path, remote_size: int, sha: str, fil
                 raise Exception(f'File {dst_file.as_posix()} size mismatch: downloaded {downloaded_size} bytes, expected {remote_size} bytes')
             if filter != None:
                 with open(tmp_dst_file, "r+") as f:
-                    s = filter(f.read())
+                    s = f.read()
+                    for fil in filter:
+                        s = fil(s)
                     f.seek(0)
                     f.truncate()
                     f.write(s)
