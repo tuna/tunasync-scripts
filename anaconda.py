@@ -209,6 +209,8 @@ def sync_installer(repo_url, local_dir: Path):
                 continue
             fname = tds[0].find('a').text
             md5 = tds[3].text
+            if md5 == '<directory>' or len(md5) != 32:
+                continue
             yield (fname, md5)
 
     for filename, md5 in remote_list():
