@@ -33,7 +33,7 @@ REPOS = [
     "kubernetes/minikube",
     {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
     {"repo": "FreeCAD/FreeCAD", "versions": 3, "pre_release": True},
-    "goharbor/harbor",
+    {"repo": "goharbor/harbor", "versions": 3},
     {"repo": "tuna/thuthesis", "versions": -1, "flat": True},
     "cmderdev/cmder",
     "balena-io/etcher",
