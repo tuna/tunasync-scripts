@@ -9,9 +9,9 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 ARCH_LIST="aarch64,arm,i686,x86_64"
 
-"$apt_sync" --delete "https://packages.termux.org/apt/termux-main"     stable main    $ARCH_LIST "${WORKING_DIR}/termux-packages-24"
-"$apt_sync" --delete "https://packages.termux.org/apt/termux-x11"      x11 main       $ARCH_LIST "${WORKING_DIR}/x11-packages"
-"$apt_sync" --delete "https://packages.termux.org/apt/termux-root"     root stable    $ARCH_LIST "${WORKING_DIR}/termux-root-packages-24"
+"$apt_sync" --delete "$TUNASYNC_UPSTREAM_URL/apt/termux-main"     stable main    $ARCH_LIST "${WORKING_DIR}/termux-packages-24"
+"$apt_sync" --delete "$TUNASYNC_UPSTREAM_URL/apt/termux-x11"      x11 main       $ARCH_LIST "${WORKING_DIR}/x11-packages"
+"$apt_sync" --delete "$TUNASYNC_UPSTREAM_URL/apt/termux-root"     root stable    $ARCH_LIST "${WORKING_DIR}/termux-root-packages-24"
 
 mkdir -p "${WORKING_DIR}/apt"
 ln -fsTr "${WORKING_DIR}/termux-packages-24"         "${WORKING_DIR}/apt/termux-main"
