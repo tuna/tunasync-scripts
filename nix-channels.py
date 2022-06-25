@@ -465,8 +465,8 @@ def garbage_collect():
         logging.info(f'  - {deleted_nar} nar files unreachable')
 
 if __name__ == '__main__':
+    garbage_collect()
     channels = clone_channels()
     update_channels(channels)
-    garbage_collect()
     if failure:
         sys.exit(1)
