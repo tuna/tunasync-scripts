@@ -15,7 +15,8 @@ APT_PATH="${BASE_PATH}/apt"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # =================== APT repos ===============================
-"$apt_sync" --delete "${BASE_URL}/apt" "kubernetes-@{debian-current},kubernetes-@{ubuntu-lts}" main amd64,i386,armhf,arm64 "$APT_PATH"
+# NOTE: kubernetes-xenial is not only for xenial
+"$apt_sync" --delete "${BASE_URL}/apt" "kubernetes-xenial" main amd64,i386,armhf,arm64 "$APT_PATH"
 echo "APT finished"
 
 # =================== YUM/DNF repos ==========================
