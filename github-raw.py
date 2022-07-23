@@ -38,6 +38,8 @@ REPOS = [
     ["ros/rosdistro", "master", "rosdep", "python.yaml"],
     ["ros/rosdistro", "master", "rosdep", "ruby.yaml"],
     ["ros/rosdistro", "master", "releases", "targets.yaml"],
+    # for llvm-apt
+    ["opencollab/llvm-jenkins.debian.net", "master", "llvm.sh"],
 ]
 
 # connect and read timeout value
