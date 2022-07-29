@@ -45,6 +45,7 @@ packages =
     tensorflow-io-nightly
     tf-nightly-cpu
     pyagrum-nightly
+    uselesscapitalquiz
 EOF
 	for i in $PYPI_EXCLUDE; do
 		echo "    $i"
