@@ -123,7 +123,7 @@ if __name__ == "__main__":
     sp.run([str(here/"yum-sync.py"),
         BASE_URL+'/rpm/centos/@{os_ver}/@{arch}',
         "--download-repodata",
-        '7',
+        '7,8',
         'Adoptium',
         'x86_64,aarch64',
         "centos@{os_ver}-@{arch}",
