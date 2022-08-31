@@ -24,6 +24,7 @@ if [[ $INIT == "0" ]]; then
 	cat << EOF
 [mirror]
 directory = ${TUNASYNC_WORKING_DIR}
+storage-backend = filesystem
 master = ${PYPI_MASTER}
 ${DOWNLOAD_MIRROR}
 json = true
