@@ -99,7 +99,7 @@ def get_url(name):
     return response.headers['x-amz-website-redirect-location']
 
 def clone_images():
-    DOWNLOAD_MATCH = r'nixos-\d\d.\d\d/latest-nixos-\w+-\w+-linux.\w+(.sha256)?'
+    DOWNLOAD_MATCH = r'nixos-(\d\d.\d\d|unstable)/latest-nixos-\w+-\w+-linux.\w+(.sha256)?'
 
     object_names = [
         x.object_name
