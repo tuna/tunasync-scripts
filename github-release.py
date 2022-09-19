@@ -15,6 +15,7 @@ BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 REPOS = [
     "Homebrew/homebrew-portable-ruby",  # Used by homebrew-bottles
+    "Homebrew/glibc-bootstrap",  # Used by homebrew-bottles, see #1586
     {"repo": "googlefonts/noto-fonts", "tarball": True},
     {"repo": "googlefonts/noto-cjk", "tarball": True},
     {"repo": "googlefonts/noto-emoji", "tarball": True},
