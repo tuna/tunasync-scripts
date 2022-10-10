@@ -65,10 +65,14 @@ class StackageSession(object):
                     'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
 
         if 'sevenzexe-info' in d:
-            d['sevenzexe-info']['url'] = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/fpco/minghc/master/bin/7z.exe'
+            d['sevenzexe-info']['url'] = d['sevenzexe-info']['url'].replace(
+                'https://github.com/commercialhaskell/stackage-content/releases/download/',
+                'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
 
         if 'sevenzdll-info' in d:
-            d['sevenzdll-info']['url'] = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/fpco/minghc/master/bin/7z.dll'
+            d['sevenzdll-info']['url'] = d['sevenzdll-info']['url'].replace(
+                'https://github.com/commercialhaskell/stackage-content/releases/download/',
+                'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
 
         for i in ['portable-git', 'stack', 'ghcjs']:
             del d[i]
