@@ -42,7 +42,7 @@ REPOS = [
     "conda-forge/miniforge",
     "texstudio-org/texstudio",
     "Stellarium/stellarium",
-    "UNIDY2002/THUInfo",
+    "thu-info-community/thu-info-app",
     {"repo": "obsproject/obs-studio", "versions": 5, "pre_release": False},
     "com-lihaoyi/mill", # better scala build tool,
     "dbeaver/dbeaver", # issue #1348
