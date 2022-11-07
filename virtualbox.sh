@@ -32,7 +32,7 @@ echo "Debian and ubuntu finished"
 timeout -s INT 30 wget ${WGET_OPTIONS:-} -q -O "/tmp/index.html" "${BASE_URL}/"
 timeout -s INT 30 wget ${WGET_OPTIONS:-} -q -O "${BASE_PATH}/LATEST.TXT" "${BASE_URL}/LATEST.TXT"
 
-for((major=4;major<=6;major++));do
+for((major=4;major<=7;major++));do
 	LATEST_VERSION=$(grep -P -o "\"$major\.[\\d\\.]+/\"" -r /tmp/index.html|tail -n 1)
 	LATEST_VERSION=${LATEST_VERSION%/\"}
 	LATEST_VERSION=${LATEST_VERSION#\"}
@@ -89,10 +89,10 @@ LATEST_VERSION=`cat "${BASE_PATH}/LATEST.TXT"`
 for filename in ${BASE_PATH}/${LATEST_VERSION}/*.*; do
 	case $filename in
 		*Win.exe)
-			ln -sf "${filename}" "${BASE_PATH}/virtualbox-Win-latest.exe"
+			ln -sf "${filename#"$BASE_PATH/"}" "${BASE_PATH}/virtualbox-Win-latest.exe"
 			;;
 		*OSX.dmg)
-			ln -sf "${filename}" "${BASE_PATH}/virtualbox-osx-latest.dmg"
+			ln -sf "${filename#"$BASE_PATH/"}" "${BASE_PATH}/virtualbox-osx-latest.dmg"
 			;;
 	esac
 done

@@ -8,7 +8,7 @@ yum_sync="${_here}/yum-sync.py"
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://repo.mongodb.org"}
 
-MONGO_VERSIONS=("5.0" "4.4" "4.2")
+MONGO_VERSIONS=("6.0" "5.0" "4.4" "4.2")
 STABLE_VERSION="5.0"
 
 YUM_PATH="${BASE_PATH}/yum"

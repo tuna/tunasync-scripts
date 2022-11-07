@@ -64,7 +64,7 @@ CONDA_CLOUD_REPOS = (
     "c4aarch64/linux-aarch64", "c4aarch64/noarch",
     "pytorch3d/linux-64", "pytorch3d/noarch",
     "idaholab/linux-64", "idaholab/noarch",
-    "MindSpore/linux-64", "MindSpore/linux-aarch64", "MindSpore/osx-arm64", "MindSpore/osx-64", "MindSpore/win-64",
+    "MindSpore/linux-64", "MindSpore/linux-aarch64", "MindSpore/osx-arm64", "MindSpore/osx-64", "MindSpore/win-64", "MindSpore/noarch",
 )
 
 EXCLUDED_PACKAGES = (
@@ -96,14 +96,26 @@ def md5_check(file: Path, md5: str = None):
             m.update(buf)
     return m.hexdigest() == md5
 
+def sha256_check(file: Path, sha256: str = None):
+    m = hashlib.sha256()
+    with file.open('rb') as f:
+        while True:
+            buf = f.read(1*1024*1024)
+            if not buf:
+                break
+            m.update(buf)
+    return m.hexdigest() == sha256
 
-def curl_download(remote_url: str, dst_file: Path, md5: str = None):
+
+def curl_download(remote_url: str, dst_file: Path, sha256: str = None, md5: str = None):
     sp.check_call([
         "curl", "-o", str(dst_file),
         "-sL", "--remote-time", "--show-error",
         "--fail", "--retry", "10", "--speed-time", "15",
         "--speed-limit", "5000", remote_url,
     ])
+    if sha256 and (not sha256_check(dst_file, sha256)):
+        return "SHA256 mismatch"
     if md5 and (not md5_check(dst_file, md5)):
         return "MD5 mismatch"
 
@@ -141,7 +153,14 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
         if meta['name'] in EXCLUDED_PACKAGES:
             continue
 
-        file_size, md5 = meta['size'], meta['md5']
+        file_size = meta['size']
+        # prefer sha256 over md5
+        sha256 = None
+        md5 = None
+        if 'sha256' in meta:
+            sha256 = meta['sha256']
+        elif 'md5' in meta:
+            md5 = meta['md5']
         total_size += file_size
 
         pkg_url = '/'.join([repo_url, filename])
@@ -162,7 +181,7 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
         for retry in range(3):
             logging.info("Downloading {}".format(filename))
             try:
-                err = curl_download(pkg_url, dst_file_wip, md5=md5)
+                err = curl_download(pkg_url, dst_file_wip, sha256=sha256, md5=md5)
                 if err is None:
                     dst_file_wip.rename(dst_file)
             except sp.CalledProcessError:
@@ -208,12 +227,12 @@ def sync_installer(repo_url, local_dir: Path):
             if len(tds) != 4:
                 continue
             fname = tds[0].find('a').text
-            md5 = tds[3].text
-            if md5 == '<directory>' or len(md5) != 32:
+            sha256 = tds[3].text
+            if sha256 == '<directory>' or len(sha256) != 64:
                 continue
-            yield (fname, md5)
+            yield (fname, sha256)
 
-    for filename, md5 in remote_list():
+    for filename, sha256 in remote_list():
         pkg_url = "/".join([repo_url, filename])
         dst_file = local_dir / filename
         dst_file_wip = local_dir / ('.downloading.' + filename)
@@ -230,7 +249,7 @@ def sync_installer(repo_url, local_dir: Path):
 
             # Do content verification on ~5% of files (see issue #25)
             if (not len_avail or remote_filesize == local_filesize) and remote_date.timestamp() == local_mtime and \
-                    (random.random() < 0.95 or md5_check(dst_file, md5)):
+                    (random.random() < 0.95 or sha256_check(dst_file, sha256)):
                 logging.info("Skipping {}".format(filename))
 
                 # Stop the scanning if the most recent version is present
@@ -247,7 +266,7 @@ def sync_installer(repo_url, local_dir: Path):
             logging.info("Downloading {}".format(filename))
             err = ''
             try:
-                err = curl_download(pkg_url, dst_file_wip, md5=md5)
+                err = curl_download(pkg_url, dst_file_wip, sha256=sha256)
                 if err is None:
                     dst_file_wip.rename(dst_file)
             except sp.CalledProcessError:

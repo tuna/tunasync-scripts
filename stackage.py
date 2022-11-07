@@ -10,6 +10,8 @@ import shutil
 import subprocess
 import yaml
 
+MIRROR_BASE_URL = os.getenv("MIRROR_BASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/stackage')
+MIRROR_GITHUB_RELEASE_URL = os.getenv("MIRROR_GITHUB_RELEASE_URL", 'https://mirrors.tuna.tsinghua.edu.cn/github-release')
 
 class StackageSession(object):
     def __init__(self):
@@ -38,7 +40,8 @@ class StackageSession(object):
         d = yaml.load(
             requests
                 .get('https://raw.githubusercontent.com/commercialhaskell/stackage-content/master/stack/stack-setup-2.yaml')
-                .content
+                .content,
+            Loader=yaml.FullLoader
         )
         for platform in d['ghc']:
             for ver in d['ghc'][platform]:
@@ -48,27 +51,29 @@ class StackageSession(object):
                     d['ghc'][platform][ver]['sha1'],
                 )
                 d['ghc'][platform][ver]['url'] = (
-                    'http://mirrors.tuna.tsinghua.edu.cn/stackage/ghc/{}'
-                    .format(d['ghc'][platform][ver]['url'].split('/')[-1])
+                    '{}/ghc/{}'
+                    .format(MIRROR_BASE_URL, d['ghc'][platform][ver]['url'].split('/')[-1])
                 )
 
         if 'msys2' in d:
             if 'windows32' in d['msys2']:
-                print('windows32')
                 d['msys2']['windows32']['url'] = d['msys2']['windows32']['url'].replace(
                     'https://github.com/fpco/stackage-content/releases/download/',
-                    'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/msys2-')
+                    f'{MIRROR_GITHUB_RELEASE_URL}/commercialhaskell/stackage-content/msys2-')
             if 'windows64' in d['msys2']:
-                print('windows64')
                 d['msys2']['windows64']['url'] = d['msys2']['windows64']['url'].replace(
                     'https://github.com/commercialhaskell/stackage-content/releases/download/',
-                    'https://mirrors.tuna.tsinghua.edu.cn/github-release/commercialhaskell/stackage-content/')
+                    f'{MIRROR_GITHUB_RELEASE_URL}/commercialhaskell/stackage-content/')
 
         if 'sevenzexe-info' in d:
-            d['sevenzexe-info']['url'] = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/fpco/minghc/master/bin/7z.exe'
+            d['sevenzexe-info']['url'] = d['sevenzexe-info']['url'].replace(
+                'https://github.com/commercialhaskell/stackage-content/releases/download/',
+                f'{MIRROR_GITHUB_RELEASE_URL}/commercialhaskell/stackage-content/')
 
         if 'sevenzdll-info' in d:
-            d['sevenzdll-info']['url'] = 'https://mirrors.tuna.tsinghua.edu.cn/github-raw/fpco/minghc/master/bin/7z.dll'
+            d['sevenzdll-info']['url'] = d['sevenzdll-info']['url'].replace(
+                'https://github.com/commercialhaskell/stackage-content/releases/download/',
+                f'{MIRROR_GITHUB_RELEASE_URL}/commercialhaskell/stackage-content/')
 
         for i in ['portable-git', 'stack', 'ghcjs']:
             del d[i]

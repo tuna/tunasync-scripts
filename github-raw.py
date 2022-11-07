@@ -28,8 +28,6 @@ def delete_line_with_gbpdistro(s: str) -> str:
 REPOS = [
     # owner/repo, tree, tree, tree, blob
     ## for stackage
-    ["fpco/minghc", "master", "bin", "7z.exe"],
-    ["fpco/minghc", "master", "bin", "7z.dll"],
     ["fpco/stackage-content", "master", "stack", "global-hints.yaml"],
     ## for rosdep
     { "path": ["ros/rosdistro", "master", "rosdep", "sources.list.d", "20-default.list"], "filter": [ raw_to_mirror, delete_line_with_gbpdistro ] },
