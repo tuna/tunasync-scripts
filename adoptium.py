@@ -129,6 +129,19 @@ if __name__ == "__main__":
         "centos@{os_ver}-@{arch}",
         f"{BASE_PATH}/rpm"
         ],
+        check=True) 
+
+    # =================== YUM repos ==========================
+    # "$yum_sync" "${BASE_URL}/rpm/rhel/@{os_ver}/@{arch}" 7 Adopitum x86_64,aarch64 "rhel@{os_ver}-@{arch}" "$BASE_PATH/rpm"
+    sp.run([str(here/"yum-sync.py"),
+        BASE_URL+'/rpm/rhel/@{os_ver}/@{arch}',
+        "--download-repodata",
+        '7,8,9',
+        'Adoptium',
+        'x86_64,aarch64',
+        "rhel@{os_ver}-@{arch}",
+        f"{BASE_PATH}/rpm"
+        ],
         check=True)
     print("YUM finished", flush=True)
 
