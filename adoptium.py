@@ -132,11 +132,11 @@ if __name__ == "__main__":
         check=True) 
 
     # =================== YUM repos ==========================
-    # "$yum_sync" "${BASE_URL}/rpm/rhel/@{os_ver}/@{arch}" 7 Adopitum x86_64,aarch64 "rhel@{os_ver}-@{arch}" "$BASE_PATH/rpm"
+    # "$yum_sync" "${BASE_URL}/rpm/rhel/@{os_ver}/@{arch}" 7-9 Adopitum x86_64,aarch64 "rhel@{os_ver}-@{arch}" "$BASE_PATH/rpm"
     sp.run([str(here/"yum-sync.py"),
         BASE_URL+'/rpm/rhel/@{os_ver}/@{arch}',
         "--download-repodata",
-        '7,8,9',
+        '7-9',
         'Adoptium',
         'x86_64,aarch64',
         "rhel@{os_ver}-@{arch}",
