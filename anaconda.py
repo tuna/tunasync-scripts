@@ -35,6 +35,7 @@ CONDA_CLOUD_REPOS = (
     "rapidsai/linux-64", "rapidsai/linux-aarch64", "rapidsai/noarch",
     "bioconda/linux-64", "bioconda/linux-aarch64", "bioconda/osx-64", "bioconda/win-64", "bioconda/noarch",
     "menpo/linux-64", "menpo/osx-64", "menpo/win-64", "menpo/win-32", "menpo/noarch",
+    "pyg/linux-64", "pyg/osx-64", "pyg/win-64",
     "pytorch/linux-64", "pytorch/osx-64", "pytorch/osx-arm64", "pytorch/win-64", "pytorch/win-32", "pytorch/noarch",
     "pytorch-lts/linux-64", "pytorch-lts/win-64", "pytorch-lts/noarch",
     "pytorch-test/linux-64", "pytorch-test/osx-64", "pytorch-test/win-64", "pytorch-test/win-32", "pytorch-test/noarch",
