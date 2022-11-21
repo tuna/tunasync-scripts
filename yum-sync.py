@@ -153,7 +153,7 @@ def main():
                         help='download repodata files instead of generating them')
     args = parser.parse_args()
 
-    if '-' in args.os_version:
+    if '-' in args.os_version and '-stream' not in args.os_version:
         dash = args.os_version.index('-')
         os_list = [ str(i) for i in range(
             int(args.os_version[:dash]),
