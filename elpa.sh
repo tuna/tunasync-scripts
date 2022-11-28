@@ -16,6 +16,8 @@ UPSTREAMS=(
   "rsync://elpa.nongnu.org/nongnu/"
   "rsync://melpa.org/packages/"
   "rsync://stable.melpa.org/packages-stable/"
+  "rsync://elpa.gnu.org/elpa-devel/"
+  "rsync://elpa.nongnu.org/nongnu-devel/"
   )
 
 REPOS=(
@@ -23,6 +25,8 @@ REPOS=(
   "nongnu"
   "melpa"
   "stable-melpa"
+  "gnu-devel"
+  "nongnu-devel"
   )
 
 for I in ${!UPSTREAMS[@]}; do
