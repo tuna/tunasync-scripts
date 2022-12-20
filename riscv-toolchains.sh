@@ -36,7 +36,7 @@ export WORKING_DIR_BASE=$GIT_PATH
 for upstream in "${upstreams[@]}"; do
     ORG=$(basename $(dirname $upstream))
     REPO=$(basename $upstream)
-    REPO_NO_GIT=$(basename upstream .git)
+    REPO_NO_GIT=$(basename $upstream .git)
     SCRIPT=${REPO_NO_GIT}.sh
     export TUNASYNC_UPSTREAM_URL=$upstream
     export TUNASYNC_WORKING_DIR=$GIT_PATH/$ORG/$REPO
