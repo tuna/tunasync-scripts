@@ -7,57 +7,15 @@ import queue
 from pathlib import Path
 from datetime import datetime
 import tempfile
+import json
 
 import requests
 
 
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
-REPOS = [
-    "Homebrew/homebrew-portable-ruby",  # Used by homebrew-bottles
-    "Homebrew/glibc-bootstrap",  # Used by homebrew-bottles, see #1586
-    {"repo": "googlefonts/noto-fonts", "tarball": True},
-    {"repo": "googlefonts/noto-cjk", "tarball": True},
-    {"repo": "googlefonts/noto-emoji", "tarball": True},
-    "be5invis/Sarasa-Gothic",
-    "be5invis/Iosevka",
-    "z4yx/GoAuthing",
-    "VSCodium/vscodium",
-    "openark/orchestrator",
-    "git-lfs/git-lfs",
-    "git-for-windows/git",
-    "prometheus/prometheus",
-    {"repo": "commercialhaskell/stackage-content", "versions": -1},  # Used by stackage
-    {"repo": "xxr3376/Learn-Project", "versions": -1},
-    {"repo": "robertying/learnX", "versions": -1},
-    "rust-analyzer/rust-analyzer",
-    "kubernetes/minikube",
-    {"repo": "iina/iina", "versions": -1, "pre_release": True, "flat": True},
-    {"repo": "FreeCAD/FreeCAD", "versions": 3, "pre_release": True},
-    {"repo": "goharbor/harbor", "versions": 3},
-    {"repo": "tuna/thuthesis", "versions": -1, "flat": True},
-    "cmderdev/cmder",
-    "balena-io/etcher",
-    "llvm/llvm-project",
-    "conda-forge/miniforge",
-    "texstudio-org/texstudio",
-    "Stellarium/stellarium",
-    "thu-info-community/thu-info-app",
-    {"repo": "obsproject/obs-studio", "versions": 5, "pre_release": False},
-    "com-lihaoyi/mill", # better scala build tool,
-    "dbeaver/dbeaver", # issue #1348
-    "ibmruntimes/semeru8-binaries",
-    "ibmruntimes/semeru11-binaries",
-    "ibmruntimes/semeru17-binaries",
-    "ibmruntimes/semeru18-binaries",
-    "topjohnwu/Magisk", # issue #1156
-    "PowerShell/PowerShell", # issue #1136
-    "atom/atom", # issue 1187
-    "k3s-io/k3s", # issue 1402
-    "laurent22/joplin", # issue 1336
-    "laurent22/joplin-android", # issue 1336
-    "graalvm/graalvm-ce-builds", # issue 1514
-]
+CONFIG = os.getenv("GITHUB_RELEASE_CONFIG", "github-release.json")
+REPOS = []
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
@@ -152,6 +110,7 @@ def main():
                         help='number of concurrent downloading jobs')
     parser.add_argument("--fast-skip", action='store_true',
                         help='do not verify size and timestamp of existing files')
+    parser.add_argument("--config", default=CONFIG)
     args = parser.parse_args()
 
     if args.working_dir is None:
@@ -161,6 +120,9 @@ def main():
     task_queue = create_workers(args.workers)
     remote_filelist = []
     cleaning = False
+
+    with open(args.config, "r") as f:
+        REPOS = json.load(f)
 
     def download(release, release_dir, tarball = False):
         global total_size

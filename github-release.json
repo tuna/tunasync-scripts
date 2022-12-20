@@ -1,0 +1,83 @@
+[
+    "Homebrew/homebrew-portable-ruby",
+    "Homebrew/glibc-bootstrap",
+    {
+        "repo": "googlefonts/noto-fonts",
+        "tarball": true
+    },
+    {
+        "repo": "googlefonts/noto-cjk",
+        "tarball": true
+    },
+    {
+        "repo": "googlefonts/noto-emoji",
+        "tarball": true
+    },
+    "be5invis/Sarasa-Gothic",
+    "be5invis/Iosevka",
+    "z4yx/GoAuthing",
+    "VSCodium/vscodium",
+    "openark/orchestrator",
+    "git-lfs/git-lfs",
+    "git-for-windows/git",
+    "prometheus/prometheus",
+    {
+        "repo": "commercialhaskell/stackage-content",
+        "versions": -1
+    },
+    {
+        "repo": "xxr3376/Learn-Project",
+        "versions": -1
+    },
+    {
+        "repo": "robertying/learnX",
+        "versions": -1
+    },
+    "rust-analyzer/rust-analyzer",
+    "kubernetes/minikube",
+    {
+        "repo": "iina/iina",
+        "versions": -1,
+        "pre_release": true,
+        "flat": true
+    },
+    {
+        "repo": "FreeCAD/FreeCAD",
+        "versions": 3,
+        "pre_release": true
+    },
+    {
+        "repo": "goharbor/harbor",
+        "versions": 3
+    },
+    {
+        "repo": "tuna/thuthesis",
+        "versions": -1,
+        "flat": true
+    },
+    "cmderdev/cmder",
+    "balena-io/etcher",
+    "llvm/llvm-project",
+    "conda-forge/miniforge",
+    "texstudio-org/texstudio",
+    "Stellarium/stellarium",
+    "thu-info-community/thu-info-app",
+    {
+        "repo": "obsproject/obs-studio",
+        "versions": 5,
+        "pre_release": false
+    },
+    "com-lihaoyi/mill",
+    "dbeaver/dbeaver",
+    "ibmruntimes/semeru8-binaries",
+    "ibmruntimes/semeru11-binaries",
+    "ibmruntimes/semeru17-binaries",
+    "ibmruntimes/semeru18-binaries",
+    "topjohnwu/Magisk",
+    "PowerShell/PowerShell",
+    "atom/atom",
+    "k3s-io/k3s",
+    "laurent22/joplin",
+    "laurent22/joplin-android",
+    "graalvm/graalvm-ce-builds"
+]
