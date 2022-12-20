@@ -1,3 +1,43 @@
 [
-    "riscv-collab/riscv-gnu-toolchain"
+    "riscv-collab/riscv-gnu-toolchain",
+    {
+        "repo": "riscv/riscv-isa-manual",
+        "versions": -1
+    },
+    {
+        "repo": "riscv/riscv-crypto",
+        "versions": -1
+    },
+    {
+        "repo": "riscv/riscv-v-spec",
+        "versions": -1
+    },
+    {
+        "repo": "riscv/riscv-debug-spec",
+        "versions": -1
+    },
+    {
+        "repo": "riscv/riscv-bitmanip",
+        "versions": -1
+    },
+    {
+        "repo": "riscv/riscv-plic-spec",
+        "versions": -1
+    }.
+    {
+        "repo": "riscv/riscv-code-size-reduction",
+        "versions": -1
+    },
+    {
+        "repo": "riscv/riscv-bfloat16",
+        "versions": -1
+    },
+    {
+        "repo": "riscv-non-isa/riscv-elf-psabi-doc",
+        "versions": -1
+    },
+    {
+        "repo": "riscv-non-isa/riscv-sbi-doc",
+        "versions": -1
+    }
 ]

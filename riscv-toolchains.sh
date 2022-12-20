@@ -18,6 +18,16 @@ mkdir -p $RELEASE_PATH
 # git
 declare -a upstreams=(
     "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
+    "https://github.com/riscv/riscv-isa-manual.git"
+    "https://github.com/riscv/riscv-opcodes.git"
+    "https://github.com/riscv/riscv-openocd.git"
+    "https://github.com/riscv/sail-riscv.git"
+    "https://github.com/riscv-non-isa/riscv-arch-test.git"
+    "https://github.com/riscv-software-src/riscv-tools.git"
+    "https://github.com/riscv-software-src/riscv-isa-sim.git"
+    "https://github.com/riscv-software-src/opensbi.git"
+    "https://github.com/riscv-software-src/riscv-tests.git"
+    "https://github.com/chipsalliance/rocket-tools.git"
 )
 
 export RECURSIVE=1
