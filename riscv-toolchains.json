@@ -1,5 +1,9 @@
 [
-    "riscv-collab/riscv-gnu-toolchain",
+    {
+        "repo": "riscv-collab/riscv-gnu-toolchain",
+        "versions": -1,
+        "pre_release": true
+    },
     {
         "repo": "riscv/riscv-isa-manual",
         "versions": -1
