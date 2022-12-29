@@ -56,7 +56,10 @@
         "flat": true
     },
     "cmderdev/cmder",
-    "balena-io/etcher",
+    {
+        "repo": "balena-io/etcher",
+        "pre_release": true
+    },
     "llvm/llvm-project",
     "conda-forge/miniforge",
     "texstudio-org/texstudio",
