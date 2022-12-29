@@ -8,19 +8,20 @@ apt_sync="${_here}/apt-sync.py"
 yum_sync="${_here}/yum-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
-BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.grafana.com/oss"}
+APT_URL=${TUNASYNC_UPSTREAM_URL:-"https://apt.grafana.com"}
+YUM_URL="https://rpm.grafana.com"
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # =================== APT repos ===============================
-"$apt_sync" --delete "${BASE_URL}/deb" stable,beta main amd64,armhf,arm64 "$APT_PATH"
+"$apt_sync" --delete "${APT_URL}" stable,beta main amd64,armhf,arm64 "$APT_PATH"
 echo "APT finished"
 
 
 # =================== YUM/DNF repos ==========================
-"$yum_sync" "${BASE_URL}/@{comp}" 7 rpm,rpm-beta x86_64 "@{comp}" "$YUM_PATH"
+"$yum_sync" "${YUM_URL}" 7 rpm x86_64 "@{comp}" "$YUM_PATH"
 echo "YUM finished"
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
