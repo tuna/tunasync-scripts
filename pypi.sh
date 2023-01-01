@@ -47,6 +47,8 @@ packages =
     tf-nightly-cpu
     pyagrum-nightly
     uselesscapitalquiz
+    tf-nightly-intel
+    tf-nightly-cpu-aws
 EOF
 	for i in $PYPI_EXCLUDE; do
 		echo "    $i"
