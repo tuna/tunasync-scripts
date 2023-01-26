@@ -10,16 +10,19 @@ BASE_URL="${TUNASYNC_UPSTREAM_URL:-"http://download.proxmox.com"}"
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
 APT_PATH="${BASE_PATH}/debian"
-PBS_PATH="${BASE_PATH}/pbs"
-PBS_CLIENT_PATH="${BASE_PATH}/pbs-client"
-PMG_PATH="${BASE_PATH}/pmg"
+PVE_PATH="${APT_PATH}/pve"
+PBS_PATH="${APT_PATH}/pbs"
+PBS_CLIENT_PATH="${APT_PATH}/pbs-client"
+PMG_PATH="${APT_PATH}/pmg"
 
 # === download deb packages ====
 
-"$apt_sync" --delete "${BASE_URL}/debian" @debian-current pve-no-subscription,pvetest amd64 "$APT_PATH"
+"$apt_sync" --delete "${BASE_URL}/debian/pve" @debian-current pve-no-subscription,pvetest amd64 "$PVE_PATH"
 "$apt_sync" --delete "${BASE_URL}/debian/pbs" @debian-current pbs-no-subscription amd64 "$PBS_PATH"
 "$apt_sync" --delete "${BASE_URL}/debian/pbs-client" @debian-current main amd64 "$PBS_CLIENT_PATH"
 "$apt_sync" --delete "${BASE_URL}/debian/pmg" @debian-current pmg-no-subscription amd64 "$PMG_PATH"
+# upstream directory structure
+ln -sf pve/dists $APT_PATH/dists
 echo "Debian finished"
 
 # === download standalone files ====
