@@ -10,14 +10,14 @@ function repo_init() {
 }
 
 function update_git() {
-	UPSTREAM="$1"
+        UPSTREAM="$1"
         repo_dir="$2"
         cd "$repo_dir"
         echo "==== SYNC $repo_dir START ===="
-	git remote set-url origin "$UPSTREAM"
-        /usr/bin/timeout -s INT 3600 git remote -v update -p
-	head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
-	[[ -n "$head" ]] && echo "ref: refs/heads/$head" > HEAD
+        git remote set-url origin "$UPSTREAM"
+        timeout -s INT 3600 git remote -v update -p
+        head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
+        [[ -n "$head" ]] && echo "ref: refs/heads/$head" > HEAD
         objs=$(find objects -type f | wc -l)
         [[ "$objs" -gt 8 ]] && git repack -a -b -d
         sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
@@ -26,19 +26,20 @@ function update_git() {
 }
 
 function checkout_branch() {
-	repo_dir="$1"
-	work_tree="$2"
-	branch="$3"
-	echo "Checkout branch $branch to $work_tree"
-	if [[ ! -d "$2" ]]; then
-		$git_option clone "$repo_dir" --branch "$branch" --single-branch "$work_tree"
-	else
-		cd "$work_tree"
-		$git_option pull
-	fi
+        repo_dir="$1"
+        work_tree="$2"
+        branch="$3"
+        echo "Checkout branch $branch to $work_tree"
+        if [[ ! -d "$2" ]]; then
+                $git_option clone "$repo_dir" --branch "$branch" --single-branch "$work_tree"
+        else
+                cd "$work_tree"
+                $git_option pull
+        fi
 }
 
-UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL:-"https://github.com/ros/rosdistro"}
+UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL}
+UPSTREAM_BRANCH=${UPSTREAM_BRANCH:-"master"}
 total_size=0
 
 if [[ ! -d "$TUNASYNC_WORKING_DIR/.git" ]]; then
@@ -46,6 +47,6 @@ if [[ ! -d "$TUNASYNC_WORKING_DIR/.git" ]]; then
         repo_init "${UPSTREAM_BASE}" "$TUNASYNC_WORKING_DIR"
 fi
 update_git "${UPSTREAM_BASE}" "$TUNASYNC_WORKING_DIR/.git"
-checkout_branch "$TUNASYNC_WORKING_DIR/.git" "$TUNASYNC_WORKING_DIR" "master"
+checkout_branch "$TUNASYNC_WORKING_DIR/.git" "$TUNASYNC_WORKING_DIR" "$UPSTREAM_BRANCH"
 
 echo "Total size is" $(numfmt --to=iec $total_size)
