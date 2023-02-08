@@ -3,26 +3,49 @@ import os
 import json
 import requests
 import time
+import subprocess as sp
+import shutil
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 # mainly from apt-sync.py
 
-HOMEBREW_BOTTLE_DOMAIN = os.getenv("TUNASYNC_UPSTREAM_URL", "https://formulae.brew.sh/api/formula.json")
+FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/Homebrew/formulae.brew.sh/actions/artifacts?name=github-pages")
 WORKING_DIR = Path(os.getenv("TUNASYNC_WORKING_DIR", "/data"))
 DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 
-headers = {
-    "Accept": "application/vnd.oci.image.index.v1+json",
-    "Authorization": "Bearer QQ=="
+github_api_headers = {
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
 }
 
-def bottles():
+if 'GITHUB_TOKEN' in os.environ:
+    github_api_headers['Authorization'] = 'token {}'.format(
+        os.environ['GITHUB_TOKEN'])
+else:
+    # https://github.com/actions/upload-artifact/issues/51
+    # the token should have 'public_repo' access
+    raise Exception("GITHUB_TOKEN is required")
+
+def formulae_github_pages(zip_file: Path, unzip_directory: Path, tar_directory: Path):
+    artifacts = requests.get(FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API, headers=github_api_headers)
+    artifacts.raise_for_status()
+    artifacts = artifacts.json()
+    latest = None
+    for artifact in artifacts["artifacts"]:
+        if artifact["workflow_run"]["head_branch"] == "master":
+            latest = artifact
+            break
+    zip_url = latest["archive_download_url"]
+
+    check_and_download(zip_url, zip_file, zip_file, github_api_headers)
+    sp.run(["unzip", str(zip_file), "-d", str(unzip_directory)])
+    sp.run(["tar", "-C", str(tar_directory), "-xf", str(unzip_directory / "artifact.tar")])
+
+def bottles(formula_file: Path):
     b = {}
-    r = requests.get(HOMEBREW_BOTTLE_DOMAIN, timeout=(5, 10))
-    r.raise_for_status()
+    formulae = json.load(formula_file.open())
     # refer to https://github.com/ustclug/ustcmirror-images/blob/master/homebrew-bottles/bottles-json/src/main.rs
-    formulae = r.json()
     for formula in formulae:
         if formula["versions"]["bottle"] and "stable" in formula["bottle"]:
             bs = formula["bottle"]["stable"]
@@ -40,8 +63,13 @@ def bottles():
                 }
     return b
 
+ghcr_headers = {
+    "Accept": "application/vnd.oci.image.index.v1+json",
+    "Authorization": "Bearer QQ=="
+}
+
 # borrowed from apt-sync.py
-def check_and_download(url: str, dst_file: Path, dst_tmp_file: Path):
+def check_and_download(url: str, dst_file: Path, dst_tmp_file: Path, headers=ghcr_headers):
     if dst_file.is_file(): return 2 # old file
     try:
         start = time.time()
@@ -70,12 +98,29 @@ def check_and_download(url: str, dst_file: Path, dst_tmp_file: Path):
 if __name__ == "__main__":
     # clean tmp file from previous sync
     TMP_DIR = WORKING_DIR / ".tmp"
-    TMP_DIR.mkdir(exist_ok=True)
-    for file in TMP_DIR.glob("*.tar.gz"):
-        print(f"Clean tmp file {file.name}", flush=True)
-        file.unlink()
 
-    b = bottles()
+    ZIP_FILE = TMP_DIR / "github-pages.zip"
+    UNZIP_DIR = TMP_DIR / "unzip"
+    TAR_DIR = TMP_DIR / "github-pages"
+    TAR_API_DIR = TAR_DIR / "api"
+
+    FORMULA_FILE = TAR_API_DIR / "formula.json"
+    INDEX_FILE = TAR_API_DIR / "index.html"
+
+    API_DIR = WORKING_DIR / "api"
+    API_OLD_DIR = WORKING_DIR / "api.old"
+
+    shutil.rmtree(str(TMP_DIR), ignore_errors=True)
+    TMP_DIR.mkdir(exist_ok=True, parents=True)
+    UNZIP_DIR.mkdir(exist_ok=True)
+    TAR_DIR.mkdir(exist_ok=True)
+
+    formulae_github_pages(ZIP_FILE, UNZIP_DIR, TAR_DIR)
+    # no homepage
+    INDEX_FILE.unlink()
+
+    # download bottles
+    b = bottles(FORMULA_FILE)
     for file in b:
         sha256 = b[file]["sha256"]
 
@@ -89,9 +134,19 @@ if __name__ == "__main__":
         elif ret == 2:
             print(f"Exists {file}, Skip", flush=True)
 
+    # replace API directory
+    print("Replacing API")
+    shutil.rmtree(str(API_OLD_DIR), ignore_errors=True)
+    if API_DIR.exists():
+        API_DIR.rename(API_OLD_DIR)
+    TAR_API_DIR.rename(API_DIR)
+
     files = list(b.keys())
     # garbage collection
     for file in WORKING_DIR.glob("*.tar.gz"):
         if file.name not in files:
             print(f"GC {file.name}", flush=True)
             file.unlink()
+
+    shutil.rmtree(str(API_OLD_DIR), ignore_errors=True)
+    shutil.rmtree(str(TMP_DIR), ignore_errors=True)
