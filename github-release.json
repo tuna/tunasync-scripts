@@ -1,5 +1,8 @@
 [
-    "Homebrew/homebrew-portable-ruby",
+    {
+        "repo": "Homebrew/homebrew-portable-ruby",
+        "versions": 3
+    },
     "Homebrew/glibc-bootstrap",
     {
         "repo": "googlefonts/noto-fonts",
