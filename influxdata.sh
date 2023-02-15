@@ -15,14 +15,15 @@ UBUNTU_PATH="${BASE_PATH}/ubuntu"
 DEBIAN_PATH="${BASE_PATH}/debian"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
-wget -O ${BASE_PATH}/influxdb.key ${BASE_URL}/influxdb.key
-
 # =================== APT repos ===============================
 
-"$apt_sync" --delete "${BASE_URL}/ubuntu" @ubuntu-lts stable amd64,i386,armhf,arm64 "$UBUNTU_PATH"
-echo "Ubuntu finished"
-"$apt_sync" --delete "${BASE_URL}/debian" @debian-current stable amd64,i386,armhf,arm64 "$DEBIAN_PATH"
-echo "Debian finished"
+# full .deb set
+"$apt_sync" --delete "${BASE_URL}/debian" stable main amd64,i386,armhf,arm64 "$DEBIAN_PATH"
+echo "Stable finished"
+# only for metadata
+"$apt_sync" "${BASE_URL}/debian" @debian-current,@ubuntu-lts stable amd64,i386,armhf,arm64 "$DEBIAN_PATH"
+ln -sTf debian "$UBUNTU_PATH"
+echo "Debian/Ubuntu finished"
 
 
 # =================== YUM/DNF repos ==========================
