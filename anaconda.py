@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import os
+import errno
 import random
 import shutil
 import subprocess as sp
@@ -73,6 +74,9 @@ EXCLUDED_PACKAGES = (
 
 # connect and read timeout value
 TIMEOUT_OPTION = (7, 10)
+
+# Generate gzip archive for json files, size threshold
+GEN_METADATA_JSON_GZIP_THRESHOLD = 1024 * 1024
 
 logging.basicConfig(
     level=logging.INFO,
@@ -190,12 +194,34 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
                 break
             logging.error("Failed to download {}: {}".format(filename, err))
 
+    if os.path.getsize(tmp_repodata) > GEN_METADATA_JSON_GZIP_THRESHOLD:
+        sp.check_call(["gzip", "--no-name", "--keep", "--", str(tmp_repodata)])
+        shutil.move(str(tmp_repodata) + ".gz", str(local_dir / "repodata.json.gz"))
+    else:
+        # If the gzip file is not generated, remove the dangling gzip archive
+        try:
+            os.remove(str(local_dir / "repodata.json.gz"))
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
     shutil.move(str(tmp_repodata), str(local_dir / "repodata.json"))
     shutil.move(str(tmp_bz2_repodata), str(local_dir / "repodata.json.bz2"))
+    tmp_current_repodata_gz_gened = False
     if tmp_current_repodata.is_file():
+        if os.path.getsize(tmp_current_repodata) > GEN_METADATA_JSON_GZIP_THRESHOLD:
+            sp.check_call(["gzip", "--no-name", "--keep", "--", str(tmp_current_repodata)])
+            shutil.move(str(tmp_current_repodata) + ".gz", str(local_dir / "current_repodata.json.gz"))
+            tmp_current_repodata_gz_gened = True
         shutil.move(str(tmp_current_repodata), str(
             local_dir / "current_repodata.json"))
+    if not tmp_current_repodata_gz_gened:
+        try:
+            # If the gzip file is not generated, remove the dangling gzip archive
+            os.remove(str(local_dir / "current_repodata.json.gz"))
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
     if delete:
         local_filelist = []
