@@ -1,4 +1,6 @@
-FROM python:3.9-alpine
+ARG PY_VERSION=3.11
+
+FROM python:${PY_VERSION}-alpine
 
 RUN apk add --update --no-cache --virtual .build-deps \
         g++ \
