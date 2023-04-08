@@ -22,7 +22,7 @@ function update_homebrew_git() {
 }
 
 UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL:-"https://github.com/Homebrew"}
-brews=("brew" "homebrew-core" "homebrew-cask" "homebrew-cask-fonts" "homebrew-cask-drivers" "homebrew-cask-versions" "install" "homebrew-command-not-found")
+brews=("brew" "homebrew-core" "homebrew-cask" "homebrew-cask-fonts" "homebrew-cask-drivers" "homebrew-cask-versions" "install" "homebrew-command-not-found" "homebrew-services")
 total_size=0
 
 for brew in ${brews[@]}; do
