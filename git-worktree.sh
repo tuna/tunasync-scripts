@@ -34,7 +34,7 @@ function checkout_branch() {
                 $git_option clone "$repo_dir" --branch "$branch" --single-branch "$work_tree"
         else
                 cd "$work_tree"
-                $git_option pull
+                $git_option checkout -B "$branch" "origin/$branch"
         fi
 }
 
