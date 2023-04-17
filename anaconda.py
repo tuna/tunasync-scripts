@@ -39,6 +39,7 @@ CONDA_CLOUD_REPOS = (
     "pytorch/linux-64", "pytorch/osx-64", "pytorch/osx-arm64", "pytorch/win-64", "pytorch/win-32", "pytorch/noarch",
     "pytorch-lts/linux-64", "pytorch-lts/win-64", "pytorch-lts/noarch",
     "pytorch-test/linux-64", "pytorch-test/osx-64", "pytorch-test/win-64", "pytorch-test/win-32", "pytorch-test/noarch",
+    "nvidia/linux-64", "nvidia/win-64", "nvidia/linux-aarch64", "nvidia/linux-ppc64le",
     "stackless/linux-64", "stackless/win-64", "stackless/win-32", "stackless/linux-32", "stackless/osx-64", "stackless/noarch",
     "fermi/linux-64", "fermi/osx-64", "fermi/win-64", "fermi/noarch",
     "fastai/linux-64", "fastai/osx-64", "fastai/win-64", "fastai/noarch",
