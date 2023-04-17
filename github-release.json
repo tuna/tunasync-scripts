@@ -64,6 +64,10 @@
         "repo": "balena-io/etcher",
         "pre_release": true
     },
+    {
+        "repo": "darktable-org/darktable",
+        "versions": 3
+    },
     "llvm/llvm-project",
     "conda-forge/miniforge",
     "texstudio-org/texstudio",
