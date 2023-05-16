@@ -2,7 +2,7 @@ FROM debian:bookworm
 MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
 RUN apt-get update && \
-	apt-get install -y git rsync stunnel4 socat && \
+	apt-get install -y --no-install-recommends git rsync stunnel4 socat ca-certificates opensysusers && \
 	apt-get clean all
 
 RUN git clone https://ftp-master.debian.org/git/archvsync.git/ /ftpsync/
