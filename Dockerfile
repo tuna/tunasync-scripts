@@ -2,7 +2,7 @@ FROM debian:buster
 MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
 
 RUN apt-get update && \
-        apt-get install --no-install-recommends -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip libnss-unknown xz-utils patch unzip
+        apt-get install --no-install-recommends -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip libnss-unknown xz-utils patch unzip openssh-client
 
 RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
       apt-get install --no-install-recommends -y libxml2-dev libxslt1-dev zlib1g-dev libssl-dev libffi-dev ;\
