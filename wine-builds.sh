@@ -13,7 +13,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 "$apt_sync" --delete "$BASE_URL/ubuntu" @ubuntu-lts main amd64,i386,all "$BASE_PATH/ubuntu"
 echo "APT for Ubuntu finished"
 
-"$apt_sync" --delete "$BASE_URL/debian" @debian-latest2 main amd64,i386,all "$BASE_PATH/debian"
+"$apt_sync" --delete "$BASE_URL/debian" @debian-current main amd64,i386,all "$BASE_PATH/debian"
 echo "APT for Debian finished"
 
 echo "APT finished"
