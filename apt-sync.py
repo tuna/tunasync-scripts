@@ -25,8 +25,8 @@ requests.utils.default_user_agent = lambda: APT_SYNC_USER_AGENT
 OS_TEMPLATE = {
     'ubuntu-lts': ["bionic", "focal", "jammy"],
     'debian-current': ["buster", "bullseye", "bookworm"],
-    'debian-latest2': ["buster", "bullseye"],
-    'debian-latest': ["bullseye"],
+    'debian-latest2': ["bullseye", "bookworm"],
+    'debian-latest': ["bookworm"],
 }
 ARCH_NO_PKGIDX = ['dep11', 'i18n', 'cnf']
 MAX_RETRY=int(os.getenv('MAX_RETRY', '3'))
