@@ -4,14 +4,14 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/archlinuxcn/"
+DESTPATH="/srv/www/cran/"
 RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-archlinuxcn.lock
-UPSTREAM_URL="cqu@sync.repo.archlinuxcn.org::repo"
+LOCKFILE=/tmp/rsync-cran.lock
+UPSTREAM_URL="cran.r-project.org::CRAN"
 
 
 synchronize() {
-	RSYNC_PASSWORD="dDqpNDTWstJlOsL"  /usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 -vvv "$UPSTREAM_URL"  "$DESTPATH"
+	/usr/bin/rsync -rptlzvH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 -vvv "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 
@@ -20,7 +20,6 @@ if [ ! -e "$LOCKFILE" ]
 then
     echo $$ >"$LOCKFILE"
     synchronize
-    exit 0
 else
     PID=$(cat "$LOCKFILE")
     if kill -0 "$PID" >&/dev/null

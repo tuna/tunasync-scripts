@@ -4,14 +4,19 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/archlinuxcn/"
-RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-archlinuxcn.lock
-UPSTREAM_URL="cqu@sync.repo.archlinuxcn.org::repo"
+DESTPATH="/srv/www/kicad/"
+LOCKFILE=/tmp/rsync-kicad.lock
+UPSTREAM_URL="rsync://ftp.osuosl.org/centos/"
 
 
 synchronize() {
-	RSYNC_PASSWORD="dDqpNDTWstJlOsL"  /usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 -vvv "$UPSTREAM_URL"  "$DESTPATH"
+	aws --debug --no-sign-request \
+	    --endpoint-url='https://s3.cern.ch/' s3 sync s3://kicad-downloads/ $DESTPATH 
+	    --exclude "windows/nightly/*" \
+	    --exclude "windows/testing/*" \
+	    --exclude "osx/nightly/*" \
+	    --exclude "osx/testing/*" \
+	    --exclude index.html
 }
 
 
@@ -20,7 +25,6 @@ if [ ! -e "$LOCKFILE" ]
 then
     echo $$ >"$LOCKFILE"
     synchronize
-    exit 0
 else
     PID=$(cat "$LOCKFILE")
     if kill -0 "$PID" >&/dev/null
