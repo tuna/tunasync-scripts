@@ -6,17 +6,21 @@
 
 DESTPATH="/srv/www/kicad/"
 LOCKFILE=/tmp/rsync-kicad.lock
-UPSTREAM_URL="rsync://ftp.osuosl.org/centos/"
 
 
 synchronize() {
-	aws --debug --no-sign-request \
-	    --endpoint-url='https://s3.cern.ch/' s3 sync s3://kicad-downloads/ $DESTPATH 
+	# sync
+	aws --no-sign-request \
+	    --endpoint-url='https://s3.cern.ch/' s3 sync s3://kicad-downloads/ $DESTPATH \
 	    --exclude "windows/nightly/*" \
 	    --exclude "windows/testing/*" \
 	    --exclude "osx/nightly/*" \
 	    --exclude "osx/testing/*" \
 	    --exclude index.html
+	#    --dryrun
+	# clean up
+	cd $DESTPATH/windows/stable && rm .[^.]*
+	cd $DESTPATH/osx/stable && rm .[^.]*
 }
 
 
@@ -39,4 +43,4 @@ else
     fi
 fi
 
-rm -f "$LOCKFILE"
+exec rm -f "$LOCKFILE"

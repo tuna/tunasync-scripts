@@ -12,12 +12,15 @@ UPSTREAM_URL="rsync://ftp.riken.jp/fedora/"
 
 synchronize() {
 	/usr/bin/rsync -rtlivH -vvv --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 \
-	--exclude='/releases/*/*/source/' \
 	--exclude='/core/' \
 	--exclude='/development/' \
 	--exclude='/releases/test/' \
-	--exclude='/releases/*/Everything/*/debug/' \
+	--exclude='/releases/*/*/*/debug/' \
+	--exclude='/releases/*/*/source/' \
 	--exclude='/epel/' \
+	--exclude='/updates/testing/' \
+	--exclude='/updates/*/*/*/debug/' \
+	--exclude='/updates/*/*/source/' \
 	--exclude='/extras/' "$UPSTREAM_URL"  "$DESTPATH"
 }
 

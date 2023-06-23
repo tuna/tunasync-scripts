@@ -4,7 +4,7 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/rocylinux/"
+DESTPATH="/srv/www/rockylinux/"
 RSYNC=/usr/bin/rsync
 LOCKFILE=/tmp/rsync-rocylinux.lock
 UPSTREAM_URL="rsync://msync.rockylinux.org/rocky-linux/"
