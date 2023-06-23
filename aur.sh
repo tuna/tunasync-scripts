@@ -1,28 +1,59 @@
 #!/bin/bash
-UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://github.com/archlinux/aur.git"}
-WORKDIR=/tank/mirror-data/git/aur.git
-function repo_init() {
-	git clone $UPSTREAM $WORKDIR
-	# $TUNASYNC_WORKING_DIR
+
+# This script should be a cronjob and should be run a few times a day. (example for /etc/crontab: "0  *  *  *  * root /usr/bin/manjaroreposync").
+# However you can also move this script to "/etc/cron.hourly".
+# To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
+
+DESTPATH="/srv/www/git/aur/"
+UPSTREAM="https://github.com/archlinux/aur.git"
+RSYNC=/usr/bin/rsync
+LOCKFILE=/tmp/rsync-aur.lock
+
+REALGIT=/home/cqumirror/.local/bin/git
+
+RETRIES=5
+DELAY=10
+COUNT=1
+
+git-retry() {
+	while [ $COUNT -lt $RETRIES ]; do
+		$REALGIT $*
+		if [ $? -eq 0 ]; then
+			RETRIES=0
+			break
+		fi
+		let COUNT=$COUNT+1
+		echo "============"
+		echo "Retry $COUNT"
+		echo ""
+		sleep $DELAY
+	done
 }
 
-function update_repo_git() {
-	cd $WORKDIR 
-	# $TUNASYNC_WORKING_DIR
-	echo "==== SYNC ArchLinux AUR GITHUB Mirror START ===="
-	/usr/bin/timeout -s INT 3600 git fetch --all || {
-		echo "=== SYNC Archlinux AUR GITHUB Mirror FAILED ==="
-		exit 1
-	}
-	git reset --hard origin/master
-	git repack -a -b -d
-	echo "==== SYNC ArchLinux AUR GITHUB Mirror DONE ===="
+synchronize() {
+	cd $DESTPATH
+	# git-retry clone $UPSTREAM $DESTPATH
+	echo "Pulling from source..."
+	git-retry pull --ff-only
 }
 
-# if [[ ! -f "$TUNASYNC_WORKING_DIR/.git/HEAD" ]]; then
-if [[ ! -f "$WORKDIR/.git/HEAD" ]]; then
-	echo "Initializing AUR Github mirror"
-	repo_init
+
+
+if [ ! -e "$LOCKFILE" ]
+then
+    echo $$ >"$LOCKFILE"
+    synchronize
+else
+    PID=$(cat "$LOCKFILE")
+    if kill -0 "$PID" >&/dev/null
+    then
+        echo "Rsync - Synchronization still running"
+        exit 0
+    else
+        echo $$ >"$LOCKFILE"
+        echo "Warning: previous synchronization appears not to have finished correctly"
+        synchronize
+    fi
 fi
 
-update_repo_git
+rm -f "$LOCKFILE"

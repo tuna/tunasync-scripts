@@ -30,7 +30,6 @@ else
         echo $$ >"$LOCKFILE"
         echo "Warning: previous synchronization appears not to have finished correctly"
         synchronize
-	exit 0
     fi
 fi
 
