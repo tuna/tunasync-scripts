@@ -11,7 +11,7 @@ UPSTREAM_URL="rsync://download.ceph.com/ceph"
 
 
 synchronize() {
-	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 -vvv "$UPSTREAM_URL"  "$DESTPATH"
+	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 

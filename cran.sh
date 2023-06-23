@@ -11,7 +11,7 @@ UPSTREAM_URL="cran.r-project.org::CRAN"
 
 
 synchronize() {
-	/usr/bin/rsync -rptlzvH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 -vvv "$UPSTREAM_URL"  "$DESTPATH"
+	/usr/bin/rsync -rptlzvH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 

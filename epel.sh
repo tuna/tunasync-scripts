@@ -4,14 +4,14 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/archlinuxcn/"
+DESTPATH="/srv/www/epel/"
 RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-archlinuxcn.lock
-UPSTREAM_URL="cqu@sync.repo.archlinuxcn.org::repo"
+LOCKFILE=/tmp/rsync-epel.lock
+UPSTREAM_URL="rsync://ftp.riken.jp/fedora/epel/"
 
 
 synchronize() {
-	RSYNC_PASSWORD="dDqpNDTWstJlOsL"  /usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
+	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=900 "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 
@@ -30,7 +30,8 @@ else
         echo $$ >"$LOCKFILE"
         echo "Warning: previous synchronization appears not to have finished correctly"
         synchronize
+	exit 0
     fi
 fi
 
-exec rm -f "$LOCKFILE"
+rm -f "$LOCKFILE"
