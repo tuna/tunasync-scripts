@@ -11,7 +11,7 @@ UPSTREAM_URL="rsync://msync.rockylinux.org/rocky-linux/"
 
 
 synchronize() {
-	/usr/bin/rsync -rtlivH -vvv --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
+	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 
@@ -20,7 +20,6 @@ if [ ! -e "$LOCKFILE" ]
 then
     echo $$ >"$LOCKFILE"
     synchronize
-    exit 0
 else
     PID=$(cat "$LOCKFILE")
     if kill -0 "$PID" >&/dev/null
@@ -31,7 +30,6 @@ else
         echo $$ >"$LOCKFILE"
         echo "Warning: previous synchronization appears not to have finished correctly"
         synchronize
-	exit 0
     fi
 fi
 

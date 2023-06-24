@@ -11,7 +11,7 @@ UPSTREAM_URL="rsync://ftp.riken.jp/fedora/"
 
 
 synchronize() {
-	/usr/bin/rsync -rtlivH -vvv --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 \
+	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --contimeout=900 \
 	--exclude='/core/' \
 	--exclude='/development/' \
 	--exclude='/releases/test/' \
