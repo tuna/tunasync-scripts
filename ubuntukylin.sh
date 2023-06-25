@@ -4,24 +4,15 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/fedora/"
+DESTPATH="/srv/www/ubuntu-kylin/"
 RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-fedora.lock
-UPSTREAM_URL="rsync://ftp.riken.jp/fedora/"
+LOCKFILE=/tmp/rsync-ubuntukylin.lock
+
 
 
 synchronize() {
-	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --contimeout=900 \
-	--exclude='/core/' \
-	--exclude='/development/' \
-	--exclude='/releases/test/' \
-	--exclude='/releases/*/*/*/debug/' \
-	--exclude='/releases/*/*/source/' \
-	--exclude='/epel/' \
-	--exclude='/updates/testing/' \
-	--exclude='/updates/*/*/*/debug/' \
-	--exclude='/updates/*/*/source/' \
-	--exclude='/extras/' "$UPSTREAM_URL"  "$DESTPATH"
+	RSYNC_PASSWORD="user"  /usr/bin/rsync -aHv -vvv --delete --progress  rsync://cdimage.ubuntukylin.com/releases/basic/ "$DESTPATH"
+#	RSYNC_PASSWORD="user" $RSYNC -azHv --delete --port=8873  --progress  user@service.ubuntukylin.com::rsync "$DESTPATH"
 }
 
 
@@ -35,7 +26,7 @@ else
     if kill -0 "$PID" >&/dev/null
     then
         echo "Rsync - Synchronization still running"
-        exit 15
+        exit 0
     else
         echo $$ >"$LOCKFILE"
         echo "Warning: previous synchronization appears not to have finished correctly"

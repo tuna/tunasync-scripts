@@ -4,24 +4,36 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/fedora/"
+DESTPATH="/srv/www/git/crates.io-index/"
 RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-fedora.lock
-UPSTREAM_URL="rsync://ftp.riken.jp/fedora/"
+LOCKFILE=/tmp/rsync-aur.lock
 
+REALGIT=/home/cqumirror/.local/bin/git
+
+RETRIES=5
+DELAY=10
+COUNT=1
+
+git-retry() {
+	while [ $COUNT -lt $RETRIES ]; do
+		$REALGIT $*
+		if [ $? -eq 0 ]; then
+			RETRIES=0
+			break
+		fi
+		let COUNT=$COUNT+1
+		echo "============"
+		echo "Retry $COUNT"
+		echo ""
+		sleep $DELAY
+	done
+}
 
 synchronize() {
-	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --contimeout=900 \
-	--exclude='/core/' \
-	--exclude='/development/' \
-	--exclude='/releases/test/' \
-	--exclude='/releases/*/*/*/debug/' \
-	--exclude='/releases/*/*/source/' \
-	--exclude='/epel/' \
-	--exclude='/updates/testing/' \
-	--exclude='/updates/*/*/*/debug/' \
-	--exclude='/updates/*/*/source/' \
-	--exclude='/extras/' "$UPSTREAM_URL"  "$DESTPATH"
+	cd $DESTPATH
+	# git-retry clone $UPSTREAM $DESTPATH
+	echo "Pulling from source..."
+	git-retry pull --ff-only
 }
 
 
@@ -35,7 +47,7 @@ else
     if kill -0 "$PID" >&/dev/null
     then
         echo "Rsync - Synchronization still running"
-        exit 15
+        exit 0
     else
         echo $$ >"$LOCKFILE"
         echo "Warning: previous synchronization appears not to have finished correctly"
@@ -43,4 +55,4 @@ else
     fi
 fi
 
-rm -f "$LOCKFILE"
+exec rm -f "$LOCKFILE"
