@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 BANDERSNATCH=${BANDERSNATCH:-"/usr/local/bin/bandersnatch"}
-PYPI_MASTER="https://pypi.org/"
+PYPI_MASTER="https://pypi.org"
 TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-$PYPI_MASTER}
 CONF="/tmp/bandersnatch.conf"
 INIT=${INIT:-"0"}
