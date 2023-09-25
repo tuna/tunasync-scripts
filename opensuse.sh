@@ -4,24 +4,14 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/fedora/"
+DESTPATH="/srv/www/opensuse/"
 RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-fedora.lock
-UPSTREAM_URL="rsync://ftp.linux.cz/pub/linux/fedora/linux/" # See <https://fedoraproject.org/wiki/Infrastructure/Mirroring/Tiering#Tier_1_Mirrors>
-
+LOCKFILE=/tmp/rsync-opensuse.lock
+# UPSTREAM_URL="rsync://ftp.riken.jp/opensuse/"
+UPSTREAM_URL="rsync://mirrors.tuna.tsinghua.edu.cn/opensuse/"
 
 synchronize() {
-	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --contimeout=900 \
-	--exclude='/core/' \
-	--exclude='/development/' \
-	--exclude='/releases/test/' \
-	--exclude='/releases/*/*/*/debug/' \
-	--exclude='/releases/*/*/source/' \
-	--exclude='/epel/' \
-	--exclude='/updates/testing/' \
-	--exclude='/updates/*/*/*/debug/' \
-	--exclude='/updates/*/*/source/' \
-	--exclude='/extras/' "$UPSTREAM_URL"  "$DESTPATH"
+       $RSYNC -rtlivH --delete-after --delay-updates --safe-links  --contimeout=6000000 --exclude='/history/' --exclude='/update/*/*/*_debug/' --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 
@@ -43,4 +33,4 @@ else
     fi
 fi
 
-rm -f "$LOCKFILE"
+exec rm -f "$LOCKFILE"
