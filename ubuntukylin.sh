@@ -11,7 +11,7 @@ LOCKFILE=/tmp/rsync-ubuntukylin.lock
 
 
 synchronize() {
-	RSYNC_PASSWORD="user"  /usr/bin/rsync -aHv -vvv --delete --progress  rsync://cdimage.ubuntukylin.com/releases/basic/ "$DESTPATH"
+	RSYNC_PASSWORD="NHTeDqok2023"  /usr/bin/rsync -aHv -vvv --delete --progress  rsync://mirror@cdimage.ubuntukylin.com/releases/basic/ "$DESTPATH"
 #	RSYNC_PASSWORD="user" $RSYNC -azHv --delete --port=8873  --progress  user@service.ubuntukylin.com::rsync "$DESTPATH"
 }
 
