@@ -13,13 +13,25 @@ RSYNC=/home/cqumirror/.local/bin/rsync
 LOCKFILE=/tmp/rsync-opensuse.lock
 UPSTREAM_URL="rsync://ftp.riken.jp/opensuse/"
 # UPSTREAM_URL="rsync://mirrors.tuna.tsinghua.edu.cn/opensuse/"
-TRUE=/usr/bin/true
+TRUE=/bin/true
+VVV=""
 
 synchronize() {
 	# create tmp dir
 	mkdir -p $TMP_DIR
 	# run synchronize
-       $PROXY $RSYNC -rtlivH -vvv --stats --filter 'risk .~tmp~/' --temp-dir=$TMP_DIR  --delete-after --safe-links --delay-updates  --contimeout=6000000 --exclude='/history/' --exclude='/update/*/*/*_debug/' --exclude='.~tmp~/'  --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH" || $TRUE
+       $PROXY $RSYNC -rtlivHi $VVV  \
+	       --stats \
+	       --filter 'risk .~tmp~/' \
+	       --temp-dir=$TMP_DIR  \
+	       --delete-after \
+	       --safe-links \
+	       --delay-updates  \
+	       --contimeout=6000000 \
+	       --exclude='/history/' \
+	       --exclude='/update/*/*/*_debug/' \
+	       --exclude='.~tmp~/'  \
+	       --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH" || $TRUE
 # $PROXY $RSYNC -rtlivH --delete-after --delay-updates --safe-links  --contimeout=6000000 --exclude='/history/' --exclude='/update/*/*/*_debug/' --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH"
 	rm -rf $TMP_DIR
 }
