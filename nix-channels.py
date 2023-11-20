@@ -294,6 +294,14 @@ def update_channels(channels):
         seen_paths = set()
         channel_failure = False
 
+        # Workaround to temporarily fix https://github.com/tuna/issues/issues/1855
+        paths = [
+            path
+            for path in paths
+            if 'texlive-2022-env-man' not in path
+                and 'texlive-2022-env-info' not in path
+        ]
+
         # Batch paths to avoid E2BIG
 
         for i in range(0, len(paths), PATH_BATCH):
@@ -396,6 +404,14 @@ def garbage_collect():
     for release in alive:
         with lzma.open(str(release / 'store-paths.xz')) as f:
             paths = [ path.rstrip() for path in f ]
+
+        # Workaround to temporarily fix https://github.com/tuna/issues/issues/1855
+        paths = [
+            path
+            for path in paths
+            if 'texlive-2022-env-man' not in path
+                and 'texlive-2022-env-info' not in path
+        ]
 
         for i in range(0, len(paths), PATH_BATCH):
             batch = paths[i : i + PATH_BATCH]
