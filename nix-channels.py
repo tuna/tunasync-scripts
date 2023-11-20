@@ -298,8 +298,8 @@ def update_channels(channels):
         paths = [
             path
             for path in paths
-            if 'texlive-2022-env-man' not in path
-                and 'texlive-2022-env-info' not in path
+            if b'texlive-2022-env-man' not in path
+                and b'texlive-2022-env-info' not in path
         ]
 
         # Batch paths to avoid E2BIG
@@ -409,8 +409,8 @@ def garbage_collect():
         paths = [
             path
             for path in paths
-            if 'texlive-2022-env-man' not in path
-                and 'texlive-2022-env-info' not in path
+            if b'texlive-2022-env-man' not in path
+                and b'texlive-2022-env-info' not in path
         ]
 
         for i in range(0, len(paths), PATH_BATCH):
