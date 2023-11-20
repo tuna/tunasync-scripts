@@ -144,7 +144,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("base_url", type=str, help="base URL")
-    parser.add_argument("os_version", type=str, help="e.g. 7-8")
+    parser.add_argument("os_version", type=str, help="e.g. 7-8,9")
     parser.add_argument("component", type=str, help="e.g. mysql56-community,mysql57-community")
     parser.add_argument("arch", type=str, help="e.g. x86_64")
     parser.add_argument("repo_name", type=str, help="e.g. @{comp}-el@{os_ver}")
@@ -153,13 +153,15 @@ def main():
                         help='download repodata files instead of generating them')
     args = parser.parse_args()
 
-    if '-' in args.os_version and '-stream' not in args.os_version:
-        dash = args.os_version.index('-')
-        os_list = [ str(i) for i in range(
-            int(args.os_version[:dash]),
-            1+int(args.os_version[dash+1:])) ]
-    else:
-        os_list = [args.os_version]
+    os_list = []
+    for os_version in args.os_version.split(','):
+        if '-' in os_version and '-stream' not in os_version:
+            dash = os_version.index('-')
+            os_list = os_list + [ str(i) for i in range(
+                int(os_version[:dash]),
+                1+int(os_version[dash+1:])) ]
+        else:
+            os_list.append(os_version)
     check_args("os_version", os_list)
     component_list = args.component.split(',')
     check_args("component", component_list)
