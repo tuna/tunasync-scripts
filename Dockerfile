@@ -1,5 +1,5 @@
-FROM debian:buster
-MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
+FROM debian:bullseye
+LABEL maintainer="Miao Wang <miao.wang@tuna.tsinghua.edu.cn>"
 
 RUN apt-get update && \
         apt-get install --no-install-recommends -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip libnss-unknown xz-utils patch unzip openssh-client

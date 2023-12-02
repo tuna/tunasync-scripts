@@ -1,5 +1,5 @@
 FROM debian:bookworm
-MAINTAINER Justin Wong <yuzhi.wang@tuna.tsinghua.edu.cn>
+LABEL maintainer="Miao Wang <miao.wang@tuna.tsinghua.edu.cn>"
 
 RUN apt-get update && \
 	apt-get install -y --no-install-recommends git rsync stunnel4 socat ca-certificates opensysusers && \

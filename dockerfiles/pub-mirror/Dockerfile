@@ -44,7 +44,7 @@ RUN set -eux; \
   done
 
 FROM dart-build
-MAINTAINER Hui Yiqun <i@huiyiqun.me>
+LABEL maintainer="HUI Yiqun <i@huiyiqun.me>"
 
 ENV PUB_CACHE /pub-cache
 
