@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:buster
 LABEL maintainer="Miao Wang <miao.wang@tuna.tsinghua.edu.cn>"
 
 RUN apt-get update && \
