@@ -221,8 +221,11 @@ enabled=1
             failed.append(('', arch))
             continue
 
-        cmd_args = ["reposync", "-a", arch, "-c", conf.name, "-d", "-p", str(args.working_dir.absolute()), "-e", cache_dir]
-        print("Launching reposync", flush=True)
+        cmd_args = [
+            "dnf", "reposync",
+            "-a", arch, "-c", conf.name,
+            "--delete", "-p", str(args.working_dir.absolute())]
+        print("Launching dnf reposync", flush=True)
         # print(cmd_args)
         ret = sp.run(cmd_args)
         if ret.returncode != 0:
@@ -234,7 +237,7 @@ enabled=1
             if args.download_repodata:
                 download_repodata(url, path)
             else:
-                cmd_args = ["createrepo", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
+                cmd_args = ["createrepo_c", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
                 # print(cmd_args)
                 ret = sp.run(cmd_args)
             calc_repo_size(path)
