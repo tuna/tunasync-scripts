@@ -13,8 +13,8 @@ RUN STATIC_DEPS=true python3 -m pip install pyquery
 RUN python3 -m pip install requests[socks] pyyaml gsutil awscli
 RUN cd /usr/local/lib/python3.*/dist-packages && echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4AHCAPNdADIaSQnC/BF9UN4KT0fVpgATRDuLqRGmPehqSjhNcR3ZqGVBKbVF3r5L2cNs3c+prOthcy3s42Nc79kbE7aRKiQ2r/ivJlWIiio5V2qwWq9aggjTJauhCHLTxXwQiVFDoburbJ4tJYXGnFzOXgYuHjXBWfLKmvshuOMAPYbiPOAgtnQX/8F2sFep7K+0c7/J4HZ6K6ynW121t9pYxX0q6zDZLJBD93rt9Lr/cYC2Eozop6t/ahQsgL1oS1vBXTsA/wQkU0HXOGJ2sJ4J1ULbop82QES9m5CXagcx9EDe7nfJD1UXGgQjif8HCl8y6KFw3rdiPQAAudB1OELBZ/0AAY8CwwMAAAHezTCxxGf7AgAAAAAEWVo=" | base64 -d | xzcat | patch -p1
 
-RUN cd /usr/local && git clone --depth 1 https://github.com/tuna/composer-mirror.git && cd composer-mirror && composer i
-COPY composer-mirror.config.php /usr/local/composer-mirror/config.php
+# RUN cd /usr/local && git clone --depth 1 https://github.com/tuna/composer-mirror.git && cd composer-mirror && composer i
+# COPY composer-mirror.config.php /usr/local/composer-mirror/config.php
 
 RUN mkdir -p /home/tunasync-scripts
 ADD https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo

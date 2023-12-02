@@ -24,11 +24,11 @@ jobs:
         include:
           - image: tunasync-scripts
             dockerfile: .
-          - image: julia-mirror
-            dockerfile: dockerfiles/julia
+          # - image: julia-mirror
+          #   dockerfile: dockerfiles/julia
           - image: rubygems-mirror
             dockerfile: dockerfiles/rubygems
-            
+
     runs-on: ubuntu-latest
     steps:
       - 
