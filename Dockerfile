@@ -2,7 +2,12 @@ FROM debian:buster
 LABEL maintainer="Miao Wang <miao.wang@tuna.tsinghua.edu.cn>"
 
 RUN apt-get update && \
-        apt-get install --no-install-recommends -y wget curl rsync lftp git jq python3-dev python3-pip yum-utils createrepo aria2 ack composer php-curl php-zip libnss-unknown xz-utils patch unzip openssh-client debmirror
+        apt-get install --no-install-recommends -y \
+        wget curl rsync lftp git jq python3-dev python3-pip \
+        yum-utils createrepo debmirror \
+        libnss-unknown xz-utils patch unzip \
+        aria2 ack openssh-client
+        # composer php-curl php-zip
 
 RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
       apt-get install --no-install-recommends -y libxml2-dev libxslt1-dev zlib1g-dev libssl-dev libffi-dev ;\

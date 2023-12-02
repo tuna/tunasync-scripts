@@ -1,5 +1,5 @@
-FROM debian:bookworm
-LABEL maintainer="WANG Ruikang <dramforever@live.com>"
+FROM debian:bullseye
+LABEL maintainer="Wang Ruikang <dramforever@live.com>"
 
 RUN apt-get update && \
     apt-get install -y python3-dev python3-pip curl 
