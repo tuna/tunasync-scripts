@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-import hashlib
 import traceback
-import json
 import os
-import re
-import shutil
+import sys
 import subprocess as sp
 import tempfile
 import argparse
@@ -146,11 +143,13 @@ def main():
     parser.add_argument("base_url", type=str, help="base URL")
     parser.add_argument("os_version", type=str, help="e.g. 7-8,9")
     parser.add_argument("component", type=str, help="e.g. mysql56-community,mysql57-community")
-    parser.add_argument("arch", type=str, help="e.g. x86_64")
+    parser.add_argument("arch", type=str, help="e.g. x86_64,aarch64")
     parser.add_argument("repo_name", type=str, help="e.g. @{comp}-el@{os_ver}")
     parser.add_argument("working_dir", type=Path, help="working directory")
     parser.add_argument("--download-repodata", action='store_true',
                         help='download repodata files instead of generating them')
+    parser.add_argument("--pass-arch-to-reposync", action='store_true',
+                        help='''pass --arch to reposync to further filter packages by 'arch' field in metadata (NOT recommended, prone to missing packages in some repositories, e.g. mysql)''')
     args = parser.parse_args()
 
     os_list = []
@@ -223,10 +222,11 @@ enabled=1
 
         cmd_args = [
             "dnf", "reposync",
-            "-a", arch, "-c", conf.name,
+            "-c", conf.name,
             "--delete", "-p", str(args.working_dir.absolute())]
-        print("Launching dnf reposync", flush=True)
-        # print(cmd_args)
+        if args.pass_arch_to_reposync:
+            cmd_args += ["--arch", arch]
+        print(f"Launching dnf reposync with command: {cmd_args}", flush=True)
         ret = sp.run(cmd_args)
         if ret.returncode != 0:
             failed.append((name, arch))
@@ -238,12 +238,12 @@ enabled=1
                 download_repodata(url, path)
             else:
                 cmd_args = ["createrepo_c", "--update", "-v", "-c", cache_dir, "-o", str(path), str(path)]
-                # print(cmd_args)
+                print(f"Launching createrepo with command: {cmd_args}", flush=True)
                 ret = sp.run(cmd_args)
             calc_repo_size(path)
 
     if len(failed) > 0:
-        print("Failed YUM repos: ", failed)
+        print(f"Failed YUM repos: {failed}", flush=True)
     else:
         if len(REPO_SIZE_FILE) > 0:
             with open(REPO_SIZE_FILE, "a") as fd:
