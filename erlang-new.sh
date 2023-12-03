@@ -31,7 +31,7 @@ deb_suffixes=(
 
 function join_by { local IFS="$1"; shift; echo "$*"; }
 ubuntu_codenames=$(join_by ',' $(IFS=','; eval echo {"${ubuntu_os[*]}"}-{"${deb_suffixes[*]}"}))
-ubuntu_codenames=$(join_by ',' $(IFS=','; eval echo {"${debian_os[*]}"}-{"${deb_suffixes[*]}"}))
+debian_codenames=$(join_by ',' $(IFS=','; eval echo {"${debian_os[*]}"}-{"${deb_suffixes[*]}"}))
 
 # =================== APT repos ===============================
 
