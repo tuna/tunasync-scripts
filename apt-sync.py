@@ -322,31 +322,33 @@ def main():
     check_args("os_version", os_list)
     os_list = replace_os_template(os_list)
 
-    # generate lists of components
-    component_list = args.component.split(',')
-    check_args("component", component_list)
+    # generate a list of components and archs for each os codename
+    def generate_list_for_oses(raw: str, name: str) -> List[List[str]]:
+        n_os = len(os_list)
+        if ':' in raw:
+            # specify os codenames for each component
+            lists = []
+            for l in raw.split(':'):
+                list_for_os = l.split(',')
+                check_args(name, list_for_os)
+                lists.append(list_for_os)
+            assert len(lists) == n_os, f"{name} must be specified for each component"
+        else:
+            # use same os codenames for all components
+            l = raw.split(',')
+            check_args(name, l)
+            lists = [l] * n_os
+        return lists
 
-    # generate arch list for each os codename
-    if ';' in args.arch:
-        # specify arches for each os
-        arch_lists = []
-        for arches in args.arch.split(';'):
-            arch_list = arches.split(',')
-            check_args("arch", arch_list)
-            arch_lists.append(arch_list)
-        assert len(arch_lists) == len(os_list), "arches must be specified for each os"
-    else:
-        # use same arches for all os
-        arch_list = args.arch.split(',')
-        check_args("arch", arch_list)
-        arch_lists = [arch_list] * len(os_list)
+    component_lists = generate_list_for_oses(args.component)
+    arch_lists = generate_list_for_oses(args.arch)
 
     args.working_dir.mkdir(parents=True, exist_ok=True)
     failed = []
     deb_set = {}
 
-    for os, arch_list in zip(os_list, arch_lists):
-        for comp in component_list:
+    for os, arch_list, comp_list in zip(os_list, arch_lists, component_lists):
+        for comp in comp_list:
             for arch in arch_list:
                 if apt_mirror(args.base_url, os, comp, arch, args.working_dir, deb_set=deb_set) != 0:
                     failed.append((os, comp, arch))
