@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 import hashlib
 import traceback
-import json
 import os
 import re
 import shutil
 import subprocess as sp
-import tempfile
 import argparse
 import bz2
 import gzip
@@ -14,13 +12,21 @@ import lzma
 import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import List, Dict, Set, Tuple, IO
+from typing import List, Dict, Tuple
 
 import requests
+import socket
 
 
 APT_SYNC_USER_AGENT = os.getenv("APT_SYNC_USER_AGENT", "APT-Mirror-Tool/1.0")
 requests.utils.default_user_agent = lambda: APT_SYNC_USER_AGENT
+
+# set preferred address family
+import requests.packages.urllib3.util.connection as urllib3_cn
+USE_ADDR_FAMILY = os.getenv('USE_ADDR_FAMILY', '').strip().lower()
+if USE_ADDR_FAMILY != '':
+    assert USE_ADDR_FAMILY in ['ipv4', 'ipv6'], "USE_ADDR_FAMILY must be either ipv4 or ipv6"
+    urllib3_cn.allowed_gai_family = lambda: socket.AF_INET if USE_ADDR_FAMILY == 'ipv4' else socket.AF_INET6
 
 OS_TEMPLATE = {
     'ubuntu-lts': ["bionic", "focal", "jammy"],
@@ -311,20 +317,35 @@ def main():
                         help='print package files to be deleted only')
     args = parser.parse_args()
 
+    # generate lists of os codenames
     os_list = args.os_version.split(',')
     check_args("os_version", os_list)
+    os_list = replace_os_template(os_list)
+
+    # generate lists of components
     component_list = args.component.split(',')
     check_args("component", component_list)
-    arch_list = args.arch.split(',')
-    check_args("arch", arch_list)
 
-    os_list = replace_os_template(os_list)
+    # generate arch list for each os codename
+    if ';' in args.arch:
+        # specify arches for each os
+        arch_lists = []
+        for arches in args.arch.split(';'):
+            arch_list = arches.split(',')
+            check_args("arch", arch_list)
+            arch_lists.append(arch_list)
+        assert len(arch_lists) == len(os_list), "arches must be specified for each os"
+    else:
+        # use same arches for all os
+        arch_list = args.arch.split(',')
+        check_args("arch", arch_list)
+        arch_lists = [arch_list] * len(os_list)
 
     args.working_dir.mkdir(parents=True, exist_ok=True)
     failed = []
     deb_set = {}
 
-    for os in os_list:
+    for os, arch_list in zip(os_list, arch_lists):
         for comp in component_list:
             for arch in arch_list:
                 if apt_mirror(args.base_url, os, comp, arch, args.working_dir, deb_set=deb_set) != 0:
