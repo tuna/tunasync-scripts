@@ -340,8 +340,8 @@ def main():
             lists = [l] * n_os
         return lists
 
-    component_lists = generate_list_for_oses(args.component)
-    arch_lists = generate_list_for_oses(args.arch)
+    component_lists = generate_list_for_oses(args.component, "component")
+    arch_lists = generate_list_for_oses(args.arch, "arch")
 
     args.working_dir.mkdir(parents=True, exist_ok=True)
     failed = []
