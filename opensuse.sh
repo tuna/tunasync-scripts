@@ -7,13 +7,15 @@ set -xe
 
 DESTPATH="/srv/www/opensuse/"
 TMP_DIR="/tank/mirror-data/rsync_tmp/opensuse"
-PROXY=/usr/bin/proxychains
+# PROXY=/usr/bin/proxychains
 # RSYNC=/usr/bin/rsync
 RSYNC=/home/cqumirror/.local/bin/rsync
 LOCKFILE=/tmp/rsync-opensuse.lock
-UPSTREAM_URL="rsync://ftp.riken.jp/opensuse/"
+# UPSTREAM_URL="rsync://ftp.riken.jp/opensuse/"
+UPSTREAM_URL="rsync://mirrors.ocf.berkeley.edu/opensuse/"
 # UPSTREAM_URL="rsync://mirrors.tuna.tsinghua.edu.cn/opensuse/"
 TRUE=/bin/true
+#VVV="-VVV"
 VVV=""
 
 synchronize() {
@@ -29,10 +31,29 @@ synchronize() {
 	       --delay-updates  \
 	       --contimeout=6000000 \
 	       --exclude='/history/' \
+	       --exclude='/source/' \
+	       --exclude='/tumbleweed/repo/src-non-oss/' \
+	       --exclude='/tumbleweed/repo/src-oss/' \
+	       --exclude='/distribution/leap/42.3/iso/' \
+	       --exclude='/distribution/leap/42.3/jeos/' \
+	       --exclude='/distribution/leap/42.3/live/' \
+	       --exclude='/distribution/leap/15.0/iso/' \
+	       --exclude='/distribution/leap/15.0/jeos/' \
+	       --exclude='/distribution/leap/15.0/live/' \
+	       --exclude='/distribution/leap/15.1/iso/' \
+	       --exclude='/distribution/leap/15.1/jeos/' \
+	       --exclude='/distribution/leap/15.1/live/' \
+	       --exclude='/distribution/leap/15.2/iso/' \
+	       --exclude='/distribution/leap/15.2/jeos/' \
+	       --exclude='/distribution/leap/15.2/live/' \
+	       --exclude='/distribution/leap/15.3/iso/' \
+	       --exclude='/distribution/leap/15.3/jeos/' \
+	       --exclude='/distribution/leap/15.3/live/' \
 	       --exclude='/update/*/*/*_debug/' \
+	       --exclude='/update/*/*/*/src/' \
+	       --exclude='/distribution/*/*/product/repo/*/src/' \
 	       --exclude='.~tmp~/'  \
 	       --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH" || $TRUE
-# $PROXY $RSYNC -rtlivH --delete-after --delay-updates --safe-links  --contimeout=6000000 --exclude='/history/' --exclude='/update/*/*/*_debug/' --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH"
 	rm -rf $TMP_DIR
 }
 

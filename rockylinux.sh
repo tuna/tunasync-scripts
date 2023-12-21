@@ -12,6 +12,7 @@ UPSTREAM_URL="rsync://msync.rockylinux.org/rocky-linux/"
 
 synchronize() {
 	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
+	cd $DESTPATH && chmod a+rx *
 }
 
 
