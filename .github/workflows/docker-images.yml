@@ -21,6 +21,7 @@ jobs:
           - nix-channels
           - pub-mirror
           - rustup-mirror
+          - freighter
         include:
           - image: tunasync-scripts
             dockerfile: .
