@@ -215,9 +215,11 @@ def main():
                     for s in r.headers["link"].split(",")
                     if s.split(";")[1].strip() == 'rel="next"'
                 ]
-                if next_url:
+                if versions > 0 and len(releases) > versions:
+                    url_str = None
+                elif next_url:
                     url_str = next_url[0]
-                elif versions > 0 and len(releases) > versions:
+                else:
                     url_str = None
         except:
             traceback.print_exc()
