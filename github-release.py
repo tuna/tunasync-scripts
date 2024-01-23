@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 import json
-
+import re
 import requests
 
 
@@ -206,15 +206,12 @@ def main():
             headers = {"Accept": "application/vnd.github+json"}
             releases = []
             url_str = f"{args.base_url}{repo}/releases"
+            pattern = re.compile(r'<(.*)>;\s*rel="next"')
             while url_str:
                 r = github_get(url_str, headers=headers)
                 r.raise_for_status()
                 releases.extend(r.json())
-                next_url = [
-                    s.split(";")[0].strip()[1:-1]
-                    for s in r.headers["link"].split(",")
-                    if s.split(";")[1].strip() == 'rel="next"'
-                ]
+                next_url = re.findall(pattern=pattern,string=r.headers["link"])
                 if versions > 0 and len(releases) > versions:
                     url_str = None
                 elif next_url:
