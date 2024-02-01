@@ -206,7 +206,7 @@ def main():
             headers = {"Accept": "application/vnd.github+json"}
             releases = []
             url_str = f"{args.base_url}{repo}/releases"
-            pattern = re.compile(r'<(.*)>;\s*rel="next"')
+            pattern = re.compile(r'.*<(.*?)>;\s*rel="next"')
             while url_str:
                 r = github_get(url_str, headers=headers)
                 r.raise_for_status()
