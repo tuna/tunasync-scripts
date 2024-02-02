@@ -2,14 +2,14 @@
 set -e
 
 _here=`dirname $(realpath $0)`
-apt_sync="${_here}/apt-sync.py" 
+apt_sync="${_here}/apt-sync.py"
 yum_sync="${_here}/yum-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL=${TUNASYNC_UPSTREAM_URL:-"http://repo.mongodb.org"}
 
-MONGO_VERSIONS=("6.0" "5.0" "4.4" "4.2")
-STABLE_VERSION="5.0"
+MONGO_VERSIONS=("7.0" "6.0" "5.0" "4.4" "4.2")
+STABLE_VERSION="7.0"
 
 YUM_PATH="${BASE_PATH}/yum"
 APT_PATH="${BASE_PATH}/apt"
@@ -19,7 +19,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 components=$(printf ",%s" "${MONGO_VERSIONS[@]}")
 components=${components:1}
-"$yum_sync" "${BASE_URL}/yum/redhat/@{os_ver}/mongodb-org/@{comp}/@{arch}/" 7 "$components" x86_64 "el@{os_ver}-@{comp}" "$YUM_PATH"
+"$yum_sync" "${BASE_URL}/yum/redhat/@{os_ver}/mongodb-org/@{comp}/@{arch}/" 7,9 "$components" x86_64 "el@{os_ver}-@{comp}" "$YUM_PATH"
 pushd "${YUM_PATH}"
 for stable in el*-${STABLE_VERSION}; do
 	# e.g. "el8" -> "el8-4.2"
