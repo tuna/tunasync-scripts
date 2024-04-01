@@ -35,7 +35,7 @@ RUN cd /usr/lib/python3/dist-packages && echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4
 
 # download and patch aosp-repo
 ADD --chmod=0755 https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
-RUN sed -i 's:#!/usr/bin/env python:#!/usr/bin/env python3:' /usr/local/bin/aosp-repo
+RUN sed -i 's:^#!/usr/bin/env python$:#!/usr/bin/env python3:' /usr/local/bin/aosp-repo
 
 # install ed for debmirror
 RUN apt-get install --no-install-recommends -y ed
