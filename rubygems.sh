@@ -40,4 +40,10 @@ if [[ $ret == 124 ]]; then
 	echo 'Sync timeout (/_\\)'
 fi
 
+if [[ $ret == 0 ]]; then
+	curl -fsSL https://rubygems.org/versions > "$TUNASYNC_WORKING_DIR/.versions.new" && \
+		mv "$TUNASYNC_WORKING_DIR/.versions.new" "$TUNASYNC_WORKING_DIR/versions"
+	ret=$?
+fi
+
 exit $ret
