@@ -23,8 +23,6 @@ deb_suffixes=(
     esl-erlang-24
     esl-erlang-25
     esl-erlang-26
-    elixir-1.12
-    elixir-1.13
     elixir-1.14
     elixir-1.15
 )
