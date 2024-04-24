@@ -207,7 +207,7 @@ def main():
             r.raise_for_status()
             releases = r.json()
         except:
-            traceback.print_exc()
+            print(f"Error: cannot download metadata for {repo}:\n{traceback.format_exc()}")
             break
 
         n_downloaded = 0
@@ -236,6 +236,7 @@ def main():
     for i in range(args.workers):
         task_queue.put(None)
 
+    # XXX: this does not work because `cleaning` is always False when `REPO`` is not empty
     if cleaning:
         local_filelist = []
         for local_file in working_dir.glob('**/*'):
