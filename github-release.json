@@ -92,7 +92,7 @@
     "laurent22/joplin-android",
     "graalvm/graalvm-ce-builds",
     "ventoy/Ventoy",
-    "rustdest/rustdesk",
+    "rustdesk/rustdesk",
     "zufuliu/notepad2",
     {
         "repo": "M2Team/NanaZip",
