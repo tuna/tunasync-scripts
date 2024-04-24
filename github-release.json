@@ -83,12 +83,23 @@
     "ibmruntimes/semeru8-binaries",
     "ibmruntimes/semeru11-binaries",
     "ibmruntimes/semeru17-binaries",
-    "ibmruntimes/semeru18-binaries",
+    "ibmruntimes/semeru21-binaries",
     "topjohnwu/Magisk",
     "PowerShell/PowerShell",
     "atom/atom",
     "k3s-io/k3s",
     "laurent22/joplin",
     "laurent22/joplin-android",
-    "graalvm/graalvm-ce-builds"
+    "graalvm/graalvm-ce-builds",
+    "ventoy/Ventoy",
+    "rustdest/rustdesk",
+    "zufuliu/notepad2",
+    {
+        "repo": "M2Team/NanaZip",
+        "versions": 3,
+        "pre_release": true
+    },
+    "musescore/MuseScore",
+    "microsoft/PowerToys",
+    "denoland/deno"
 ]
