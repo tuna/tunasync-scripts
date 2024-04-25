@@ -15,7 +15,7 @@ DEBIAN_PATH="${BASE_PATH}/debian"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # generate codenames for repos
-ubuntu_os=(bionic focal jammy)
+ubuntu_os=(focal jammy)
 debian_os=(bullseye buster)
 deb_suffixes=(
     mongooseim-5
