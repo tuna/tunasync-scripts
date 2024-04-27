@@ -7,7 +7,7 @@ apt_sync="${_here}/apt-sync.py"
 yum_sync="${_here}/yum-sync.py"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
-BASE_URL="${TUNASYNC_UPSTREAM_URL}"
+BASE_URL=${TUNASYNC_UPSTREAM_URL:-"https://packages.erlang-solutions.com"}
 
 CENTOS_PATH="${BASE_PATH}/centos"
 UBUNTU_PATH="${BASE_PATH}/ubuntu"
@@ -15,8 +15,8 @@ DEBIAN_PATH="${BASE_PATH}/debian"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # generate codenames for repos
-ubuntu_os=(focal jammy)
-debian_os=(bullseye buster)
+ubuntu_os=(jammy)
+debian_os=(buster bullseye)
 deb_suffixes=(
     mongooseim-5
     mongooseim-6
