@@ -29,7 +29,7 @@ if USE_ADDR_FAMILY != '':
     urllib3_cn.allowed_gai_family = lambda: socket.AF_INET if USE_ADDR_FAMILY == 'ipv4' else socket.AF_INET6
 
 OS_TEMPLATE = {
-    'ubuntu-lts': ["focal", "jammy"],
+    'ubuntu-lts': ["focal", "jammy", "noble"],
     'debian-current': ["buster", "bullseye", "bookworm"],
     'debian-latest2': ["bullseye", "bookworm"],
     'debian-latest': ["bookworm"],
