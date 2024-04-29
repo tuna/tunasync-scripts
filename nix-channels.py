@@ -428,9 +428,20 @@ def garbage_collect():
             for path in process.stdout.decode().splitlines():
                 closure.add(hash_part(path))
 
-    logging.info(f'  - {len(closure)} paths in closure')
+    logging.info(f'  - {len(closure)} narinfo files in closure')
 
-    deleted = 0
+    closure_nar = set()
+
+    for hash in closure:
+        narinfo_path = working_dir / STORE_DIR / f'{hash}.narinfo'
+        narinfo = narinfo_path.read_text()
+        narinfo = parse_narinfo(narinfo)
+        closure_nar.add(narinfo['URL'])
+
+    logging.info(f'  - {len(closure_nar)} nar files in closure')
+
+    deleted_narinfo = 0
+    deleted_nar = 0
 
     for path in (working_dir / STORE_DIR).iterdir():
         if not path.name.endswith('.narinfo'):
@@ -440,7 +451,7 @@ def garbage_collect():
         if hash in closure:
             continue
 
-        deleted += 1
+        deleted_narinfo += 1
 
         if DELETE_OLD:
             narinfo = parse_narinfo(path.read_text())
@@ -453,14 +464,28 @@ def garbage_collect():
             except:
                 pass
 
+    for path in (working_dir / STORE_DIR / 'nar').iterdir():
+        if f'nar/{path.name}' in closure_nar:
+            continue
+
+        deleted_nar += 1
+
+        if DELETE_OLD:
+            try:
+                path.unlink()
+            except:
+                pass
+
     if DELETE_OLD:
-        logging.info(f'  - {deleted} paths deleted')
+        logging.info(f'  - {deleted_narinfo} narinfo files deleted')
+        logging.info(f'  - {deleted_nar} nar files deleted')
     else:
-        logging.info(f'  - {deleted} paths now unreachable')
+        logging.info(f'  - {deleted_narinfo} narinfo files unreachable')
+        logging.info(f'  - {deleted_nar} nar files unreachable')
 
 if __name__ == '__main__':
+    garbage_collect()
     channels = clone_channels()
     update_channels(channels)
-    garbage_collect()
     if failure:
         sys.exit(1)
