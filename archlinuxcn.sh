@@ -11,7 +11,13 @@ UPSTREAM_URL="cqu@sync.repo.archlinuxcn.org::repo"
 
 
 synchronize() {
-	RSYNC_PASSWORD="dDqpNDTWstJlOsL"  /usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 "$UPSTREAM_URL"  "$DESTPATH"
+	RSYNC_PASSWORD="dDqpNDTWstJlOsL"  /usr/bin/rsync -rtlivH \
+		--delete-after \
+		--delay-updates \
+		--safe-links \
+		--contimeout=6000 \
+	        --exclude="*-debug-*" \
+		"$UPSTREAM_URL"  "$DESTPATH"
 }
 
 

@@ -11,7 +11,7 @@ UPSTREAM_URL="rsync://ftp.riken.jp/fedora/epel/"
 
 
 synchronize() {
-	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=900 "$UPSTREAM_URL"  "$DESTPATH"
+	proxychains /usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=900 "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 

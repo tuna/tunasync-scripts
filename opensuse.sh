@@ -13,7 +13,7 @@ RSYNC=/home/cqumirror/.local/bin/rsync
 LOCKFILE=/tmp/rsync-opensuse.lock
 # UPSTREAM_URL="rsync://ftp.riken.jp/opensuse/"
 UPSTREAM_URL="rsync://mirrors.ocf.berkeley.edu/opensuse/"
-# UPSTREAM_URL="rsync://mirrors.tuna.tsinghua.edu.cn/opensuse/"
+#UPSTREAM_URL="rsync://mirrors.tuna.tsinghua.edu.cn/opensuse/"
 TRUE=/bin/true
 #VVV="-VVV"
 VVV=""
@@ -30,6 +30,8 @@ synchronize() {
 	       --safe-links \
 	       --delay-updates  \
 	       --contimeout=6000000 \
+	       --exclude='*-debuginfo-*' \
+	       --exclude='*-debugsource-*' \
 	       --exclude='/history/' \
 	       --exclude='/source/' \
 	       --exclude='/tumbleweed/repo/src-non-oss/' \
@@ -51,7 +53,25 @@ synchronize() {
 	       --exclude='/distribution/leap/15.3/live/' \
 	       --exclude='/update/*/*/*_debug/' \
 	       --exclude='/update/*/*/*/src/' \
+	       --exclude='/ports/*/source' \
+	       --exclude='/ports/*/*/appliances/*' \
+	       --exclude='/ports/armv6hl/' \
+	       --exclude='/ports/armv7hl/' \
+	       --exclude='/ports/debug/' \
+	       --exclude='/ports/ppc/' \
+	       --exclude='/ports/zsystems/' \
+	       --exclude='/ports/riscv/' \
+	       --exclude='/ports/update/*/*/*/armv7hl/' \
+	       --exclude='/ports/update/*/*/*/armv6hl/' \
+	       --exclude='/ports/update/*/*/*/ppc/' \
+	       --exclude='/ports/update/*/*/*/zsystems/' \
+	       --exclude='/ports/update/*/*/*/debug/' \
+	       --exclude='/ports/update/*/*/*/riscv/' \
+	       --exclude='/ports/*/*/*/*/src/' \
+	       --exclude='/ports/*/*/*/*_debug/' \
 	       --exclude='/distribution/*/*/product/repo/*/src/' \
+	       --exclude='/distribution/*/*/appliances/*' \
+	       --exclude='/tumbleweed/appliances/*' \
 	       --exclude='.~tmp~/'  \
 	       --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH" || $TRUE
 	rm -rf $TMP_DIR
