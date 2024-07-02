@@ -11,9 +11,9 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # see https://www.freexian.com/lts/extended/ for possible values
-    codenames=(jessie                 stretch)
-   components=(main,contrib,non-free  main,contrib,non-free)
-architectures=(i386,amd64,armhf,armel i386,amd64,armhf)
+    codenames=(jessie                 stretch                buster)
+   components=(main,contrib,non-free  main,contrib,non-free  main,contrib,non-free)
+architectures=(i386,amd64,armhf,armel i386,amd64,armhf       i386,amd64,arm64,armhf)
 
 "$apt_sync" --delete "${UPSTREAM}" "$(join_by , "${codenames[@]}")" "$(join_by : "${components[@]}")" "$(join_by : "${architectures[@]}")" "$BASE_PATH"
 
