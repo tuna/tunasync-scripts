@@ -15,7 +15,7 @@ UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
-"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}" 7,9 gitlab-runner x86_64,aarch64 "el@{os_ver}-@{arch}" "$YUM_PATH"
+"$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}" 9 gitlab-runner x86_64,aarch64 "el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
 "$apt_sync" --delete "${UPSTREAM}/ubuntu" @ubuntu-lts main amd64,i386,arm64 "$UBUNTU_PATH"

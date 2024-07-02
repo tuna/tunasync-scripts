@@ -16,7 +16,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # generate codenames for repos
 ubuntu_os=(jammy)
-debian_os=(buster bullseye)
+debian_os=(bullseye)
 deb_suffixes=(
     mongooseim-5
     mongooseim-6
@@ -25,6 +25,7 @@ deb_suffixes=(
     esl-erlang-26
     elixir-1.14
     elixir-1.15
+    elixir-1.16
 )
 
 function join_by { local IFS="$1"; shift; echo "$*"; }

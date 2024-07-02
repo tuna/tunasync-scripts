@@ -30,7 +30,7 @@ if USE_ADDR_FAMILY != '':
 
 OS_TEMPLATE = {
     'ubuntu-lts': ["focal", "jammy", "noble"],
-    'debian-current': ["buster", "bullseye", "bookworm"],
+    'debian-current': ["bullseye", "bookworm"],
     'debian-latest2': ["bullseye", "bookworm"],
     'debian-latest': ["bookworm"],
 }

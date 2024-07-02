@@ -27,7 +27,7 @@ echo "Debian/Ubuntu finished"
 
 
 # =================== YUM/DNF repos ==========================
-"$yum_sync" "${BASE_URL}/rhel/@{os_ver}/@{arch}/stable/" 7 influxdata x86_64 "el@{os_ver}-@{arch}" "$YUM_PATH"
+"$yum_sync" "${BASE_URL}/rhel/@{os_ver}/@{arch}/stable/" 9 influxdata x86_64 "el@{os_ver}-@{arch}" "$YUM_PATH"
 echo "YUM finished"
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
