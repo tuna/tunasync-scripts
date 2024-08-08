@@ -2,7 +2,7 @@
 
 set -e
 
-SHADOWMIRE=${SHADOWMIRE:-"/home/scripts/shadowmire"}
+SHADOWMIRE=${SHADOWMIRE:-"/home/scripts/shadowmire.py"}
 PYPI_MASTER="https://pypi.org"
 
 TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-$PYPI_MASTER}
