@@ -42,10 +42,6 @@ done
 
 cat << EOF
 ]
-EOF
-
-cat << EOF
-]
 prerelease_exclude = [
     "duckdb",
     "graphscope-client",
