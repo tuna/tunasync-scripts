@@ -60,4 +60,4 @@ EOF
 echo "Generated config file:"
 cat $CONF
 
-exec $SHADOWMIRE --config $CONF sync
+exec python3 $SHADOWMIRE --config $CONF sync
