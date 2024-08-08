@@ -29,7 +29,6 @@ from tqdm import tqdm
 from requests.adapters import HTTPAdapter, Retry
 
 LOG_FORMAT = "%(asctime)s %(levelname)s: %(message)s (%(filename)s:%(lineno)d)"
-logging.basicConfig(format=LOG_FORMAT)
 logger = logging.getLogger("shadowmire")
 
 
@@ -961,7 +960,7 @@ def read_config(
 @click.pass_context
 def cli(ctx: click.Context, repo: str) -> None:
     log_level = logging.DEBUG if os.environ.get("DEBUG") else logging.INFO
-    logging.basicConfig(level=log_level)
+    logging.basicConfig(level=log_level, format=LOG_FORMAT)
     ctx.ensure_object(dict)
 
     if WORKERS > 10:
