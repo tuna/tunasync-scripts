@@ -30,7 +30,7 @@ fi
 (
 cat << EOF
 [options]
-repo = ${REPO}
+repo = "${REPO}"
 sync_packages = true
 ${DOWNLOAD_MIRROR}
 use_pypi_index = true
