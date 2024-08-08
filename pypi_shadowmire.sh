@@ -12,7 +12,7 @@ CONF="/tmp/shadowmire.conf"
 INIT=${INIT:-"0"}
 SHADOWMIRE_UPSTREAM=${SHADOWMIRE_UPSTREAM:-"0"}
 
-export REPO="${TUNASYNC_WORKING_DIR}/web"
+REPO="${TUNASYNC_WORKING_DIR}/web"
 
 if [ ! -d "$REPO" ]; then
 	mkdir -p "$REPO"
@@ -30,8 +30,10 @@ fi
 (
 cat << EOF
 [options]
+repo = ${REPO}
 sync_packages = true
 ${DOWNLOAD_MIRROR}
+use_pypi_index = true
 exclude = [
     ".+-nightly(-|$)",
 EOF
