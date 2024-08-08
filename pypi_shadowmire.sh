@@ -12,14 +12,14 @@ CONF="/tmp/shadowmire.conf"
 INIT=${INIT:-"0"}
 SHADOWMIRE_UPSTREAM=${SHADOWMIRE_UPSTREAM:-"0"}
 
-if [ ! -d "$TUNASYNC_WORKING_DIR" ]; then
-	mkdir -p $TUNASYNC_WORKING_DIR
+export REPO="${TUNASYNC_WORKING_DIR}/web"
+
+if [ ! -d "$REPO" ]; then
+	mkdir -p "$REPO"
 	INIT="1"
 fi
 
-export REPO="${TUNASYNC_WORKING_DIR}"
-
-echo "Syncing to $TUNASYNC_WORKING_DIR"
+echo "Syncing to $REPO"
 
 DOWNLOAD_MIRROR=""
 if [[ $TUNASYNC_UPSTREAM != $PYPI_MASTER ]]; then
