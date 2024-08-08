@@ -1,7 +1,8 @@
 # tunasync-scripts
+
 Custom scripts for mirror jobs
 
-# LICENCE
+## LICENCE
 
 ```
 This program is free software: you can redistribute it and/or modify    
@@ -17,3 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License    
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
+
+## Note
+
+* `shadowmire.py` is taken as-is from [taoky/shadowmire](https://github.com/taoky/shadowmire). It is licensed under Apache License.
