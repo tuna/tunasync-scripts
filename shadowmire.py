@@ -491,14 +491,20 @@ class SyncBase:
                 continue
             package_simple_path = self.simple_dir / package_name
             html_simple = package_simple_path / "index.html"
+            htmlv1_simple = package_simple_path / "index.v1_html"
             json_simple = package_simple_path / "index.v1_json"
-            if not (html_simple.exists() and json_simple.exists()):
+            if not (
+                html_simple.exists() and json_simple.exists() and htmlv1_simple.exists()
+            ):
                 logger.info(
-                    "add %s as it does not have index.html or index.v1_json",
+                    "add %s as it does not have index.html, index.v1_html or index.v1_json",
                     package_name,
                 )
                 to_update.append(package_name)
                 continue
+            if not html_simple.is_symlink():
+                html_simple.unlink()
+                html_simple.symlink_to("index.v1_html")
             hrefs_html = get_package_urls_from_index_html(html_simple)
             hrefsize_json = get_package_urls_size_from_index_json(json_simple)
             if (
@@ -621,7 +627,7 @@ class SyncBase:
     def write_meta_to_simple(self, package_simple_path: Path, meta: dict) -> None:
         simple_html_contents = PyPI.generate_html_simple_page(meta)
         simple_json_contents = PyPI.generate_json_simple_page(meta)
-        for html_filename in ("index.html", "index.v1_html"):
+        for html_filename in ("index.v1_html",):
             html_path = package_simple_path / html_filename
             with overwrite(html_path) as f:
                 f.write(simple_html_contents)
@@ -629,6 +635,11 @@ class SyncBase:
             json_path = package_simple_path / json_filename
             with overwrite(json_path) as f:
                 f.write(simple_json_contents)
+        index_html_path = package_simple_path / "index.html"
+        if not index_html_path.is_symlink():
+            if index_html_path.exists():
+                index_html_path.unlink()
+            index_html_path.symlink_to("index.v1_html")
 
     def finalize(self) -> None:
         local_names = self.local_db.keys()
@@ -1051,7 +1062,9 @@ def genlocal(ctx: click.Context) -> None:
         serial = get_local_serial(package_metapath)
         if serial:
             local[package_name] = serial
-    logger.info("%d out of {} packages have valid serial number", len(local), len(dir_items))
+    logger.info(
+        "%d out of %d packages have valid serial number", len(local), len(dir_items)
+    )
     local_db.nuke(commit=False)
     local_db.batch_set(local)
     local_db.dump_json()
@@ -1093,7 +1106,11 @@ def verify(
     simple_dirs = {i.name for i in (basedir / "simple").iterdir() if i.is_dir()}
     json_files = {i.name for i in (basedir / "json").iterdir() if i.is_file()}
     not_in_local = (simple_dirs | json_files) - local_names
-    logger.info("%d out of %d local packages NOT in local db", len(not_in_local), len(local_names))
+    logger.info(
+        "%d out of %d local packages NOT in local db",
+        len(not_in_local),
+        len(local_names),
+    )
     for package_name in not_in_local:
         logger.info("package %s not in local db", package_name)
         if remove_not_in_local:
@@ -1127,7 +1144,9 @@ def verify(
     )
     syncer.finalize()
 
-    logger.info("====== Step 4. Remove any unreferenced files in `packages` folder ======")
+    logger.info(
+        "====== Step 4. Remove any unreferenced files in `packages` folder ======"
+    )
     ref_set = set()
     for sname in tqdm(simple_dirs, desc="Iterating simple/ directory"):
         sd = basedir / "simple" / sname
@@ -1148,7 +1167,7 @@ def verify(
         if str(file) not in ref_set:
             logger.info("removing unreferenced file %s", file)
             file.unlink()
-    
+
     logger.info("Verification finished. Success: %s", success)
 
     if not success:
