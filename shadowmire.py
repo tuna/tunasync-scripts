@@ -826,7 +826,7 @@ class SyncPlainHTTP(SyncBase):
             hrefs = get_existing_hrefs(package_simple_path)
             existing_hrefs = [] if hrefs is None else hrefs
         # Download JSON meta
-        file_url = urljoin(self.upstream, f"/json/{package_name}")
+        file_url = urljoin(self.upstream, f"json/{package_name}")
         success, resp = download(
             self.session, file_url, self.jsonmeta_dir / (package_name + ".new")
         )
@@ -851,7 +851,7 @@ class SyncPlainHTTP(SyncBase):
                 logger.info("removing file %s (if exists)", p)
                 package_path = Path(normpath(package_simple_path / p))
                 package_path.unlink(missing_ok=True)
-            package_simple_url = urljoin(self.upstream, f"/simple/{package_name}/")
+            package_simple_url = urljoin(self.upstream, f"simple/{package_name}/")
             for href in remote_hrefs:
                 url = urljoin(package_simple_url, href)
                 dest = Path(normpath(package_simple_path / href))
@@ -871,12 +871,9 @@ class SyncPlainHTTP(SyncBase):
         # generate indexes
         self.write_meta_to_simple(package_simple_path, meta)
 
-        last_serial = get_local_serial(package_simple_path)
-        if not last_serial:
-            logger.warning("cannot get valid package serial from %s", package_name)
-        else:
-            if use_db:
-                self.local_db.set(package_name, last_serial)
+        last_serial: int = meta["last_serial"]
+        if use_db:
+            self.local_db.set(package_name, last_serial)
 
         return last_serial
 
