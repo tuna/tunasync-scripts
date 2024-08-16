@@ -124,22 +124,29 @@ def curl_download(remote_url: str, dst_file: Path, sha256: str = None, md5: str 
         return "MD5 mismatch"
 
 
-def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
+def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool, remove_legacy: bool):
     logging.info("Start syncing {}".format(repo_url))
     local_dir.mkdir(parents=True, exist_ok=True)
 
     repodata_url = repo_url + '/repodata.json'
     bz2_repodata_url = repo_url + '/repodata.json.bz2'
+    # https://github.com/conda/conda/issues/13256, from conda 24.1.x
+    zst_repodata_url = repo_url + '/repodata.json.zst'
     # https://docs.conda.io/projects/conda-build/en/latest/release-notes.html
     # "current_repodata.json" - like repodata.json, but only has the newest version of each file
     current_repodata_url = repo_url + '/current_repodata.json'
 
     tmp_repodata = tmpdir / "repodata.json"
     tmp_bz2_repodata = tmpdir / "repodata.json.bz2"
+    tmp_zst_repodata = tmpdir / "repodata.json.zst"
     tmp_current_repodata = tmpdir / 'current_repodata.json'
 
     curl_download(repodata_url, tmp_repodata)
     curl_download(bz2_repodata_url, tmp_bz2_repodata)
+    try:
+        curl_download(zst_repodata_url, tmp_zst_repodata)
+    except:
+        pass
     try:
         curl_download(current_repodata_url, tmp_current_repodata)
     except:
@@ -150,9 +157,14 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
 
     remote_filelist = []
     total_size = 0
-    packages = repodata['packages']
-    if 'packages.conda' in repodata:
-        packages.update(repodata['packages.conda'])
+    legacy_packages = repodata['packages']
+    conda_packages = repodata.get("packages.conda", {})
+    if remove_legacy:
+        # https://github.com/anaconda/conda/blob/0dbf85e0546e0b0dc060c8265ec936591ccbe980/conda/core/subdir_data.py#L440-L442
+        use_legacy_packages = set(legacy_packages.keys()) - set(k[:-6] + ".tar.bz2" for k in conda_packages.keys())
+        legacy_packages = {k: legacy_packages[k] for k in use_legacy_packages}
+    packages = {**legacy_packages, **conda_packages}
+
     for filename, meta in packages.items():
         if meta['name'] in EXCLUDED_PACKAGES:
             continue
@@ -207,6 +219,10 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool):
 
     shutil.move(str(tmp_repodata), str(local_dir / "repodata.json"))
     shutil.move(str(tmp_bz2_repodata), str(local_dir / "repodata.json.bz2"))
+    try:
+        shutil.move(str(tmp_zst_repodata), str(local_dir / "repodata.json.zst"))
+    except:
+        pass
     tmp_current_repodata_gz_gened = False
     if tmp_current_repodata.is_file():
         if os.path.getsize(tmp_current_repodata) > GEN_METADATA_JSON_GZIP_THRESHOLD:
@@ -307,6 +323,8 @@ def main():
     parser.add_argument("--working-dir", default=WORKING_DIR)
     parser.add_argument("--delete", action='store_true',
                         help='delete unreferenced package files')
+    parser.add_argument("--remove-legacy", action='store_true',
+                        help='delete legacy packages which have conda counterpart. Requires client conda >= 4.7.0')
     args = parser.parse_args()
 
     if args.working_dir is None:
@@ -335,7 +353,7 @@ def main():
             tmpdir = tempfile.mkdtemp()
             try:
                 size_statistics += sync_repo(remote_url,
-                                             local_dir, Path(tmpdir), args.delete)
+                                             local_dir, Path(tmpdir), args.delete, args.remove_legacy)
             except Exception:
                 logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
             finally:
@@ -348,7 +366,7 @@ def main():
         tmpdir = tempfile.mkdtemp()
         try:
             size_statistics += sync_repo(remote_url,
-                                         local_dir, Path(tmpdir), args.delete)
+                                         local_dir, Path(tmpdir), args.delete, args.remove_legacy)
         except Exception:
             logging.exception("Failed to sync repo: {}".format(repo))
         finally:
