@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import os
+import sys
 import errno
 import random
 import shutil
@@ -211,11 +212,7 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool, remove
         shutil.move(str(tmp_repodata) + ".gz", str(local_dir / "repodata.json.gz"))
     else:
         # If the gzip file is not generated, remove the dangling gzip archive
-        try:
-            os.remove(str(local_dir / "repodata.json.gz"))
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
+        Path(local_dir / "repodata.json.gz").unlink(missing_ok=True)
 
     shutil.move(str(tmp_repodata), str(local_dir / "repodata.json"))
     shutil.move(str(tmp_bz2_repodata), str(local_dir / "repodata.json.bz2"))
@@ -232,12 +229,8 @@ def sync_repo(repo_url: str, local_dir: Path, tmpdir: Path, delete: bool, remove
         shutil.move(str(tmp_current_repodata), str(
             local_dir / "current_repodata.json"))
     if not tmp_current_repodata_gz_gened:
-        try:
-            # If the gzip file is not generated, remove the dangling gzip archive
-            os.remove(str(local_dir / "current_repodata.json.gz"))
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
+        # If the gzip file is not generated, remove the dangling gzip archive
+        Path(local_dir / "current_repodata.json.gz").unlink(missing_ok=True)
 
     if delete:
         local_filelist = []
@@ -334,6 +327,8 @@ def main():
     size_statistics = 0
     random.seed()
 
+    success = True
+
     logging.info("Syncing installers...")
     for dist in ("archive", "miniconda"):
         remote_url = "{}/{}".format(CONDA_REPO_BASE_URL, dist)
@@ -344,6 +339,7 @@ def main():
                 f.stat().st_size for f in local_dir.glob('*') if f.is_file())
         except Exception:
             logging.exception("Failed to sync installers of {}".format(dist))
+            success = False
 
     for repo in CONDA_REPOS:
         for arch in CONDA_ARCHES:
@@ -356,6 +352,7 @@ def main():
                                              local_dir, Path(tmpdir), args.delete, args.remove_legacy)
             except Exception:
                 logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
+                success = False
             finally:
                 shutil.rmtree(tmpdir)
 
@@ -369,10 +366,13 @@ def main():
                                          local_dir, Path(tmpdir), args.delete, args.remove_legacy)
         except Exception:
             logging.exception("Failed to sync repo: {}".format(repo))
+            success = False
         finally:
             shutil.rmtree(tmpdir)
 
     print("Total size is", sizeof_fmt(size_statistics, suffix=""))
+    if not success:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
