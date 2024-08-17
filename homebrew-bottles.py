@@ -10,25 +10,30 @@ from pathlib import Path
 
 # mainly from apt-sync.py
 
-FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/Homebrew/formulae.brew.sh/actions/artifacts?name=github-pages")
+FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API = os.getenv(
+    "TUNASYNC_UPSTREAM_URL",
+    "https://api.github.com/repos/Homebrew/formulae.brew.sh/actions/artifacts?name=github-pages",
+)
 WORKING_DIR = Path(os.getenv("TUNASYNC_WORKING_DIR", "/data"))
-DOWNLOAD_TIMEOUT=int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
+DOWNLOAD_TIMEOUT = int(os.getenv("DOWNLOAD_TIMEOUT", "1800"))
 
 github_api_headers = {
     "Accept": "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
 }
 
-if 'GITHUB_TOKEN' in os.environ:
-    github_api_headers['Authorization'] = 'token {}'.format(
-        os.environ['GITHUB_TOKEN'])
+if "GITHUB_TOKEN" in os.environ:
+    github_api_headers["Authorization"] = "token {}".format(os.environ["GITHUB_TOKEN"])
 else:
     # https://github.com/actions/upload-artifact/issues/51
     # the token should have 'public_repo' access
     raise Exception("GITHUB_TOKEN is required")
 
+
 def formulae_github_pages(zip_file: Path, unzip_directory: Path, tar_directory: Path):
-    artifacts = requests.get(FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API, headers=github_api_headers)
+    artifacts = requests.get(
+        FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API, headers=github_api_headers
+    )
     artifacts.raise_for_status()
     artifacts = artifacts.json()
     latest = None
@@ -40,7 +45,10 @@ def formulae_github_pages(zip_file: Path, unzip_directory: Path, tar_directory: 
 
     check_and_download(zip_url, zip_file, zip_file, github_api_headers)
     sp.run(["unzip", str(zip_file), "-d", str(unzip_directory)])
-    sp.run(["tar", "-C", str(tar_directory), "-xf", str(unzip_directory / "artifact.tar")])
+    sp.run(
+        ["tar", "-C", str(tar_directory), "-xf", str(unzip_directory / "artifact.tar")]
+    )
+
 
 def bottles(formula_file: Path):
     b = {}
@@ -49,7 +57,7 @@ def bottles(formula_file: Path):
     for formula in formulae:
         if formula["versions"]["bottle"] and "stable" in formula["bottle"]:
             bs = formula["bottle"]["stable"]
-            for (platform, v) in bs["files"].items():
+            for platform, v in bs["files"].items():
                 sha256 = v["sha256"]
                 url = v["url"]
                 name = formula["name"]
@@ -63,28 +71,36 @@ def bottles(formula_file: Path):
                 }
     return b
 
+
 ghcr_headers = {
     "Accept": "application/vnd.oci.image.index.v1+json",
-    "Authorization": "Bearer QQ=="
+    "Authorization": "Bearer QQ==",
 }
 
+
 # borrowed from apt-sync.py
-def check_and_download(url: str, dst_file: Path, dst_tmp_file: Path, headers=ghcr_headers):
-    if dst_file.is_file(): return 2 # old file
+def check_and_download(
+    url: str, dst_file: Path, dst_tmp_file: Path, headers=ghcr_headers
+):
+    if dst_file.is_file():
+        return 2  # old file
     try:
         start = time.time()
         with requests.get(url, stream=True, timeout=(5, 10), headers=headers) as r:
             r.raise_for_status()
-            if 'last-modified' in r.headers:
+            if "last-modified" in r.headers:
                 remote_ts = parsedate_to_datetime(
-                    r.headers['last-modified']).timestamp()
-            else: remote_ts = None
+                    r.headers["last-modified"]
+                ).timestamp()
+            else:
+                remote_ts = None
 
-            with dst_tmp_file.open('wb') as f:
+            with dst_tmp_file.open("wb") as f:
                 for chunk in r.iter_content(chunk_size=1024**2):
                     if time.time() - start > DOWNLOAD_TIMEOUT:
                         raise TimeoutError("Download timeout")
-                    if not chunk: continue # filter out keep-alive new chunks
+                    if not chunk:
+                        continue  # filter out keep-alive new chunks
 
                     f.write(chunk)
             if remote_ts is not None:
@@ -92,8 +108,10 @@ def check_and_download(url: str, dst_file: Path, dst_tmp_file: Path, headers=ghc
         return 0
     except BaseException as e:
         print(e, flush=True)
-        if dst_tmp_file.is_file(): dst_tmp_file.unlink()
+        if dst_tmp_file.is_file():
+            dst_tmp_file.unlink()
     return 1
+
 
 if __name__ == "__main__":
     # clean tmp file from previous sync

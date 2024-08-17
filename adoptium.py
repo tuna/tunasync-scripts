@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
 import hashlib
-import traceback
-import json
 import os
-import re
-import shutil
 import subprocess as sp
-import tempfile
-import argparse
 import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import List, Set, Tuple, IO
+from typing import Set
 import requests
 
 DOWNLOAD_TIMEOUT = int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
