@@ -24,7 +24,12 @@ echo "Syncing to $REPO"
 DOWNLOAD_MIRROR=""
 if [[ $TUNASYNC_UPSTREAM != $PYPI_MASTER ]]; then
     # see https://github.com/pypa/bandersnatch/pull/928 for more info
-    DOWNLOAD_MIRROR="shadowmire_upstream = ${TUNASYNC_UPSTREAM}"
+    DOWNLOAD_MIRROR="shadowmire_upstream = \"${TUNASYNC_UPSTREAM}\""
+fi
+
+USE_PYPI_INDEX=""
+if [[ $SHADOWMIRE_USE_PYPI_INDEX == "1" ]]; then
+    USE_PYPI_INDEX="use_pypi_index = true"
 fi
 
 (
@@ -33,7 +38,7 @@ cat << EOF
 repo = "${REPO}"
 sync_packages = true
 ${DOWNLOAD_MIRROR}
-use_pypi_index = true
+${USE_PYPI_INDEX}
 exclude = [
     ".+-nightly(-|$)",
 EOF
