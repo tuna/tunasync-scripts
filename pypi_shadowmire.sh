@@ -6,7 +6,6 @@ SHADOWMIRE=${SHADOWMIRE:-"/home/scripts/shadowmire.py"}
 PYPI_MASTER="https://pypi.org"
 
 TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-$PYPI_MASTER}
-TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM%/}
 
 CONF="/tmp/shadowmire.conf"
 INIT=${INIT:-"0"}
