@@ -142,8 +142,7 @@ def apt_mirror(
     repo: str,
     arch: str,
     dest_base_dir: Path,
-    deb_set: Dict[str, int,
-    ],
+    deb_set: Dict[str, int,],
     skip_checksum: bool
 ) -> int:
     if not dest_base_dir.is_dir():
