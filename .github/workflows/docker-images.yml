@@ -22,6 +22,7 @@ jobs:
           - pub-mirror
           - rustup-mirror
           - shadowmire
+          - tsumugu
           # - freighter
         include:
           - image: tunasync-scripts
