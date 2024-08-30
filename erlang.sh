@@ -27,16 +27,33 @@ deb_suffixes=(
     elixir-1.15
     elixir-1.16
 )
+declare -a debian_dists=()
+declare -a ubuntu_dists=()
+
+for deb_os in "${debian_os[@]}"; do
+   for suffix in "${deb_suffixes[@]}"; do
+       debian_dists+=("${deb_os}-${suffix}")
+   done
+done
+
+for ubuntu_os in "${ubuntu_os[@]}"; do
+   for suffix in "${deb_suffixes[@]}"; do
+       ubuntu_dists+=("${ubuntu_os}-${suffix}")
+   done
+done
 
 function join_by { local IFS="$1"; shift; echo "$*"; }
-ubuntu_codenames=$(join_by ',' $(IFS=','; eval echo {"${ubuntu_os[*]}",}-{"${deb_suffixes[*],}"}))
-debian_codenames=$(join_by ',' $(IFS=','; eval echo {"${debian_os[*]}",}-{"${deb_suffixes[*],}"}))
+ubuntu_dists_list=$(join_by ',' ${ubuntu_dists[@]})
+debian_dists_list=$(join_by ',' ${debian_dists[@]})
+
+echo "All Ubuntu codenames: $ubuntu_dists_list"
+echo "All Debian codenames: $debian_dists_list"
 
 # =================== APT repos ===============================
 
-"$apt_sync" --delete "${BASE_URL}/ubuntu" "$ubuntu_codenames" contrib amd64,arm64 "$UBUNTU_PATH"
+"$apt_sync" --delete "${BASE_URL}/ubuntu" "$ubuntu_dists_list" contrib amd64,arm64 "$UBUNTU_PATH"
 echo "Ubuntu finished"
-"$apt_sync" --delete "${BASE_URL}/debian" "$debian_codenames" contrib amd64,arm64 "$DEBIAN_PATH"
+"$apt_sync" --delete "${BASE_URL}/debian" "$debian_dists_list" contrib amd64,arm64 "$DEBIAN_PATH"
 echo "Debian finished"
 
 # =================== YUM repos ===============================
