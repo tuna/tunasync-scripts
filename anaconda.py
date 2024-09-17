@@ -34,7 +34,6 @@ CONDA_ARCHES = (
 
 CONDA_CLOUD_REPOS = (
     "conda-forge/linux-64", "conda-forge/linux-aarch64", "conda-forge/osx-64", "conda-forge/osx-arm64", "conda-forge/win-64", "conda-forge/noarch",
-    "msys2/linux-64", "msys2/win-64", "msys2/noarch",
     "rapidsai/linux-64", "rapidsai/linux-aarch64", "rapidsai/noarch",
     "bioconda/linux-64", "bioconda/linux-aarch64", "bioconda/osx-64", "bioconda/win-64", "bioconda/noarch",
     "menpo/linux-64", "menpo/osx-64", "menpo/win-64", "menpo/win-32", "menpo/noarch",
@@ -48,7 +47,6 @@ CONDA_CLOUD_REPOS = (
     "simpleitk/linux-64", "simpleitk/linux-32", "simpleitk/osx-64", "simpleitk/win-64", "simpleitk/win-32", "simpleitk/noarch",
     "caffe2/linux-64", "caffe2/osx-64", "caffe2/win-64", "caffe2/noarch",
     "plotly/linux-64", "plotly/linux-32", "plotly/osx-64", "plotly/win-64", "plotly/win-32", "plotly/noarch",
-    "intel/linux-64", "intel/linux-32", "intel/osx-64", "intel/win-64", "intel/win-32", "intel/noarch",
     "auto/linux-64", "auto/linux-32", "auto/osx-64", "auto/win-64", "auto/win-32", "auto/noarch",
     "ursky/linux-64", "ursky/osx-64", "ursky/noarch",
     "matsci/linux-64", "matsci/osx-64", "matsci/win-64", "matsci/noarch",
@@ -371,7 +369,7 @@ def main():
                 f.stat().st_size for f in local_dir.glob("*") if f.is_file()
             )
         except Exception:
-            logging.exception("Failed to sync installers of {}".format(dist))
+            logging.exception("Failed to sync conda installers: {}".format(dist))
             success = False
 
     for repo in CONDA_REPOS:
@@ -385,8 +383,8 @@ def main():
                     remote_url, local_dir, Path(tmpdir), args.delete, args.remove_legacy
                 )
             except Exception:
-                logging.exception("Failed to sync repo: {}/{}".format(repo, arch))
-                success = False
+                logging.exception("Failed to sync conda repo: {}/{}".format(repo, arch))
+                # success = False # some arch might not exist, do not fail
             finally:
                 shutil.rmtree(tmpdir)
 
@@ -400,7 +398,7 @@ def main():
                 remote_url, local_dir, Path(tmpdir), args.delete, args.remove_legacy
             )
         except Exception:
-            logging.exception("Failed to sync repo: {}".format(repo))
+            logging.exception("Failed to sync conda cloud repo: {}".format(repo))
             success = False
         finally:
             shutil.rmtree(tmpdir)
