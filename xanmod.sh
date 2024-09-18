@@ -9,7 +9,7 @@ BASE_PATH="${TUNASYNC_WORKING_DIR}"
 BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://deb.xanmod.org/"}"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
-APT_PATH="${BASE_PATH}/apt"
+APT_PATH="${BASE_PATH}"
 
 # =================== APT repos ===============================
 # see: https://deb.xanmod.org/dists/releases/InRelease
