@@ -25,7 +25,7 @@ function get_codenames() {
 
 for os in "focal" "jammy" "noble" "bullseye" "bookworm"; do
     codenames=$(get_codenames $os)
-    "$apt_sync" --delete "$BASE_URL/$os" "$codenames" "$BASE_PATH/$os"
+    "$apt_sync" --delete "$BASE_URL/$os" "$codenames" main amd64,arm64 "$BASE_PATH/$os"
 done
 
 echo "APT finished"
