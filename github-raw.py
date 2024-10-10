@@ -48,6 +48,8 @@ REPOS = [
     ["ros/rosdistro", "master", "releases", "targets.yaml"],
     # for llvm-apt
     ["opencollab/llvm-jenkins.debian.net", "master", "llvm.sh"],
+    # for docker-install
+    ["docker/docker-install", "master", "install.sh"],
 ]
 
 # connect and read timeout value
