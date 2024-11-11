@@ -42,6 +42,8 @@ WORKERS = int(os.environ.get("SHADOWMIRE_WORKERS", "3"))
 IOWORKERS = int(os.environ.get("SHADOWMIRE_IOWORKERS", "2"))
 # A safety net -- to avoid upstream issues casuing too many packages removed when determinating sync plan.
 MAX_DELETION = int(os.environ.get("SHADOWMIRE_MAX_DELETION", "50000"))
+# Sometimes PyPI is not consistent -- new packages could not be fetched. This option tries to avoid permanently mark that kind of package as nonexist.
+IGNORE_THRESHOLD = int(os.environ.get("SHADOWMIRE_IGNORE_THRESHOLD", "1024"))
 
 # https://github.com/pypa/bandersnatch/blob/a05af547f8d1958217ef0dc0028890b1839e6116/src/bandersnatch_filter_plugins/prerelease_name.py#L18C1-L23C6
 PRERELEASE_PATTERNS = (
@@ -114,6 +116,13 @@ class LocalVersionKV:
         cur = self.conn.cursor()
         cur.execute("DELETE FROM local WHERE key = ?", (key,))
         self.conn.commit()
+
+    def remove_invalid(self) -> int:
+        cur = self.conn.cursor()
+        cur.execute("DELETE FROM local WHERE value = -1")
+        rowcnt = cur.rowcount
+        self.conn.commit()
+        return rowcnt
 
     def nuke(self, commit: bool = True) -> None:
         cur = self.conn.cursor()
@@ -336,6 +345,9 @@ class PyPI:
                 ret[normalized_key] = ret[key]
                 del ret[key]
         return ret
+
+    def changelog_last_serial(self) -> int:
+        return self.xmlrpc_client.changelog_last_serial()  # type: ignore
 
     def get_package_metadata(self, package_name: str) -> dict:
         req = self.session.get(urljoin(self.host, f"pypi/{package_name}/json"))
@@ -828,15 +840,18 @@ class SyncPyPI(SyncBase):
     ) -> None:
         self.pypi = PyPI()
         self.session = create_requests_session()
+        self.last_serial: Optional[int] = None
+        self.remote_packages: Optional[dict[str, int]] = None
         super().__init__(basedir, local_db, sync_packages)
 
     def fetch_remote_versions(self) -> dict[str, int]:
-        ret = self.pypi.list_packages_with_serial()
-        logger.info("Remote has %s packages", len(ret))
+        self.last_serial = self.pypi.changelog_last_serial()
+        self.remote_packages = self.pypi.list_packages_with_serial()
+        logger.info("Remote has %s packages", len(self.remote_packages))
         with overwrite(self.basedir / "remote.json") as f:
-            json.dump(ret, f)
+            json.dump(self.remote_packages, f)
             logger.info("File saved to remote.json.")
-        return ret
+        return self.remote_packages
 
     def do_update(
         self,
@@ -852,9 +867,31 @@ class SyncPyPI(SyncBase):
             meta_original = deepcopy(meta)
             logger.debug("%s meta: %s", package_name, meta)
         except PackageNotFoundError:
+            if (
+                self.remote_packages is not None
+                and package_name in self.remote_packages
+            ):
+                recorded_serial = self.remote_packages[package_name]
+            else:
+                recorded_serial = None
+            if (
+                recorded_serial is not None
+                and self.last_serial is not None
+                and abs(recorded_serial - self.last_serial) < IGNORE_THRESHOLD
+            ):
+                logger.warning(
+                    "%s missing from upstream (its serial %s, remote last serial %s), try next time...",
+                    package_name,
+                    recorded_serial,
+                    self.last_serial,
+                )
+                return None
+
             logger.warning(
-                "%s missing from upstream, remove and ignore in the future.",
+                "%s missing from upstream (its serial %s, remote last serial %s), remove and ignore in the future.",
                 package_name,
+                recorded_serial,
+                self.last_serial,
             )
             # try remove it locally, if it does not exist upstream
             self.do_remove(package_name, use_db=False)
@@ -1444,6 +1481,14 @@ def list_packages_with_serial(ctx: click.Context) -> None:
     local_db = ctx.obj["local_db"]
     syncer = SyncPyPI(basedir, local_db)
     syncer.fetch_remote_versions()
+
+
+@cli.command(help="Clear invalid package status in local database")
+@click.pass_context
+def clear_invalid_packages(ctx: click.Context) -> None:
+    local_db: LocalVersionKV = ctx.obj["local_db"]
+    total = local_db.remove_invalid()
+    logger.info("Removed %s invalid status in local database", total)
 
 
 if __name__ == "__main__":
