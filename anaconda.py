@@ -66,6 +66,7 @@ CONDA_CLOUD_REPOS = (
     "pytorch3d/linux-64", "pytorch3d/noarch",
     "idaholab/linux-64", "idaholab/noarch",
     "MindSpore/linux-64", "MindSpore/linux-aarch64", "MindSpore/osx-arm64", "MindSpore/osx-64", "MindSpore/win-64", "MindSpore/noarch",
+    "speleo3/linux-64", "speleo3/win-64", "speleo3/osx-64", "speleo3/noarch",
 )
 
 EXCLUDED_PACKAGES = (
