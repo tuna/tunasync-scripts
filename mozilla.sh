@@ -15,7 +15,7 @@ APT_PATH="${BASE_PATH}/apt"
 
 # =================== APT repos ===============================
 # see: https://packages.mozilla.org/apt/dists/mozilla/InRelease
-"$apt_sync" --delete "${BASE_URL/}/apt" mozilla main amd64,arm64 "${APT_PATH}"
+"$apt_sync" --delete "${BASE_URL/}/apt" mozilla main all,amd64,arm64 "${APT_PATH}"
 echo "APT finished"
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
