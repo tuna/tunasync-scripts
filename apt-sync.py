@@ -143,6 +143,7 @@ def apt_mirror(
     arch: str,
     dest_base_dir: Path,
     deb_set: Dict[str, int],
+    skip_checksum: bool
 ) -> int:
     if not dest_base_dir.is_dir():
         print("Destination directory is empty, cannot continue")
@@ -229,7 +230,7 @@ def apt_mirror(
                     )
                     pkgidx_file.unlink()
                     continue
-                if hashlib.sha256(content).hexdigest() != checksum:
+                if not skip_checksum and hashlib.sha256(content).hexdigest() != checksum:
                     print(
                         f"Invalid checksum of {pkgidx_file}, expected {checksum}, skipped"
                     )
@@ -331,7 +332,7 @@ def apt_mirror(
             with dest_tmp_filename.open("rb") as f:
                 for block in iter(lambda: f.read(1024**2), b""):
                     sha.update(block)
-            if sha.hexdigest() != pkg_checksum:
+            if not skip_checksum and sha.hexdigest() != pkg_checksum:
                 print(f"Invalid checksum of {dest_filename}, expected {pkg_checksum}")
                 dest_tmp_filename.unlink()
                 continue
@@ -383,6 +384,8 @@ def main():
         action="store_true",
         help="print package files to be deleted only",
     )
+    parser.add_argument("--skip-checksum", action='store_true',
+                        help='skip checksum validation')
     args = parser.parse_args()
 
     # generate lists of os codenames
@@ -420,7 +423,7 @@ def main():
             for arch in arch_list:
                 if (
                     apt_mirror(
-                        args.base_url, os, comp, arch, args.working_dir, deb_set=deb_set
+                        args.base_url, os, comp, arch, args.working_dir, deb_set=deb_set, skip_checksum=args.skip_checksum
                     )
                     != 0
                 ):
