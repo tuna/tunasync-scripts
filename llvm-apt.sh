@@ -17,7 +17,7 @@ function get_codenames() {
     if [ -z "$codenames" ]; then
         echo "Unable to fetch codename from $dist_meta_url, using default" >&2
         prefix=llvm-toolchain-$os
-        codenames="$prefix,$prefix-18,$prefix-19"
+        codenames="$prefix,$prefix-18,$prefix-19,$prefix-20"
     fi
     echo "Codenames for $os: $codenames" >&2
     echo $codenames
