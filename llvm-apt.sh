@@ -13,7 +13,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 function get_codenames() {
     local os=$1
     local dist_meta_url="${BASE_URL}/${os}/conf/distributions"
-    local codenames=$(curl -s $dist_meta_url 2>/dev/null | grep -oP '^Codename: \K.*' | tr '\n' ',' | sed 's/,$//')
+    local codenames=$(curl -sSfL $dist_meta_url 2>/dev/null | grep -oP '^Codename: \K.*' | tr '\n' ',' | sed 's/,$//')
     if [ -z "$codenames" ]; then
         echo "Unable to fetch codename from $dist_meta_url, using default" >&2
         prefix=llvm-toolchain-$os
