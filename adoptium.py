@@ -10,7 +10,7 @@ import requests
 
 DOWNLOAD_TIMEOUT = int(os.getenv('DOWNLOAD_TIMEOUT', '1800'))
 BASE_PATH = os.getenv('TUNASYNC_WORKING_DIR')
-BASE_URL = os.getenv('TUNASYNC_UPSTREAM_URL', "https://packages.adoptium.net/artifactory")
+BASE_URL = os.getenv('TUNASYNC_UPSTREAM_URL', "https://packages.adoptium.net/ui/native")
 FEATURE_VERSIONS = [8, 11, 17, 20, 21]
 
 def download_file(url: str, dst_file: Path)->bool:
