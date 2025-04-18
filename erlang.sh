@@ -15,17 +15,20 @@ DEBIAN_PATH="${BASE_PATH}/debian"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # generate codenames for repos
-ubuntu_os=(jammy)
-debian_os=(bullseye)
+ubuntu_os=(jammy noble)
+debian_os=(bullseye bookworm)
 deb_suffixes=(
     mongooseim-5
     mongooseim-6
     esl-erlang-24
     esl-erlang-25
     esl-erlang-26
+    esl-erlang-27
     elixir-1.14
     elixir-1.15
     elixir-1.16
+    elixir-1.17
+    elixir-1.18
 )
 declare -a debian_dists=()
 declare -a ubuntu_dists=()
