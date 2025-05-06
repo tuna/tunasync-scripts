@@ -273,6 +273,7 @@ def sync_installer(repo_url, local_dir: Path):
     logging.info("Start syncing {}".format(repo_url))
     local_dir.mkdir(parents=True, exist_ok=True)
     full_scan = random.random() < 0.1  # Do full version check less frequently
+    scan_futher = True
 
     def remote_list():
         r = requests.get(repo_url, timeout=TIMEOUT_OPTION)
@@ -293,6 +294,9 @@ def sync_installer(repo_url, local_dir: Path):
         dst_file_wip = local_dir / (".downloading." + filename)
 
         if dst_file.is_file():
+            if not scan_futher:
+                logging.info("Skipping {} without checking".format(filename))
+                continue
             r = requests.head(pkg_url, allow_redirects=True, timeout=TIMEOUT_OPTION)
             len_avail = "content-length" in r.headers
             if len_avail:
@@ -313,7 +317,7 @@ def sync_installer(repo_url, local_dir: Path):
                 # Stop the scanning if the most recent version is present
                 if not full_scan:
                     logging.info("Stop the scanning")
-                    break
+                    scan_futher = False
 
                 continue
 
