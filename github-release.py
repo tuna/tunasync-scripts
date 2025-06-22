@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import tempfile
 import json
-
+import re
 import requests
 
 
@@ -203,9 +203,21 @@ def main():
         print(f"syncing {repo} to {repo_dir}")
 
         try:
-            r = github_get(f"{args.base_url}{repo}/releases")
-            r.raise_for_status()
-            releases = r.json()
+            headers = {"Accept": "application/vnd.github+json"}
+            releases = []
+            url_str = f"{args.base_url}{repo}/releases"
+            pattern = re.compile(r'.*<(.*?)>;\s*rel="next"')
+            while url_str:
+                r = github_get(url_str, headers=headers)
+                r.raise_for_status()
+                releases.extend(r.json())
+                next_url = re.findall(pattern=pattern,string=r.headers["link"])
+                if versions > 0 and len(releases) > versions:
+                    url_str = None
+                elif next_url:
+                    url_str = next_url[0]
+                else:
+                    url_str = None
         except:
             print(f"Error: cannot download metadata for {repo}:\n{traceback.format_exc()}")
             break
