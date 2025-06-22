@@ -38,9 +38,11 @@ def formulae_github_pages(zip_file: Path, unzip_directory: Path, tar_directory: 
     artifacts = artifacts.json()
     latest = None
     for artifact in artifacts["artifacts"]:
-        if artifact["workflow_run"]["head_branch"] == "master":
+        if artifact["workflow_run"]["head_branch"] == "main":
             latest = artifact
             break
+    if latest is None:
+        raise Exception("No latest artifact found")
     zip_url = latest["archive_download_url"]
 
     check_and_download(zip_url, zip_file, zip_file, github_api_headers)
