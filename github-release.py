@@ -186,6 +186,7 @@ def main():
         versions = 1 # keep only one release
         tarball = False # do not download the tarball
         prerelease = False # filter out pre-releases
+        perpage = 0
         if isinstance(cfg, str):
             repo = cfg
         else:
@@ -198,12 +199,17 @@ def main():
                 tarball = cfg["tarball"]
             if "pre_release" in cfg:
                 prerelease = cfg["pre_release"]
+            if "per_page" in cfg:
+                perpage = cfg["per_page"]
 
         repo_dir = working_dir / Path(repo)
         print(f"syncing {repo} to {repo_dir}")
 
         try:
-            r = github_get(f"{args.base_url}{repo}/releases")
+            if perpage > 0:
+                r = github_get(f"{args.base_url}{repo}/releases?per_page={perpage}")
+            else:
+                r = github_get(f"{args.base_url}{repo}/releases")
             r.raise_for_status()
             releases = r.json()
         except:
