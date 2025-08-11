@@ -47,8 +47,7 @@
     },
     {
         "repo": "FreeCAD/FreeCAD",
-        "versions": 3,
-        "pre_release": true
+        "versions": 3
     },
     {
         "repo": "goharbor/harbor",
