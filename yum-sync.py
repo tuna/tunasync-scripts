@@ -6,6 +6,7 @@ import tempfile
 import argparse
 import bz2
 import gzip
+import shutil
 import sqlite3
 import traceback
 import time
@@ -270,6 +271,7 @@ enabled=1
             if args.download_repodata:
                 download_repodata(url, path)
             else:
+                shutil.rmtree(".repodata", True)
                 cmd_args = [
                     "createrepo_c",
                     "--update",
