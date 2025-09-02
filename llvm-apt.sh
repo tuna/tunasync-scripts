@@ -17,13 +17,13 @@ function get_codenames() {
     if [ -z "$codenames" ]; then
         echo "Unable to fetch codename from $dist_meta_url, using default" >&2
         prefix=llvm-toolchain-$os
-        codenames="$prefix,$prefix-18,$prefix-19,$prefix-20"
+        codenames="$prefix,$prefix-20,$prefix-21"
     fi
     echo "Codenames for $os: $codenames" >&2
     echo $codenames
 }
 
-for os in "focal" "jammy" "noble" "bullseye" "bookworm"; do
+for os in "focal" "jammy" "noble" "bullseye" "bookworm" "trixie"; do
     codenames=$(get_codenames $os)
     "$apt_sync" --delete "$BASE_URL/$os" "$codenames" main amd64,arm64 "$BASE_PATH/$os"
 done

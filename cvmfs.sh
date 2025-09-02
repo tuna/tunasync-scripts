@@ -16,7 +16,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # CERN keeps only maintained versions of CVMFS
 ubuntu_os=(noble jammy focal)
-debian_os=(bookworm bullseye buster)
+debian_os=(trixie bookworm bullseye)
 deb_suffixes=(prod)
 declare -a debian_dists=()
 declare -a ubuntu_dists=()

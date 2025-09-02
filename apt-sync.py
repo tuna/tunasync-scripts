@@ -35,9 +35,9 @@ if USE_ADDR_FAMILY != "":
 
 OS_TEMPLATE = {
     "ubuntu-lts": ["focal", "jammy", "noble"],
-    "debian-current": ["bullseye", "bookworm"],
-    "debian-latest2": ["bullseye", "bookworm"],
-    "debian-latest": ["bookworm"],
+    "debian-current": ["bullseye", "bookworm", "trixie"],
+    "debian-latest2": ["bookworm", "trixie"],
+    "debian-latest": ["trixie"],
 }
 ARCH_NO_PKGIDX = ["dep11", "i18n", "cnf"]
 MAX_RETRY = int(os.getenv("MAX_RETRY", "3"))
