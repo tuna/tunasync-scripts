@@ -17,10 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         image: 
-          - bandersnatch
           - ftpsync
           - nix-channels
           - pub-mirror
+          - rubygems-mirror
           - rustup-mirror
           - shadowmire
           - tsumugu
@@ -30,8 +30,6 @@ jobs:
             dockerfile: .
           # - image: julia-mirror
           #   dockerfile: dockerfiles/julia
-          - image: rubygems-mirror
-            dockerfile: dockerfiles/rubygems
 
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +56,7 @@ jobs:
           echo "docker_file=${DF}" >> $GITHUB_ENV
       -
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
