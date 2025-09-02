@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:trixie
 LABEL maintainer="Miao Wang <miao.wang@tuna.tsinghua.edu.cn>"
 
 RUN apt-get update && \

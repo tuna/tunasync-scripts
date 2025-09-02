@@ -1,4 +1,4 @@
-FROM debian:bookworm
+FROM debian:trixie
 LABEL maintainer="Wang Ruikang <dramforever@live.com>"
 
 RUN apt-get update && \
