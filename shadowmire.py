@@ -24,6 +24,7 @@ import tomllib
 from copy import deepcopy
 import functools
 from http.client import HTTPConnection
+import socket
 
 import requests
 import click
@@ -43,9 +44,10 @@ IOWORKERS = int(os.environ.get("SHADOWMIRE_IOWORKERS", "2"))
 # A safety net -- to avoid upstream issues casuing too many packages removed when determinating sync plan.
 MAX_DELETION = int(os.environ.get("SHADOWMIRE_MAX_DELETION", "50000"))
 # Sometimes PyPI is not consistent -- new packages could not be fetched. This option tries to avoid permanently mark that kind of package as nonexist.
-IGNORE_THRESHOLD = int(os.environ.get("SHADOWMIRE_IGNORE_THRESHOLD", "1024"))
+IGNORE_THRESHOLD = int(os.environ.get("SHADOWMIRE_IGNORE_THRESHOLD", "10000"))
 
 # https://github.com/pypa/bandersnatch/blob/a05af547f8d1958217ef0dc0028890b1839e6116/src/bandersnatch_filter_plugins/prerelease_name.py#L18C1-L23C6
+# These patterns shall work same in both re.match() and re.search(), as they begin with .+
 PRERELEASE_PATTERNS = (
     re.compile(r".+rc\d+$"),
     re.compile(r".+a(lpha)?\d+$"),
@@ -298,8 +300,9 @@ class CustomXMLRPCTransport(xmlrpc.client.Transport):
 
     def make_connection(self, host: tuple[str, dict[str, str]] | str) -> HTTPConnection:
         conn = super().make_connection(host)
-        if conn.timeout is None:
-            # 2 min timeout
+        if socket.getdefaulttimeout() is None:
+            # By default conn.timeout is socket._GLOBAL_DEFAULT_TIMEOUT instead of None.
+            # So here we check if default timeout is set, and if not, add a 2-min timeout
             conn.timeout = 120
         return conn
 
@@ -488,8 +491,13 @@ class Plan:
 def match_patterns(
     s: str, ps: list[re.Pattern[str]] | tuple[re.Pattern[str], ...]
 ) -> bool:
+    """
+    Search if any of the patterns match the string `s`.
+
+    Uses re.search(), matching anywhere in the string.
+    """
     for p in ps:
-        if p.match(s):
+        if p.search(s):
             return True
     return False
 
@@ -575,6 +583,7 @@ class SyncBase:
         self,
         package_names: list[str],
         prerelease_excludes: list[re.Pattern[str]],
+        excluded_wheel_filenames: list[re.Pattern[str]],
         json_files: set[str],
         packages_pathcache: set[str],
         compare_size: bool,
@@ -609,6 +618,30 @@ class SyncBase:
                 # something unexpected happens...
                 logger.info("add %s as its indexes are not consistent", package_name)
                 return False
+            # Check with JSON meta, ensuring that package file list is consistent
+            json_meta_path = self.jsonmeta_dir / package_name
+            try:
+                with open(json_meta_path, "r") as f:
+                    meta = json.load(f)
+                meta_filters(meta, package_name, prerelease_excludes, excluded_wheel_filenames)
+                release_files = PyPI.get_release_files_from_meta(meta)
+                hrefs_from_meta = {
+                    PyPI.file_url_to_local_url(i["url"]) for i in release_files
+                }
+            except (json.JSONDecodeError, FileNotFoundError, KeyError):
+                logger.info(
+                    "add %s as its JSON meta is not valid",
+                    package_name,
+                )
+                return False
+            for href in hrefs_html:
+                if href not in hrefs_from_meta:
+                    logger.info(
+                        "add %s as its HTML index has href %s not in JSON meta",
+                        package_name,
+                        href,
+                    )
+                    return False
 
             # OK, check if all hrefs have corresponding files
             if self.sync_packages:
@@ -665,16 +698,25 @@ class SyncBase:
                 exit_with_futures(futures)
 
         logger.info("%s packages to update in check_and_update()", len(to_update))
-        return self.parallel_update(to_update, prerelease_excludes)
+        return self.parallel_update(
+            to_update, prerelease_excludes, excluded_wheel_filenames
+        )
 
     def parallel_update(
-        self, package_names: list[str], prerelease_excludes: list[re.Pattern[str]]
+        self,
+        package_names: list[str],
+        prerelease_excludes: list[re.Pattern[str]],
+        excluded_wheel_filenames: list[re.Pattern[str]],
     ) -> bool:
         success = True
         with ThreadPoolExecutor(max_workers=WORKERS) as executor:
             futures = {
                 executor.submit(
-                    self.do_update, package_name, prerelease_excludes, False
+                    self.do_update,
+                    package_name,
+                    prerelease_excludes,
+                    excluded_wheel_filenames,
+                    False,
                 ): (
                     idx,
                     package_name,
@@ -705,7 +747,10 @@ class SyncBase:
         return success
 
     def do_sync_plan(
-        self, plan: Plan, prerelease_excludes: list[re.Pattern[str]]
+        self,
+        plan: Plan,
+        prerelease_excludes: list[re.Pattern[str]],
+        excluded_wheel_filenames: list[re.Pattern[str]],
     ) -> bool:
         to_remove = plan.remove
         to_update = plan.update
@@ -713,7 +758,9 @@ class SyncBase:
         for package_name in to_remove:
             self.do_remove(package_name)
 
-        return self.parallel_update(to_update, prerelease_excludes)
+        return self.parallel_update(
+            to_update, prerelease_excludes, excluded_wheel_filenames
+        )
 
     def do_remove(
         self, package_name: str, use_db: bool = True, remove_packages: bool = True
@@ -742,6 +789,7 @@ class SyncBase:
         self,
         package_name: str,
         prerelease_excludes: list[re.Pattern[str]],
+        excluded_wheel_filenames: list[re.Pattern[str]],
         use_db: bool = True,
     ) -> Optional[int]:
         raise NotImplementedError
@@ -828,10 +876,51 @@ def download(
 
 def filter_release_from_meta(
     meta: dict, patterns: list[re.Pattern[str]] | tuple[re.Pattern[str], ...]
-) -> None:
+) -> bool:
+    """
+    Returns True if meta changes, False otherwise.
+    """
+    changed = False
     for release in list(meta["releases"].keys()):
         if match_patterns(release, patterns):
             del meta["releases"][release]
+            changed = True
+    return changed
+
+
+def filter_wheel_file_from_meta(
+    meta: dict, patterns: list[re.Pattern[str]] | tuple[re.Pattern[str], ...]
+) -> bool:
+    """
+    Returns True if meta changes, False otherwise.
+    """
+    changed = False
+    for release_infos in meta["releases"].values():
+        for release_idx in range(len(release_infos) - 1, -1, -1):
+            release_info = release_infos[release_idx]
+            filename = release_info["filename"]
+            if match_patterns(filename, patterns):
+                del release_infos[release_idx]
+                changed = True
+    return changed
+
+
+def meta_filters(
+    meta: dict,
+    package_name: str,
+    prerelease_excludes: list[re.Pattern[str]],
+    excluded_wheel_filenames: list[re.Pattern[str]],
+):
+    """
+    Apply filters to the package meta.
+    Returns True if meta changes, False otherwise.
+    """
+    changed = False
+    if match_patterns(package_name, prerelease_excludes):
+        changed |= filter_release_from_meta(meta, PRERELEASE_PATTERNS)
+    if excluded_wheel_filenames:
+        changed |= filter_wheel_file_from_meta(meta, excluded_wheel_filenames)
+    return changed
 
 
 class SyncPyPI(SyncBase):
@@ -857,6 +946,7 @@ class SyncPyPI(SyncBase):
         self,
         package_name: str,
         prerelease_excludes: list[re.Pattern[str]],
+        excluded_wheel_filenames: list[re.Pattern[str]],
         use_db: bool = True,
     ) -> Optional[int]:
         logger.info("updating %s", package_name)
@@ -900,9 +990,8 @@ class SyncPyPI(SyncBase):
             self.local_db.set(package_name, -1)
             return None
 
-        # filter prerelease, if necessary
-        if match_patterns(package_name, prerelease_excludes):
-            filter_release_from_meta(meta, PRERELEASE_PATTERNS)
+        # filter prerelease and wheel files, if necessary
+        meta_filters(meta, package_name, prerelease_excludes, excluded_wheel_filenames)
 
         if self.sync_packages:
             # sync packages first, then sync index
@@ -911,7 +1000,7 @@ class SyncPyPI(SyncBase):
             release_files = PyPI.get_release_files_from_meta(meta)
             # remove packages that no longer exist remotely
             remote_hrefs = [
-                self.pypi.file_url_to_local_url(i["url"]) for i in release_files
+                PyPI.file_url_to_local_url(i["url"]) for i in release_files
             ]
             should_remove = list(set(existing_hrefs) - set(remote_hrefs))
             for href in should_remove:
@@ -942,6 +1031,9 @@ class SyncPyPI(SyncBase):
         json_meta_path = self.jsonmeta_dir / package_name
         with overwrite(json_meta_path) as f:
             # Note that we're writing meta_original here!
+            # This is also the case for SyncPlainHTTP.
+            # When syncing, we want to keep the original meta (json/),
+            # but index.v1_json and index.v1_html are generated from modified meta.
             json.dump(meta_original, f)
 
         if use_db:
@@ -987,6 +1079,7 @@ class SyncPlainHTTP(SyncBase):
         self,
         package_name: str,
         prerelease_excludes: list[re.Pattern[str]],
+        excluded_wheel_filenames: list[re.Pattern[str]],
         use_db: bool = True,
     ) -> Optional[int]:
         logger.info("updating %s", package_name)
@@ -1009,9 +1102,8 @@ class SyncPlainHTTP(SyncBase):
             return None
         assert resp
         meta = resp.json()
-        # filter prerelease, if necessary
-        if match_patterns(package_name, prerelease_excludes):
-            filter_release_from_meta(meta, PRERELEASE_PATTERNS)
+        # filter prerelease and wheel files, if necessary
+        meta_filters(meta, package_name, prerelease_excludes, excluded_wheel_filenames)
 
         if self.sync_packages:
             release_files = PyPI.get_release_files_from_meta(meta)
@@ -1034,8 +1126,24 @@ class SyncPlainHTTP(SyncBase):
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 success, resp = download(self.session, url, dest)
                 if not success:
-                    logger.warning("skipping %s as it fails downloading", package_name)
-                    return None
+                    if resp and resp.status_code == 404:
+                        # handle special case: upstream filters out some files
+                        logger.warning(
+                            "cannot find %s at upstream, fallback to pypi", url
+                        )
+                        url = i["url"]  # original pypi URL
+                        success, resp = download(self.session, url, dest)
+                        if not success:
+                            logger.warning(
+                                "skipping %s as it fails downloading (from pypi)",
+                                package_name,
+                            )
+                            return None
+                    else:
+                        logger.warning(
+                            "skipping %s as it fails downloading", package_name
+                        )
+                        return None
 
         # OK, now it's safe to rename
         (self.jsonmeta_dir / (package_name + ".new")).rename(
@@ -1094,6 +1202,11 @@ def sync_shared_args(func: Callable[..., Any]) -> Callable[..., Any]:
             "--prerelease-exclude",
             multiple=True,
             help="Package names of which prereleases will be excluded. Regex.",
+        ),
+        click.option(
+            "--excluded-wheel-filename",
+            multiple=True,
+            help="Specify patterns to exclude wheel files (applies to all packages). Regex.",
         ),
     ]
     for option in shared_options[::-1]:
@@ -1193,12 +1306,14 @@ def sync(
     shadowmire_upstream: Optional[str],
     exclude: tuple[str],
     prerelease_exclude: tuple[str],
+    excluded_wheel_filename: tuple[str],
     use_pypi_index: bool,
 ) -> None:
     basedir: Path = ctx.obj["basedir"]
     local_db: LocalVersionKV = ctx.obj["local_db"]
     excludes = exclude_to_excludes(exclude)
     prerelease_excludes = exclude_to_excludes(prerelease_exclude)
+    excluded_wheel_filenames = exclude_to_excludes(excluded_wheel_filename)
     syncer = get_syncer(
         basedir, local_db, sync_packages, shadowmire_upstream, use_pypi_index
     )
@@ -1207,7 +1322,7 @@ def sync(
     # save plan for debugging
     with overwrite(basedir / "plan.json") as f:
         json.dump(plan, f, default=vars, indent=2)
-    success = syncer.do_sync_plan(plan, prerelease_excludes)
+    success = syncer.do_sync_plan(plan, prerelease_excludes, excluded_wheel_filenames)
     syncer.finalize()
 
     logger.info("Synchronization finished. Success: %s", success)
@@ -1277,6 +1392,7 @@ def verify(
     shadowmire_upstream: Optional[str],
     exclude: tuple[str],
     prerelease_exclude: tuple[str],
+    excluded_wheel_filename: tuple[str],
     remove_not_in_local: bool,
     compare_size: bool,
     use_pypi_index: bool,
@@ -1285,6 +1401,7 @@ def verify(
     local_db: LocalVersionKV = ctx.obj["local_db"]
     excludes = exclude_to_excludes(exclude)
     prerelease_excludes = exclude_to_excludes(prerelease_exclude)
+    excluded_wheel_filenames = exclude_to_excludes(excluded_wheel_filename)
     syncer = get_syncer(
         basedir, local_db, sync_packages, shadowmire_upstream, use_pypi_index
     )
@@ -1341,7 +1458,9 @@ def verify(
                 return res
 
         futures = {
-            executor.submit(packages_iterate, first_dir.name, idx % IOWORKERS): first_dir.name  # type: ignore
+            executor.submit(
+                packages_iterate, first_dir.name, idx % IOWORKERS
+            ): first_dir.name  # type: ignore
             for idx, first_dir in enumerate(fast_iterdir((basedir / "packages"), "dir"))
         }
         try:
@@ -1364,6 +1483,7 @@ def verify(
     success = syncer.check_and_update(
         list(local_names),
         prerelease_excludes,
+        excluded_wheel_filenames,
         json_files,
         packages_pathcache,
         compare_size,
@@ -1393,7 +1513,8 @@ def verify(
         # MyPy does not enjoy same variable name with different types, even when --allow-redefinition
         # Ignore here to make mypy happy
         futures = {
-            executor.submit(iterate_simple, sname): sname for sname in simple_dirs  # type: ignore
+            executor.submit(iterate_simple, sname): sname
+            for sname in simple_dirs  # type: ignore
         }
         try:
             for future in tqdm(
@@ -1418,7 +1539,7 @@ def verify(
         for path in tqdm(packages_pathcache, desc="Iterating path cache"):
             if path not in ref_set:
                 logger.info("removing unreferenced file %s", path)
-                Path(path).unlink()
+                Path(path).unlink(missing_ok=True)
 
     logger.info("Verification finished. Success: %s", success)
 
@@ -1436,6 +1557,7 @@ def do_update(
     shadowmire_upstream: Optional[str],
     exclude: tuple[str],
     prerelease_exclude: tuple[str],
+    excluded_wheel_filename: tuple[str],
     use_pypi_index: bool,
     package_name: str,
 ) -> None:
@@ -1445,10 +1567,11 @@ def do_update(
     if excludes:
         logger.warning("--exclude is ignored in do_update()")
     prerelease_excludes = exclude_to_excludes(prerelease_exclude)
+    excluded_wheel_filenames = exclude_to_excludes(excluded_wheel_filename)
     syncer = get_syncer(
         basedir, local_db, sync_packages, shadowmire_upstream, use_pypi_index
     )
-    syncer.do_update(package_name, prerelease_excludes)
+    syncer.do_update(package_name, prerelease_excludes, excluded_wheel_filenames)
 
 
 @cli.command(help="Manual remove given package for debugging purpose")
@@ -1461,12 +1584,13 @@ def do_remove(
     shadowmire_upstream: Optional[str],
     exclude: tuple[str],
     prerelease_exclude: tuple[str],
+    excluded_wheel_filename: tuple[str],
     use_pypi_index: bool,
     package_name: str,
 ) -> None:
     basedir = ctx.obj["basedir"]
     local_db = ctx.obj["local_db"]
-    if exclude or prerelease_exclude:
+    if exclude or prerelease_exclude or excluded_wheel_filename:
         logger.warning("exclusion rules are ignored in do_remove()")
     syncer = get_syncer(
         basedir, local_db, sync_packages, shadowmire_upstream, use_pypi_index
