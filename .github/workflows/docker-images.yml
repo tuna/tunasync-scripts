@@ -160,5 +160,9 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           for i in *; do
-            docker buildx imagetools inspect "tunathu/$i:${{ steps.docker_tag.outputs.docker_tag }}"
+            DOCKER_IMG="tunathu/$i:${{ steps.docker_tag.outputs.docker_tag }}"
+            echo "## $DOCKER_IMG" >> $GITHUB_STEP_SUMMARY
+            echo "```" >> $GITHUB_STEP_SUMMARY
+            docker buildx imagetools inspect "$DOCKER_IMG" | tee -a $GITHUB_STEP_SUMMARY
+            echo "```" >> $GITHUB_STEP_SUMMARY
           done
