@@ -18,9 +18,9 @@ RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
 RUN python3 -m pip install gsutil --break-system-packages
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && apt-get install -y locales -qq && locale-gen
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 HOME=/tmp
+ENV LANG en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 HOME=/tmp
 RUN mkdir -p /home/tunasync-scripts
-CMD /bin/bash
+CMD ["/bin/bash"]
 
 
 # ====================

@@ -8,7 +8,7 @@ FROM julia:1.5
 LABEL description="A community maintained docker script to set up julia mirror easily."
 LABEL maintainer="Johnny Chen <johnnychen94@hotmail.com>"
 
-ENV JULIA_DEPOT_PATH="/opt/julia"
+ENV JULIA_DEPOT_PATH "/opt/julia"
 
 RUN adduser --uid 2000 tunasync && \
     julia -e 'using Pkg; pkg"add StorageMirrorServer@0.2.0"' && \
