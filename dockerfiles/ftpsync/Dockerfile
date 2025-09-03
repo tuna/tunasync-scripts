@@ -8,5 +8,5 @@ RUN apt-get update && \
 RUN git clone https://ftp-master.debian.org/git/archvsync.git/ /ftpsync/
 WORKDIR /ftpsync/
 ENV PATH /ftpsync/bin:${PATH}
-CMD /bin/bash
+CMD ["/bin/bash"]
 
