@@ -16,5 +16,5 @@ RUN mkdir -p /tmp/nix.unpack && \
     ln -s /nix/store/*-nix-*/bin/* /usr/local/bin && \
     rm -rf /tmp/nix.unpack
 
-ENV HOME /tmp
+ENV HOME=/tmp
 CMD ["/bin/bash"]

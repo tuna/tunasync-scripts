@@ -14,8 +14,8 @@ RUN \
   mv /usr/lib/dart-sdk /usr/lib/dart && \
   chmod -R "og+rX" /usr/lib/dart
 
-ENV DART_SDK /usr/lib/dart
-ENV PATH $DART_SDK/bin:/root/.pub-cache/bin:$PATH
+ENV DART_SDK=/usr/lib/dart
+ENV PATH=$DART_SDK/bin:/root/.pub-cache/bin:$PATH
 WORKDIR /root
 
 RUN set -eux; \
@@ -46,7 +46,7 @@ RUN set -eux; \
 FROM dart-build
 LABEL maintainer="HUI Yiqun <i@huiyiqun.me>"
 
-ENV PUB_CACHE /pub-cache
+ENV PUB_CACHE=/pub-cache
 
 RUN pub global activate -s git https://github.com/tuna/pub-mirror.git
 
