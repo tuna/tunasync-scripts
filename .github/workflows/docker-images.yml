@@ -32,8 +32,6 @@ jobs:
         include:
           - image: tunasync-scripts
             dockerfile_dir: .
-          # - image: julia-mirror
-          #   dockerfile: dockerfiles/julia
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -60,21 +58,21 @@ jobs:
         if: github.event_name == 'push'
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-buildx-${{ matrix.image }}-${{ matrix.os }}-${{ github.sha }}
+          key: ${{ matrix.os }}-buildx-${{ matrix.image }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-buildx-${{ matrix.image }}-${{ matrix.os }}-
-            ${{ runner.os }}-${{ runner.arch }}-buildx-${{ matrix.image }}-
+            ${{ matrix.os }}-buildx-${{ matrix.image }}-${{ matrix.os }}-
+            ${{ matrix.os }}-buildx-${{ matrix.image }}-
       -
         name: Cache Docker layers
         uses: actions/cache@v4
         if: github.event_name == 'pull_request'
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-${{ matrix.os }}-${{ github.sha }}
+          key: ${{ matrix.os }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-${{ matrix.os }}-
-            ${{ runner.os }}-${{ runner.arch }}-buildx-${{ matrix.image }}-${{ matrix.os }}-
-            ${{ runner.os }}-${{ runner.arch }}-buildx-${{ matrix.image }}-
+            ${{ matrix.os }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-
+            ${{ matrix.os }}-buildx-${{ matrix.image }}-
+            ${{ matrix.os }}-buildx-${{ matrix.image }}-
       -
         name: Cache Docker layers
         if: github.event_name != 'push' && github.event_name != 'pull_request'
@@ -91,7 +89,7 @@ jobs:
       -
         name: Build and push
         uses: docker/build-push-action@v6
-        id: dockerbuild
+        id: docker_build
         with:
           context: .
           file: ${{ steps.docker_file_dir.outputs.docker_file_dir }}/Dockerfile
@@ -104,13 +102,13 @@ jobs:
         name: Export digest
         run: |
           mkdir -p ${{ runner.temp }}/digests/${{ matrix.image }}
-          digest="${{ steps.dockerbuild.outputs.digest }}"
+          digest="${{ steps.docker_build.outputs.digest }}"
           touch "${{ runner.temp }}/digests/${{ matrix.image }}/${digest#sha256:}"
       -
         name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.image }}-${{ matrix.os }}
+          name: digests-${{ matrix.image }}-${{ runner.arch }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1
