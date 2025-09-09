@@ -98,7 +98,7 @@ def handle_pkg(
     logger.info(f"Handling package {pkg_name}...")
     # fetch metadata from upstream
     pkgUrl = base_url + "/api/packages/" + pkg_name
-    req = get_with_token(pkgUrl, headers={"Accept": "application/vnd.pub.v2+json"})
+    req = get_with_token(pkgUrl, headers={"Accept": "application/vnd.pub.v2+json"}, timeout=5)
     req.raise_for_status()
     resp = req.json()
 
@@ -189,11 +189,11 @@ def main():
     pkgs_url = base_url + "/api/package-names"
     pkg_futures = []
     while True:
-        req = get_with_token(pkgs_url, headers={"Accept-Encoding": "gzip"})
+        req = get_with_token(pkgs_url, headers={"Accept-Encoding": "gzip"}, timeout=5)
         req.raise_for_status()
         resp = req.json()
 
-        for pkg in resp["packages"][:10]:
+        for pkg in resp["packages"]:
             pkg_futures.append(
                 pkg_executor.submit(
                     handle_pkg,
