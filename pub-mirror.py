@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import os
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -24,6 +25,7 @@ BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://pub.dev")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 MIRROR_URL = os.getenv("MIRROR_BASE_URL", "https://mirrors.tuna.tsinghua.edu.cn/dart-pub")
 REPOS = []
+UA = 'tuna-pub-mirror/0.0 (+https://github.com/tuna/tunasync-scripts)'
 
 
 # wrap around requests.get to use token if available
@@ -31,6 +33,7 @@ def get_with_token(*args, **kwargs):
     headers = kwargs["headers"] if "headers" in kwargs else {}
     if "PUB_TOKEN" in os.environ:
         headers["Authorization"] = "Bearer {}".format(os.environ["PUB_TOKEN"])
+    headers["User-Agent"] = UA
     kwargs["headers"] = headers
     return requests.get(*args, **kwargs)
 
@@ -93,6 +96,7 @@ def handle_pkg(
     pkg_name: str,
     working_dir: Path,
     mirror_url: str,
+    clean: bool,
 ) -> bool:
 
     logger.info(f"Handling package {pkg_name}...")
@@ -107,8 +111,11 @@ def handle_pkg(
 
     for ver in resp["versions"]:
         logger.debug(f'Checking {pkg_name}=={ver["version"]}')
+        del ver["advisoriesUpdated"] # not supported
         if ver.get("retracted", False):
             logger.info(f'Skipping retracted version {pkg_name}=={ver["version"]}')
+            dst_file = working_dir / "packages" / pkg_name / "versions" / f'{ver["version"]}.tar.gz'
+            dst_file.unlink(missing_ok=True)
             continue
         download_tasks.append(
             (
@@ -125,6 +132,18 @@ def handle_pkg(
         ver["archive_url"] = serving_url
         if cur_ver == latest_ver:
             resp["latest"] = ver
+
+    # clean up obsolete versions if needed
+    if clean:
+        all_versions = [ver["version"] for ver in resp["versions"] if not ver.get("retracted", False)]
+        versions_dir = working_dir / "packages" / pkg_name / "versions"
+        if versions_dir.is_dir():
+            for f in versions_dir.iterdir():
+                if f.is_file() and f.suffix == ".gz":
+                    ver = f.stem
+                    if ver not in all_versions:
+                        logger.info(f"Removing obsolete pkg file {f.as_posix()}")
+                        f.unlink(missing_ok=True)
 
     # save modified metadata to api/packages/<pkg>/meta.json
     modified_meta_str = json.dumps(ver)
@@ -166,6 +185,11 @@ def main():
     parser.add_argument(
         "--workers", default=1, type=int, help="number of concurrent downloading jobs"
     )
+    parser.add_argument(
+        "--clean",
+        action='store_true',
+        help="remove obsolete package versions that are no longer in upstream",
+    )
     # parser.add_argument("--fast-skip", action='store_true',
     #                     help='do not verify sha256 of existing files')
     args = parser.parse_args()
@@ -176,11 +200,13 @@ def main():
     working_dir = Path(args.working_dir)
     base_url = args.base_url
     mirror_url = MIRROR_URL
+    clean = args.clean
 
     logger.info(f"Using upstream URL: {base_url}")
     logger.info(f"Using mirror URL: {mirror_url}")
     logger.info(f"Using working directory: {working_dir.as_posix()}")
     logger.info(f"Using {args.workers} workers")
+    logger.info(f"Clean obsolete packages: {'Yes' if clean else 'No'}")
 
     pkg_executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
     download_executor = concurrent.futures.ThreadPoolExecutor(max_workers=args.workers)
@@ -188,6 +214,7 @@ def main():
     # iterate through all packages
     pkgs_url = base_url + "/api/package-names"
     pkg_futures = []
+    all_pkgs = []
     while True:
         req = get_with_token(pkgs_url, headers={"Accept-Encoding": "gzip"}, timeout=5)
         req.raise_for_status()
@@ -202,14 +229,27 @@ def main():
                     pkg,
                     working_dir,
                     mirror_url,
+                    clean,
                 )
             )
+            all_pkgs.append(pkg)
 
         # null means no more pages
         if not (pkgs_url := resp["nextUrl"]):
             break
 
     pkg_executor.shutdown(wait=True)
+
+    if clean:
+        # clean up obsolete packages
+        pkgs_dir = working_dir / "packages"
+        if pkgs_dir.is_dir():
+            for p in pkgs_dir.iterdir():
+                if p.is_dir():
+                    pkg_name = p.name
+                    if pkg_name not in all_pkgs:
+                        logger.info(f"Removing obsolete package {pkg_name}")
+                        shutil.rmtree(p, ignore_errors=True)
 
 
 if __name__ == "__main__":
