@@ -141,7 +141,7 @@ def handle_pkg(
         if versions_dir.is_dir():
             for f in versions_dir.iterdir():
                 if f.is_file() and f.suffix == ".gz":
-                    ver = f.stem
+                    ver = f.name.removesuffix(".tar.gz")
                     if ver not in all_versions:
                         logger.info(f"Removing obsolete pkg file {f.as_posix()}")
                         f.unlink(missing_ok=True)
