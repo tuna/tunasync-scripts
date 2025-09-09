@@ -19,7 +19,6 @@ jobs:
         image:
           - ftpsync
           - nix-channels
-          - pub-mirror
           - rubygems-mirror
           - rustup-mirror
           - shadowmire
