@@ -9,6 +9,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
 import requests
 
@@ -38,7 +39,7 @@ def get_with_token(*args, **kwargs):
     return requests.get(*args, **kwargs)
 
 
-def do_download(remote_url: str, dst_file: Path, sha256: Optional[str] = None):
+def do_download(remote_url: str, dst_file: Path, time: datetime, sha256: str):
     # NOTE the stream=True parameter below
     with get_with_token(remote_url, stream=True) as r:
         r.raise_for_status()
@@ -58,12 +59,13 @@ def do_download(remote_url: str, dst_file: Path, sha256: Optional[str] = None):
                         downloaded_sha256.update(chunk)
                         # f.flush()
             # check for downloaded sha256
-            if sha256 and sha256 != downloaded_sha256.hexdigest():
+            if sha256 != downloaded_sha256.hexdigest():
                 raise Exception(
                     f"File {dst_file.as_posix()} sha256 mismatch: downloaded {downloaded_sha256.hexdigest()}, expected {sha256}"
                 )
             tmp_dst_file.chmod(0o644)
             tmp_dst_file.replace(dst_file)
+            os.utime(dst_file, (time.timestamp(), time.timestamp())) # access and modified time
         finally:
             if tmp_dst_file is not None:
                 if tmp_dst_file.is_file():
@@ -71,7 +73,7 @@ def do_download(remote_url: str, dst_file: Path, sha256: Optional[str] = None):
 
 
 def download_pkg_ver(
-    pkg_name: str, working_dir: Path, ver: str, url: str, sha256: str
+    pkg_name: str, working_dir: Path, ver: str, url: str, time: datetime, sha256: str
 ) -> bool:
     # download archive file to /packages/<pkg>/versions/<version>.tar.gz
     dst_file = working_dir / "packages" / pkg_name / "versions" / f"{ver}.tar.gz"
@@ -79,7 +81,7 @@ def download_pkg_ver(
         dst_file.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"Downloading {url} to {dst_file.as_posix()}")
         try:
-            do_download(url, dst_file, sha256=sha256)
+            do_download(url, dst_file, time, sha256)
             return True
         except Exception as e:
             logger.error(f"Failed to download {url} to {dst_file.as_posix()}: {e}")
@@ -88,6 +90,11 @@ def download_pkg_ver(
         logger.info(f"File {dst_file.as_posix()} already exists, skipping download")
         return True
 
+def _from_published_time(published: Optional[str]) -> datetime:
+    if published:
+        return datetime.fromisoformat(published.replace("Z", "+00:00"))
+    else:
+        return datetime.now()
 
 # https://github.com/dart-lang/pub/blob/master/doc/repository-spec-v2.md#list-all-versions-of-a-package
 def handle_pkg(
@@ -108,9 +115,11 @@ def handle_pkg(
 
     download_tasks = []
     latest_ver = resp["latest"]["version"]
+    latest_time = _from_published_time(resp["latest"].get("published"))
 
     for ver in resp["versions"]:
         logger.debug(f'Checking {pkg_name}=={ver["version"]}')
+        ver_time = _from_published_time(ver.get("published"))
         if "advisoriesUpdated" in ver:
             del ver["advisoriesUpdated"] # not supported
         if ver.get("retracted", False):
@@ -124,6 +133,7 @@ def handle_pkg(
                 working_dir,
                 ver["version"],
                 ver["archive_url"],
+                ver_time,
                 ver["archive_sha256"],
             )
         )
@@ -141,13 +151,13 @@ def handle_pkg(
         if versions_dir.is_dir():
             for f in versions_dir.iterdir():
                 if f.is_file() and f.suffix == ".gz":
-                    ver = f.name.removesuffix(".tar.gz")
-                    if ver not in all_versions:
+                    local_ver = f.name.removesuffix(".tar.gz")
+                    if local_ver not in all_versions:
                         logger.info(f"Removing obsolete pkg file {f.as_posix()}")
                         f.unlink(missing_ok=True)
 
     # save modified metadata to api/packages/<pkg>/meta.json
-    modified_meta_str = json.dumps(ver)
+    modified_meta_str = json.dumps(resp)
     meta_on_disk = working_dir / "api" / "packages" / pkg_name / "meta.json"
     # fast path: check if meta.json exists and has the same size
     if not meta_on_disk.is_file() or meta_on_disk.stat().st_size != len(
