@@ -87,6 +87,7 @@ def download_pkg_ver(
             logger.error(f"Failed to download {url} to {dst_file.as_posix()}: {e}")
             return False
     else:
+        os.utime(dst_file, (time.timestamp(), time.timestamp())) # update access and modified time
         logger.info(f"File {dst_file.as_posix()} already exists, skipping download")
         return True
 
