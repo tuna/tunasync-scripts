@@ -111,7 +111,8 @@ def handle_pkg(
 
     for ver in resp["versions"]:
         logger.debug(f'Checking {pkg_name}=={ver["version"]}')
-        del ver["advisoriesUpdated"] # not supported
+        if "advisoriesUpdated" in ver:
+            del ver["advisoriesUpdated"] # not supported
         if ver.get("retracted", False):
             logger.info(f'Skipping retracted version {pkg_name}=={ver["version"]}')
             dst_file = working_dir / "packages" / pkg_name / "versions" / f'{ver["version"]}.tar.gz'
