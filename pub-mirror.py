@@ -239,7 +239,15 @@ def main():
         if not (pkgs_url := resp["nextUrl"]):
             break
 
+    # wait for all packages to be handled
+    for f in concurrent.futures.as_completed(pkg_futures):
+        try:
+            f.result()
+        except Exception as e:
+            logger.error(f"Error handling package: {e}")
+
     pkg_executor.shutdown(wait=True)
+    download_executor.shutdown(wait=True)
 
     if clean:
         # clean up obsolete packages
