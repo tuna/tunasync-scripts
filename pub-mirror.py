@@ -22,7 +22,7 @@ logger.addHandler(handler)
 
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://pub.dev")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
-MIRROR_URL = os.getenv("MIRROR_URL", "https://mirrors.tuna.tsinghua.edu.cn/dart-pub")
+MIRROR_URL = os.getenv("MIRROR_BASE_URL", "https://mirrors.tuna.tsinghua.edu.cn/dart-pub")
 REPOS = []
 
 
