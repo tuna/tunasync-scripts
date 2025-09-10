@@ -317,7 +317,7 @@ def main():
                     local_pkgs.add(pkg_name)
 
         pkgs_to_clean = local_pkgs - remote_pkgs
-        logging.info(f"{len(pkgs_to_clean)} packages not in upstream: {pkgs_to_clean}")
+        logger.info(f"{len(pkgs_to_clean)} packages not in upstream: {pkgs_to_clean}")
         for pkg_name in pkgs_to_clean:
             logger.info(f"Removing obsolete package dir {pkg_name}")
             p = pkgs_dir / pkg_name
