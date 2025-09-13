@@ -292,14 +292,13 @@ def main():
             old_file.unlink()
 
         for local_dir in working_dir.glob("*/*/*"):
+            # remove empty dirs only
             if local_dir.is_dir():
                 try:
-                    # remove empty dirs only
                     local_dir.rmdir()
-                except Exception as e:
-                    logger.warning(
-                        f"Failed to remove directory {local_dir}: {e}", exc_info=True
-                    )
+                    logger.info(f"Removing empty directory {local_dir}")
+                except Exception:
+                    pass
 
     logger.info(f"Total size is {sizeof_fmt(total_size, suffix='')}")
     if not all_success:
