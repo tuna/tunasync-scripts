@@ -143,6 +143,7 @@ def main():
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
                 # tarball has no size information, use -1 to skip size check
+                logger.info(f"queueing download of {url} to {dst_file.relative_to(working_dir)}")
                 futures.append(
                     executor.submit(
                         download_file, url, dst_file, working_dir, updated, -1
@@ -177,6 +178,7 @@ def main():
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
 
+            logger.info(f"queueing download of {url} to {dst_file.relative_to(working_dir)}")
             futures.append(
                 executor.submit(
                     download_file, url, dst_file, working_dir, updated, remote_size
@@ -187,14 +189,16 @@ def main():
 
     def download_file(
         url: str, dst_file: Path, working_dir: Path, updated: float, remote_size: int
-    ) -> None:
-        logger.info(f"downloading {url} to {dst_file.relative_to(working_dir)}")
+    ) -> bool:
+        logger.info(f"downloading {url} to {dst_file.relative_to(working_dir)} ({remote_size} bytes)")
         try:
             do_download(url, dst_file, updated, remote_size)
+            return True
         except Exception as e:
-            logger.error(f"Failed to download {url}: {e}", exc_info=True)
+            logger.error(f"Failed to download {url}: {e}")
             if dst_file.is_file():
                 dst_file.unlink()
+            return False
 
     def link_latest(name: str, repo_dir: Path) -> None:
         try:
@@ -241,8 +245,7 @@ def main():
             releases = r.json()
         except Exception as e:
             logger.error(
-                f"Cannot download metadata for {repo}: {e}\n{traceback.format_exc()}",
-                exc_info=True,
+                f"Cannot download metadata for {repo}: {e}",
             )
             break
 
@@ -271,8 +274,9 @@ def main():
         cleaning = True
 
     # 等待所有下载任务完成
-    concurrent.futures.wait(futures)
+    results, _ = concurrent.futures.wait(futures)
     executor.shutdown()
+    all_success = all([r.result() for r in results])
 
     # XXX: this does not work because `cleaning` is always False when `REPO`` is not empty
     if cleaning:
@@ -296,8 +300,10 @@ def main():
                         f"Failed to remove directory {local_dir}: {e}", exc_info=True
                     )
 
-        logger.info(f"Total size is {sizeof_fmt(total_size, suffix='')}")
-
+    logger.info(f"Total size is {sizeof_fmt(total_size, suffix='')}")
+    if not all_success:
+        logger.error("Some files failed to download")
+        exit(1)
 
 if __name__ == "__main__":
     main()
