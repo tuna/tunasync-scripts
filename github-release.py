@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
+import json
+import logging
 import os
-import sys
+import queue
+import tempfile
 import threading
 import traceback
-import queue
-from pathlib import Path
 from datetime import datetime
-import tempfile
-import json
+from pathlib import Path
 
 import requests
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter(
+    "%(asctime)s.%(msecs)03d - %(filename)s:%(lineno)d [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 BASE_URL = os.getenv("TUNASYNC_UPSTREAM_URL", "https://api.github.com/repos/")
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
@@ -79,11 +88,11 @@ def downloading_worker(q):
 
         url, dst_file, working_dir, updated, remote_size = item
 
-        print("downloading", url, "to", dst_file.relative_to(working_dir), flush=True)
+        logger.info(f"downloading {url} to {dst_file.relative_to(working_dir)}")
         try:
             do_download(url, dst_file, updated, remote_size)
-        except Exception:
-            print("Failed to download", url, flush=True)
+        except Exception as e:
+            logger.error(f"Failed to download {url}: {e}", exc_info=True)
             if dst_file.is_file():
                 dst_file.unlink()
 
@@ -148,7 +157,7 @@ def main():
             remote_filelist.append(dst_file.relative_to(working_dir))
 
             if dst_file.is_file():
-                print("skipping", dst_file.relative_to(working_dir), flush=True)
+                logger.info(f"skipping {dst_file.relative_to(working_dir)}")
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
                 # tarball has no size information, use -1 to skip size check
@@ -166,22 +175,18 @@ def main():
 
             if dst_file.is_file():
                 if args.fast_skip:
-                    print(
-                        "fast skipping", dst_file.relative_to(working_dir), flush=True
-                    )
+                    logger.info(f"fast skipping {dst_file.relative_to(working_dir)}")
                     continue
                 else:
                     stat = dst_file.stat()
                     local_filesize = stat.st_size
                     local_mtime = stat.st_mtime
-                    # print(f"{local_filesize} vs {asset['size']}")
-                    # print(f"{local_mtime} vs {updated}")
                     if (
                         local_mtime > updated
                         or remote_size == local_filesize
                         and local_mtime == updated
                     ):
-                        print("skipping", dst_file.relative_to(working_dir), flush=True)
+                        logger.info(f"skipping {dst_file.relative_to(working_dir)}")
                         continue
             else:
                 dst_file.parent.mkdir(parents=True, exist_ok=True)
@@ -220,7 +225,7 @@ def main():
                 perpage = cfg["per_page"]
 
         repo_dir = working_dir / Path(repo)
-        print(f"syncing {repo} to {repo_dir}")
+        logger.info(f"syncing {repo} to {repo_dir}")
 
         try:
             if perpage > 0:
@@ -229,9 +234,10 @@ def main():
                 r = github_get(f"{args.base_url}{repo}/releases")
             r.raise_for_status()
             releases = r.json()
-        except:
-            print(
-                f"Error: cannot download metadata for {repo}:\n{traceback.format_exc()}"
+        except Exception as e:
+            logger.error(
+                f"Error: cannot download metadata for {repo}: {e}\n{traceback.format_exc()}",
+                exc_info=True,
             )
             break
 
@@ -240,7 +246,7 @@ def main():
             if not release["draft"] and (prerelease or not release["prerelease"]):
                 name = ensure_safe_name(release["name"] or release["tag_name"])
                 if len(name) == 0:
-                    print("Error: Unnamed release")
+                    logger.error("Error: Unnamed release")
                     continue
                 download(release, (repo_dir if flat else repo_dir / name), tarball)
                 if n_downloaded == 0 and not flat:
@@ -250,7 +256,7 @@ def main():
                 if versions > 0 and n_downloaded >= versions:
                     break
         if n_downloaded == 0:
-            print(f"Error: No release version found for {repo}")
+            logger.error(f"Error: No release version found for {repo}")
             continue
     else:
         cleaning = True
@@ -269,7 +275,7 @@ def main():
                 local_filelist.append(local_file.relative_to(working_dir))
 
         for old_file in set(local_filelist) - set(remote_filelist):
-            print("deleting", old_file, flush=True)
+            logger.info(f"deleting {old_file}")
             old_file = working_dir / old_file
             old_file.unlink()
 
@@ -278,10 +284,12 @@ def main():
                 try:
                     # remove empty dirs only
                     local_dir.rmdir()
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to remove directory {local_dir}: {e}", exc_info=True
+                    )
 
-        print("Total size is", sizeof_fmt(total_size, suffix=""))
+        logger.info(f"Total size is {sizeof_fmt(total_size, suffix='')}")
 
 
 if __name__ == "__main__":
