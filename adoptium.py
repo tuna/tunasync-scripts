@@ -118,10 +118,20 @@ if __name__ == "__main__":
     sp.run([str(here/"yum-sync.py"),
         BASE_URL+'/rpm/rhel/@{os_ver}/@{arch}',
         "--download-repodata",
-        '9',
+        '9,10',
         'Adoptium',
         'x86_64,aarch64',
         "rhel@{os_ver}-@{arch}",
+        f"{BASE_PATH}/rpm"
+        ],
+        check=True)
+    sp.run([str(here/"yum-sync.py"),
+        BASE_URL+'/rpm/fedora/@{os_ver}/@{arch}',
+        "--download-repodata",
+        '42',
+        'Adoptium',
+        'x86_64,aarch64',
+        "fedora@{os_ver}-@{arch}",
         f"{BASE_PATH}/rpm"
         ],
         check=True)
