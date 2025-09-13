@@ -19,7 +19,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 components=$(printf ",%s" "${MONGO_VERSIONS[@]}")
 components=${components:1}
-"$yum_sync" "${BASE_URL}/yum/redhat/@{os_ver}/mongodb-org/@{comp}/@{arch}/" 9 "$components" x86_64 "el@{os_ver}-@{comp}" "$YUM_PATH"
+"$yum_sync" "${BASE_URL}/yum/redhat/@{os_ver}/mongodb-org/@{comp}/@{arch}/" @rhel-current "$components" x86_64 "el@{os_ver}-@{comp}" "$YUM_PATH"
 pushd "${YUM_PATH}"
 for stable in el*-${STABLE_VERSION}; do
 	# e.g. "el8" -> "el8-4.2"

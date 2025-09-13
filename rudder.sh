@@ -16,7 +16,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 components=$(printf ",%s" "${RUDDER_VERS[@]}")
 components=${components:1}
-"$yum_sync" "${UPSTREAM}/rpm/@{comp}/RHEL_@{os_ver}/" 9,10 $components x86_64 "rudder@{comp}-RHEL_@{os_ver}" "$YUM_PATH"
+"$yum_sync" "${UPSTREAM}/rpm/@{comp}/RHEL_@{os_ver}/" @rhel-current $components x86_64 "rudder@{comp}-RHEL_@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
 
 for ver in ${RUDDER_VERS[@]}; do

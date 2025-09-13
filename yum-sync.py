@@ -10,6 +10,7 @@ import shutil
 import sqlite3
 import traceback
 import time
+import re
 from email.utils import parsedate_to_datetime
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -20,6 +21,26 @@ REPO_SIZE_FILE = os.getenv("REPO_SIZE_FILE", "")
 DOWNLOAD_TIMEOUT = int(os.getenv("DOWNLOAD_TIMEOUT", "1800"))
 REPO_STAT = {}
 
+
+OS_TEMPLATE = {
+    "rhel-current": ["9", "10"],
+    "fedora-current": ["41", "42"],
+}
+
+pattern_os_template = re.compile(r"@\{(.+)\}")
+
+def replace_os_template(os_list: List[str]) -> List[str]:
+    ret = []
+    for i in os_list:
+        matched = pattern_os_template.search(i)
+        if matched:
+            for os in OS_TEMPLATE[matched.group(1)]:
+                ret.append(pattern_os_template.sub(os, i))
+        elif i.startswith("@"):
+            ret.extend(OS_TEMPLATE[i[1:]])
+        else:
+            ret.append(i)
+    return ret
 
 def calc_repo_size(path: Path):
     dbfiles = path.glob("repodata/*primary.*")
@@ -175,7 +196,9 @@ def main():
     args = parser.parse_args()
 
     os_list = []
-    for os_version in args.os_version.split(","):
+    raw_os_list = args.os_version.split(",")
+    raw_os_list = replace_os_template(raw_os_list)
+    for os_version in raw_os_list.split(","):
         if "-" in os_version and "-stream" not in os_version:
             dash = os_version.index("-")
             os_list = os_list + [

@@ -19,7 +19,7 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # === download rhel packages ====
 
-"$yum_sync" "${BASE_URL}/rpm/el/@{os_ver}/@{arch}" 9 VirtualBox x86_64 "el@{os_ver}" "$YUM_PATH"
+"$yum_sync" "${BASE_URL}/rpm/el/@{os_ver}/@{arch}" @rhel-current VirtualBox x86_64 "el@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
 
 # === download deb packages ====
