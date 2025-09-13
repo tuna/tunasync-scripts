@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import tempfile
-import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -45,6 +44,7 @@ def github_get(*args, **kwargs) -> requests.Response:
         headers["Authorization"] = "token {}".format(os.environ["GITHUB_TOKEN"])
     headers["User-Agent"] = UA
     kwargs["headers"] = headers
+    kwargs["timeout"] = TIMEOUT_OPTION
     return requests.get(*args, **kwargs)
 
 
@@ -63,7 +63,8 @@ def do_download(
                 delete=False,
             ) as f:
                 tmp_dst_file = Path(f.name)
-                for chunk in r.iter_content(chunk_size=1024**2):
+                # download in 1MB chunks
+                for chunk in r.iter_content(chunk_size=1 << 20):
                     if chunk:  # filter out keep-alive new chunks
                         f.write(chunk)
                         # f.flush()
