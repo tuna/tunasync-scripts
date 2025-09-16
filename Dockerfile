@@ -15,8 +15,12 @@ RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
     fi
 
 # RUN pip3 install --upgrade pip
-# needs unpublished version of apitools, see: https://github.com/GoogleCloudPlatform/gsutil/issues/1819
-RUN python3 -m pip install gsutil https://github.com/google/apitools/archive/refs/tags/v0.5.35.zip --break-system-packages
+RUN python3 -m pip install \
+    # for flutter, needs unpublished version of apitools, see: https://github.com/GoogleCloudPlatform/gsutil/issues/1819
+    gsutil https://github.com/google/apitools/archive/refs/tags/v0.5.35.zip \
+    # for shadowmire
+    requests tqdm click \
+    --break-system-packages
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && apt-get install -y locales -qq && locale-gen
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 HOME=/tmp

@@ -1,3 +1,5 @@
+# RETIRED: use tunasync-scripts image and pub-mirror.py instead
+
 FROM debian:stable AS dart-build
 
 ARG DART_VERSION="2.12.4"

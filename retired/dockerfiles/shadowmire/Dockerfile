@@ -1,3 +1,5 @@
+# RETIRED: merged into tunasync-scripts image
+
 ARG PY_VERSION=3.13
 
 FROM python:${PY_VERSION}-alpine
