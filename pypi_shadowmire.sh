@@ -1,8 +1,11 @@
 #!/bin/bash
 
 set -e
+set -o pipefail
 
-SHADOWMIRE=${SHADOWMIRE:-"/home/scripts/shadowmire.py"}
+_here=`dirname $(realpath $0)`
+
+SHADOWMIRE=${SHADOWMIRE:-"${_here}/shadowmire.py"}
 PYPI_MASTER="https://pypi.org"
 
 TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-$PYPI_MASTER}
