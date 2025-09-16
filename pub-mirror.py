@@ -31,6 +31,8 @@ MIRROR_URL = os.getenv(
 REPOS = []
 UA = "tuna-pub-mirror/0.0 (+https://github.com/tuna/tunasync-scripts)"
 
+# connect and read timeout value
+TIMEOUT_OPTION = (7, 10)
 
 # wrap around requests.get to use token if available
 def get_with_token(*args, **kwargs):
@@ -39,6 +41,7 @@ def get_with_token(*args, **kwargs):
         headers["Authorization"] = "Bearer {}".format(os.environ["PUB_TOKEN"])
     headers["User-Agent"] = UA
     kwargs["headers"] = headers
+    kwargs["timeout"] = TIMEOUT_OPTION
     return requests.get(*args, **kwargs)
 
 
