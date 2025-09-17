@@ -195,10 +195,9 @@ def main():
     )
     args = parser.parse_args()
 
-    os_list = []
     raw_os_list = args.os_version.split(",")
-    raw_os_list = replace_os_template(raw_os_list)
-    for os_version in raw_os_list.split(","):
+    os_list = replace_os_template(raw_os_list)
+    for os_version in os_list:
         if "-" in os_version and "-stream" not in os_version:
             dash = os_version.index("-")
             os_list = os_list + [
