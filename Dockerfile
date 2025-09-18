@@ -5,7 +5,7 @@ RUN apt-get update && \
         apt-get install --no-install-recommends -y \
         wget curl rsync lftp git jq \
         python3-dev python3-pip python3-pyquery python3-socks python3-requests python3-yaml awscli \
-        dnf-plugins-core createrepo-c rpm debmirror \
+        dnf-plugins-core createrepo-c yum debmirror \
         libnss-unknown xz-utils patch unzip \
         aria2 ack openssh-client
         # composer php-curl php-zip
