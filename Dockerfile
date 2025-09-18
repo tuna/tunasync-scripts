@@ -44,3 +44,6 @@ RUN sed -i 's:^#!/usr/bin/env python$:#!/usr/bin/env python3:' /usr/local/bin/ao
 
 # install ed for debmirror
 RUN apt-get install --no-install-recommends -y ed
+
+# set rpm db path back to HOME (revert the change since trixie)
+RUN mkdir -p /etc/rpm && echo "%_dbpath		%(bash -c 'echo ~/.rpmdb')" > /etc/rpm/macros
