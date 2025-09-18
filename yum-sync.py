@@ -1,21 +1,32 @@
 #!/usr/bin/env python3
-import traceback
-import os
-import subprocess as sp
-import tempfile
 import argparse
 import bz2
 import gzip
+import logging
+import os
+import re
 import shutil
 import sqlite3
-import traceback
+import subprocess as sp
+import tempfile
 import time
-import re
-from email.utils import parsedate_to_datetime
+import traceback
 import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
+
 import requests
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter(
+    "%(asctime)s.%(msecs)03d - %(filename)s:%(lineno)d [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 REPO_SIZE_FILE = os.getenv("REPO_SIZE_FILE", "")
 DOWNLOAD_TIMEOUT = int(os.getenv("DOWNLOAD_TIMEOUT", "1800"))
@@ -59,7 +70,7 @@ def calc_repo_size(path: Path):
             elif suffixes[-1] in (".sqlite", ".xml"):
                 dec = lambda x: x
         if dec is None:
-            print(f"Failed to read from {path}: {list(dbfiles)}", flush=True)
+            logger.error(f"Failed to read from {path}: {list(dbfiles)}")
             return
         with db.open("rb") as f:
             tmp.write(dec(f.read()))
@@ -86,11 +97,11 @@ def calc_repo_size(path: Path):
                 traceback.print_exc()
                 return
         else:
-            print(f"Unknown suffix {suffixes}")
+            logger.error(f"Unknown suffix {suffixes}")
             return
 
-        print(f"Repository {path}:")
-        print(f"  {cnt} packages, {size} bytes in total", flush=True)
+        logger.info(f"Repository {path}:")
+        logger.info(f"  {cnt} packages, {size} bytes in total")
 
         global REPO_STAT
         REPO_STAT[str(path)] = (size, cnt) if cnt > 0 else (0, 0)  # size can be None
@@ -120,7 +131,7 @@ def check_and_download(url: str, dst_file: Path) -> int:
                 os.utime(dst_file, (remote_ts, remote_ts))
         return 0
     except BaseException as e:
-        print(e, flush=True)
+        logger.error(f"Error occurred: {e}")
         if dst_file.is_file():
             dst_file.unlink()
     return 1
@@ -132,7 +143,7 @@ def download_repodata(url: str, path: Path) -> int:
     oldfiles = set(path.glob("*.*"))
     newfiles = set()
     if check_and_download(url + "/repodata/repomd.xml", path / ".repomd.xml") != 0:
-        print(f"Failed to download the repomd.xml of {url}")
+        logger.error(f"Failed to download the repomd.xml of {url}")
         return 1
     try:
         tree = ET.parse(path / ".repomd.xml")
@@ -146,7 +157,7 @@ def download_repodata(url: str, path: Path) -> int:
             fn = path / href[9:]
             newfiles.add(fn)
             if check_and_download(url + "/" + href, fn) != 0:
-                print(f"Failed to download the {href}")
+                logger.error(f"Failed to download the {href}")
                 return 1
     except BaseException as e:
         traceback.print_exc()
@@ -155,7 +166,7 @@ def download_repodata(url: str, path: Path) -> int:
     (path / ".repomd.xml").rename(path / "repomd.xml")  # update the repomd.xml
     newfiles.add(path / "repomd.xml")
     for i in oldfiles - newfiles:
-        print(f"Deleting old files: {i}")
+        logger.info(f"Deleting old files: {i}")
         i.unlink()
 
 
@@ -213,6 +224,8 @@ def main():
     arch_list = args.arch.split(",")
     check_args("arch", arch_list)
 
+    logger.info(f"Configuration: {os_list=}, {component_list=}, {arch_list=}")
+
     failed = []
     args.working_dir.mkdir(parents=True, exist_ok=True)
     cache_dir = tempfile.mkdtemp()
@@ -236,7 +249,7 @@ def main():
                     if r.status_code < 400 or r.status_code == 403:
                         yield (name, url)
                     else:
-                        print(probe_url, "->", r.status_code)
+                        logger.warning(f"{probe_url} -> {r.status_code}")
                 except:
                     traceback.print_exc()
 
@@ -268,7 +281,7 @@ enabled=1
         # sp.run(["ls", "-la", cache_dir])
 
         if len(dest_dirs) == 0:
-            print("Nothing to sync", flush=True)
+            logger.info("Nothing to sync")
             failed.append(("", arch))
             continue
 
@@ -283,7 +296,7 @@ enabled=1
         ]
         if args.pass_arch_to_reposync:
             cmd_args += ["--arch", arch]
-        print(f"Launching dnf reposync with command: {cmd_args}", flush=True)
+        logger.info(f"Launching dnf reposync with command: {cmd_args}")
         ret = sp.run(cmd_args)
         if ret.returncode != 0:
             failed.append((name, arch))
@@ -305,12 +318,12 @@ enabled=1
                     str(path),
                     str(path),
                 ]
-                print(f"Launching createrepo with command: {cmd_args}", flush=True)
+                logger.info(f"Launching createrepo with command: {cmd_args}")
                 ret = sp.run(cmd_args)
             calc_repo_size(path)
 
     if len(failed) > 0:
-        print(f"Failed YUM repos: {failed}", flush=True)
+        logger.error(f"Failed YUM repos: {failed}")
     else:
         if len(REPO_SIZE_FILE) > 0:
             with open(REPO_SIZE_FILE, "a") as fd:
