@@ -15,7 +15,7 @@ YUM_PATH="${BASE_PATH}/yum"
 export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 # CERN keeps only maintained versions of CVMFS
-ubuntu_os=(noble jammy focal)
+ubuntu_os=(noble jammy)
 debian_os=(trixie bookworm bullseye)
 deb_suffixes=(prod)
 declare -a debian_dists=()
