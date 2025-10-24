@@ -23,7 +23,7 @@ function get_codenames() {
     echo $codenames
 }
 
-for os in "jammy" "noble" "bullseye" "bookworm" "trixie"; do
+for os in "jammy" "noble" "plucky" "bullseye" "bookworm" "trixie"; do
     codenames=$(get_codenames $os)
     "$apt_sync" --delete "$BASE_URL/$os" "$codenames" main amd64,arm64 "$BASE_PATH/$os"
 done
