@@ -36,6 +36,9 @@ logger = logging.getLogger("shadowmire")
 
 
 USER_AGENT = "Shadowmire (https://github.com/taoky/shadowmire)"
+LOCAL_DB_NAME = "local.db"
+LOCAL_JSON_NAME = "local.json"
+LOCAL_DB_SERIAL_NAME = "local.db.serial"
 
 # Note that it's suggested to use only 3 workers for PyPI.
 WORKERS = int(os.environ.get("SHADOWMIRE_WORKERS", "3"))
@@ -450,6 +453,7 @@ class PyPI:
             "files": [],
             "meta": {
                 "api-version": "1.1",
+                # not required by PEP691, but bandersnatch has it
                 "_last-serial": str(package_meta["last_serial"]),
             },
             "name": package_meta["info"]["name"],
@@ -486,6 +490,7 @@ ShadowmirePackageItem = tuple[str, int]
 class Plan:
     remove: list[str]
     update: list[str]
+    remote_last_serial: int
 
 
 def match_patterns(
@@ -535,15 +540,15 @@ class SyncBase:
         """
         local should NOT skip invalid (-1) serials
         """
-        remote = self.fetch_remote_versions()
-        remote = self.filter_remote_with_excludes(remote, excludes)
+        remote_sn, remote_pkgs = self.fetch_remote_versions()
+        remote_pkgs = self.filter_remote_with_excludes(remote_pkgs, excludes)
         with open(self.basedir / "remote_excluded.json", "w") as f:
-            json.dump(remote, f)
+            json.dump(remote_pkgs, f)
 
         to_remove = []
         to_update = []
         local_keys = set(local.keys())
-        remote_keys = set(remote.keys())
+        remote_keys = set(remote_pkgs.keys())
         for i in local_keys - remote_keys:
             to_remove.append(i)
             local_keys.remove(i)
@@ -566,17 +571,21 @@ class SyncBase:
             to_update.append(i)
         for i in local_keys:
             local_serial = local[i]
-            remote_serial = remote[i]
+            remote_serial = remote_pkgs[i]
             if local_serial != remote_serial:
                 if local_serial == -1:
                     logger.info("skip %s, as it's marked as not exist at upstream", i)
                     to_remove.append(i)
                 else:
                     to_update.append(i)
-        output = Plan(remove=to_remove, update=to_update)
+        output = Plan(remove=to_remove, update=to_update, remote_last_serial=remote_sn)
         return output
 
-    def fetch_remote_versions(self) -> dict[str, int]:
+    def fetch_remote_versions(self) -> tuple[int, dict[str, int]]:
+        # returns (last_serial, {package_name: serial, ...})
+        raise NotImplementedError
+
+    def get_package_metadata(self, package_name: str) -> dict:
         raise NotImplementedError
 
     def check_and_update(
@@ -623,7 +632,9 @@ class SyncBase:
             try:
                 with open(json_meta_path, "r") as f:
                     meta = json.load(f)
-                meta_filters(meta, package_name, prerelease_excludes, excluded_wheel_filenames)
+                meta_filters(
+                    meta, package_name, prerelease_excludes, excluded_wheel_filenames
+                )
                 release_files = PyPI.get_release_files_from_meta(meta)
                 hrefs_from_meta = {
                     PyPI.file_url_to_local_url(i["url"]) for i in release_files
@@ -811,12 +822,12 @@ class SyncBase:
                 index_html_path.unlink()
             index_html_path.symlink_to("index.v1_html")
 
-    def finalize(self) -> None:
+    def finalize(self, index_serial: int) -> None:
         local_names = self.local_db.keys()
-        # generate index.html at basedir
-        index_path = self.basedir / "simple" / "index.html"
+        # generate v1_html index
+        v1_html_index_path = self.basedir / "simple" / "index.v1_html"
         # modified from bandersnatch
-        with overwrite(index_path) as f:
+        with overwrite(v1_html_index_path) as f:
             f.write("<!DOCTYPE html>\n")
             f.write("<html>\n")
             f.write("  <head>\n")
@@ -830,6 +841,25 @@ class SyncBase:
                 # We're really trusty that this is all encoded in UTF-8. :/
                 f.write(f'    <a href="{pkg}/">{pkg}</a><br/>\n')
             f.write("  </body>\n</html>")
+        # always link index.html to index.v1_html
+        html_simple_path = self.basedir / "simple" / "index.html"
+        if not html_simple_path.is_symlink():
+            html_simple_path.unlink(missing_ok=True)
+            html_simple_path.symlink_to("index.v1_html")
+
+        # generate v1_json index and local.db{,.serial} for downstream use
+        v1_json_index_path = self.basedir / "simple" / "index.v1_json"
+        with overwrite(v1_json_index_path) as f:
+            index_json: dict[str, Any] = {
+                "meta": {
+                    "api-version": "1.1",
+                    "_last-serial": index_serial,
+                },
+                "projects": [{"name": n} for n in sorted(local_names)],
+            }
+            json.dump(index_json, f)
+        with overwrite(self.basedir / LOCAL_DB_SERIAL_NAME) as f:
+            f.write(str(index_serial))
         self.local_db.dump_json()
 
     def skip_this_package(self, i: dict, dest: Path) -> bool:
@@ -933,14 +963,17 @@ class SyncPyPI(SyncBase):
         self.remote_packages: Optional[dict[str, int]] = None
         super().__init__(basedir, local_db, sync_packages)
 
-    def fetch_remote_versions(self) -> dict[str, int]:
+    def fetch_remote_versions(self) -> tuple[int, dict[str, int]]:
         self.last_serial = self.pypi.changelog_last_serial()
         self.remote_packages = self.pypi.list_packages_with_serial()
         logger.info("Remote has %s packages", len(self.remote_packages))
         with overwrite(self.basedir / "remote.json") as f:
             json.dump(self.remote_packages, f)
             logger.info("File saved to remote.json.")
-        return self.remote_packages
+        return self.last_serial, self.remote_packages
+
+    def get_package_metadata(self, package_name: str) -> dict:
+        return self.pypi.get_package_metadata(package_name)
 
     def do_update(
         self,
@@ -953,7 +986,7 @@ class SyncPyPI(SyncBase):
         package_simple_path = self.simple_dir / package_name
         package_simple_path.mkdir(exist_ok=True)
         try:
-            meta = self.pypi.get_package_metadata(package_name)
+            meta = self.get_package_metadata(package_name)
             meta_original = deepcopy(meta)
             logger.debug("%s meta: %s", package_name, meta)
         except PackageNotFoundError:
@@ -999,9 +1032,7 @@ class SyncPyPI(SyncBase):
             existing_hrefs = [] if existing_hrefs is None else existing_hrefs
             release_files = PyPI.get_release_files_from_meta(meta)
             # remove packages that no longer exist remotely
-            remote_hrefs = [
-                PyPI.file_url_to_local_url(i["url"]) for i in release_files
-            ]
+            remote_hrefs = [PyPI.file_url_to_local_url(i["url"]) for i in release_files]
             should_remove = list(set(existing_hrefs) - set(remote_hrefs))
             for href in should_remove:
                 p = unquote(href)
@@ -1060,20 +1091,49 @@ class SyncPlainHTTP(SyncBase):
             self.pypi = None
         super().__init__(basedir, local_db, sync_packages)
 
-    def fetch_remote_versions(self) -> dict[str, int]:
-        remote: dict[str, int]
+    def fetch_remote_versions(self) -> tuple[int, dict[str, int]]:
+        remote_pkgs: dict[str, int]
         if not self.pypi:
-            remote_url = urljoin(self.upstream, "local.json")
-            resp = self.session.get(remote_url)
+            remote_pkg_db_url = urljoin(self.upstream, LOCAL_JSON_NAME)
+            resp = self.session.get(remote_pkg_db_url)
             resp.raise_for_status()
-            remote = resp.json()
+            remote_pkgs = resp.json()
+            # first fallback to max serial in remote_pkgs
+            serial = max(remote_pkgs.values()) if remote_pkgs else -1
+            # then try to get last serial from remote
+            remote_last_serial_url = urljoin(self.upstream, LOCAL_DB_SERIAL_NAME)
+            try:
+                resp = self.session.get(remote_last_serial_url)
+                resp.raise_for_status()
+                serial = int(resp.text.strip())
+            except (requests.RequestException, ValueError):
+                logger.warning(
+                    f"cannot get last_serial from upstream, fallback to max package serial in {LOCAL_JSON_NAME}",
+                    exc_info=True,
+                )
         else:
-            remote = self.pypi.list_packages_with_serial()
-        logger.info("Remote has %s packages", len(remote))
+            serial = self.pypi.changelog_last_serial()
+            remote_pkgs = self.pypi.list_packages_with_serial()
+        logger.info("Remote has %s packages", len(remote_pkgs))
         with overwrite(self.basedir / "remote.json") as f:
-            json.dump(remote, f)
+            json.dump(remote_pkgs, f)
             logger.info("File saved to remote.json.")
-        return remote
+        return serial, remote_pkgs
+
+    def get_package_metadata(self, package_name: str) -> dict:
+        file_url = urljoin(self.upstream, f"json/{package_name}")
+        success, resp = download(
+            self.session, file_url, self.jsonmeta_dir / (package_name + ".new")
+        )
+        if not success:
+            logger.error(
+                "download %s JSON meta fails with code %s",
+                package_name,
+                resp.status_code if resp else None,
+            )
+            raise PackageNotFoundError
+        assert resp
+        return resp.json()
 
     def do_update(
         self,
@@ -1089,19 +1149,10 @@ class SyncPlainHTTP(SyncBase):
             hrefs = get_existing_hrefs(package_simple_path)
             existing_hrefs = [] if hrefs is None else hrefs
         # Download JSON meta
-        file_url = urljoin(self.upstream, f"json/{package_name}")
-        success, resp = download(
-            self.session, file_url, self.jsonmeta_dir / (package_name + ".new")
-        )
-        if not success:
-            logger.error(
-                "download %s JSON meta fails with code %s",
-                package_name,
-                resp.status_code if resp else None,
-            )
+        try:
+            meta = self.get_package_metadata(package_name)
+        except PackageNotFoundError:
             return None
-        assert resp
-        meta = resp.json()
         # filter prerelease and wheel files, if necessary
         meta_filters(meta, package_name, prerelease_excludes, excluded_wheel_filenames)
 
@@ -1264,8 +1315,7 @@ def cli(ctx: click.Context, repo: str) -> None:
 
     # Make sure basedir is absolute
     basedir = Path(repo).resolve()
-    local_db = LocalVersionKV(basedir / "local.db", basedir / "local.json")
-
+    local_db = LocalVersionKV(basedir / LOCAL_DB_NAME, basedir / LOCAL_JSON_NAME)
     ctx.obj["basedir"] = basedir
     ctx.obj["local_db"] = local_db
 
@@ -1323,7 +1373,7 @@ def sync(
     with overwrite(basedir / "plan.json") as f:
         json.dump(plan, f, default=vars, indent=2)
     success = syncer.do_sync_plan(plan, prerelease_excludes, excluded_wheel_filenames)
-    syncer.finalize()
+    syncer.finalize(plan.remote_last_serial)
 
     logger.info("Synchronization finished. Success: %s", success)
 
@@ -1488,7 +1538,7 @@ def verify(
         packages_pathcache,
         compare_size,
     )
-    syncer.finalize()
+    syncer.finalize(plan.remote_last_serial)
 
     logger.info(
         "====== Step 5. Remove any unreferenced files in `packages` folder ======"
