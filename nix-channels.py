@@ -196,8 +196,8 @@ def clone_channels():
 
         # Examples:
         #
-        # Released on yyyy-mm-dd hh:mm UTC from Git commit ...
-        # Released on yyyy-mm-dd hh:mm from ...
+        # Released on yyyy-mm-dd hh:mm:ss UTC from Git commit ...
+        # Released on yyyy-mm-dd hh:mm:ss from ...
         tagline_res = re.match(r'^Released on (.+?) (?:UTC )?from', tagline)
 
         if tagline_res is None:
@@ -389,7 +389,7 @@ def garbage_collect():
 
         channel = release.name.split('@')[0]
         date_str = (release / '.released-time').read_text()
-        date_match = re.match(r'\d+-\d+-\d+ \d+:\d+', date_str)
+        date_match = re.match(r'\d+-\d+-\d+ \d+:\d+:\d+', date_str)
         assert date_match is not None, f'Release {release!r} has invalid time {date_str!r}'
         date_str = date_match[0]
         released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
