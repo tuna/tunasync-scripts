@@ -10,6 +10,8 @@ UPSTREAM=${TUNASYNC_UPSTREAM_URL:-"https://packages.gitlab.com/gitlab/gitlab-ce"
 
 BASE_PATH="${TUNASYNC_WORKING_DIR}"
 
+DEB_ARCHES=${DEB_ARCHES:-"amd64,i386,arm64"}
+
 YUM_PATH="${BASE_PATH}/yum"
 UBUNTU_PATH="${BASE_PATH}/ubuntu/"
 DEBIAN_PATH="${BASE_PATH}/debian/"
@@ -19,11 +21,11 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 echo "YUM finished"
 
 for i in jammy noble; do
-    "$apt_sync" --delete "${UPSTREAM}/ubuntu/$i" "$i" main amd64,i386,arm64 "$UBUNTU_PATH/$i"
+    "$apt_sync" --delete "${UPSTREAM}/ubuntu/$i" "$i" main "$DEB_ARCHES" "$UBUNTU_PATH/$i"
 done
 echo "Ubuntu finished"
 for i in bullseye bookworm trixie; do
-    "$apt_sync" --delete "${UPSTREAM}/debian/$i" "$i" main amd64,i386,arm64 "$DEBIAN_PATH/$i"
+    "$apt_sync" --delete "${UPSTREAM}/debian/$i" "$i" main "$DEB_ARCHES" "$DEBIAN_PATH/$i"
 done
 echo "Debian finished"
 
