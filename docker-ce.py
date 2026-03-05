@@ -4,6 +4,7 @@ import sys
 import threading
 import queue
 import traceback
+import hashlib
 from pathlib import Path
 from email.utils import parsedate_to_datetime
 import re
@@ -111,12 +112,14 @@ def requests_download(remote_url: str, dst_file: Path):
         r.raise_for_status()
         remote_ts = parsedate_to_datetime(
             r.headers['last-modified']).timestamp()
-        with open(dst_file, 'wb') as f:
+        tmpfile = dst_file.parent / ("." + dst_file.name + ".tmp")
+        with open(tmpfile, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024**2):
                 if chunk:  # filter out keep-alive new chunks
                     f.write(chunk)
                     # f.flush()
-        os.utime(dst_file, (remote_ts, remote_ts))
+        os.utime(tmpfile, (remote_ts, remote_ts))
+        tmpfile.rename(dst_file)
 
 
 def downloading_worker(q):
@@ -139,7 +142,17 @@ def downloading_worker(q):
                 if remote_filesize == local_filesize and remote_date.timestamp() == local_mtime:
                     print("skipping", dst_file.relative_to(working_dir), flush=True)
                     continue
-
+                else:
+                    print("diff", dst_file.relative_to(working_dir), "remote", remote_filesize, remote_date, "local", local_filesize, local_mtime, flush=True)
+                    if r.headers['etag'] and remote_filesize == local_filesize:
+                        remote_md5 = r.headers['etag'].strip('"')
+                        if re.match(r'^[a-fA-F0-9]{32}$', remote_md5):
+                            print("checking md5", dst_file.relative_to(working_dir), flush=True)
+                            local_md5 = hashlib.md5(dst_file.read_bytes()).hexdigest()
+                            if remote_md5.lower() == local_md5:
+                                print("skipping (md5 match)", dst_file.relative_to(working_dir), flush=True)
+                                os.utime(dst_file, (remote_date.timestamp(), remote_date.timestamp()))
+                                continue
                 dst_file.unlink()
             print("downloading", url, flush=True)
             requests_download(url, dst_file)
