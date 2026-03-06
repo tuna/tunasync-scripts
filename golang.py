@@ -37,10 +37,24 @@ class GoRelease:
         self.version = version
         self.sha256 = sha256
         self.kind = kind
+        # Optional per-release base URL; falls back to global BASE_URL if not set
+        self._base_url = None
+
+    @property
+    def base_url(self):
+        """
+        Base URL used to construct the download URL for this release.
+        If not explicitly set, falls back to the global BASE_URL.
+        """
+        return self._base_url or BASE_URL
+
+    @base_url.setter
+    def base_url(self, value):
+        self._base_url = value
     
     @property
     def download_url(self):
-        return f"{BASE_URL.rstrip('/')}/{self.filename}"
+        return f"{self.base_url.rstrip('/')}/{self.filename}"
     
     @property
     def relative_path(self):
