@@ -30,9 +30,9 @@ adapters.DEFAULT_RETRIES = 3
 
 class GoRelease:
     """Represents a single Go release file."""
-    def __init__(self, filename, os, arch, version, sha256, kind):
+    def __init__(self, filename, os_name, arch, version, sha256, kind):
         self.filename = filename
-        self.os = os
+        self.os = os_name
         self.arch = arch
         self.version = version
         self.sha256 = sha256
