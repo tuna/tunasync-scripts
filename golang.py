@@ -74,7 +74,7 @@ class RemoteSite:
     def _fetch_releases(self):
         """Fetch releases from the JSON API or HTML page."""
 
-        # self._fetch_from_json()
+        self._fetch_from_json()
         if self.sync_all:
             self._fetch_from_html()
 
@@ -97,7 +97,7 @@ class RemoteSite:
             for f in files:
                 go_release = GoRelease(
                     filename=f.get("filename", ""),
-                    os=f.get("os", ""),
+                    os_name=f.get("os", ""),
                     arch=f.get("arch", ""),
                     version=version,
                     sha256=f.get("sha256", ""),
@@ -158,7 +158,7 @@ class RemoteSite:
                 # Create the release object
                 go_release = GoRelease(
                     filename=filename,
-                    os=os_name,
+                    os_name=os_name,
                     arch=arch,
                     version=version,
                     sha256=sha256,
