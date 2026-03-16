@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
+import requests.utils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -234,41 +235,62 @@ def main():
         repo_dir = working_dir / Path(repo)
         logger.info(f"syncing {repo} to {repo_dir}")
 
-        try:
+        def release_generator():
+            url = ""
             if perpage > 0:
-                r = github_get(f"{args.base_url}{repo}/releases?per_page={perpage}")
+                url = f"{args.base_url}{repo}/releases?per_page={perpage}"
             else:
-                r = github_get(f"{args.base_url}{repo}/releases")
-            r.raise_for_status()
-            releases = r.json()
-        except Exception as e:
-            logger.error(
-                f"Cannot download metadata for {repo}: {e}",
-            )
-            break
+                url = f"{args.base_url}{repo}/releases"
+            while True:
+                try:
+                    r = github_get(url)
+                    r.raise_for_status()
+                    releases = r.json()
+                except Exception as e:
+                    logger.error(
+                        f"Failed to download metadata for {repo}: {e}",
+                    )
+                    raise
+
+                for release in releases:
+                    yield release
+
+                # check if there is a next page
+                if "Link" in r.headers:
+                    links = requests.utils.parse_header_links(r.headers["Link"])
+                    next_link = next((link for link in links if link["rel"] == "next"), None)
+                    if next_link:
+                        url = next_link["url"]
+                    else:
+                        break
+                else:
+                    break
 
         n_downloaded = 0
-        for release in releases:
-            if not release["draft"] and (prerelease or not release["prerelease"]):
-                name = ensure_safe_name(release["name"] or release["tag_name"])
-                if len(name) == 0:
-                    logger.error("Unnamed release")
-                    continue
-                total_size += process_release(
-                    release,
-                    (repo_dir if flat else repo_dir / name),
-                    tarball,
-                    exclude_regexes,
-                )
-                if n_downloaded == 0 and not flat:
-                    # create a symbolic link to the latest release folder
-                    link_latest(name, repo_dir)
-                n_downloaded += 1
-                if versions > 0 and n_downloaded >= versions:
-                    break
-        if n_downloaded == 0:
-            logger.error(f"No release version found for {repo}")
-            continue
+        try:
+            for release in release_generator():
+                if not release["draft"] and (prerelease or not release["prerelease"]):
+                    name = ensure_safe_name(release["name"] or release["tag_name"])
+                    if len(name) == 0:
+                        logger.error("Unnamed release")
+                        continue
+                    total_size += process_release(
+                        release,
+                        (repo_dir if flat else repo_dir / name),
+                        tarball,
+                        exclude_regexes,
+                    )
+                    if n_downloaded == 0 and not flat:
+                        # create a symbolic link to the latest release folder
+                        link_latest(name, repo_dir)
+                    n_downloaded += 1
+                    if versions > 0 and n_downloaded >= versions:
+                        break
+            if n_downloaded == 0:
+                logger.error(f"No release version found for {repo}")
+                continue
+        except Exception:
+            logger.exception(f"Failed to process releases for {repo}")
     else:
         cleaning = True
 
