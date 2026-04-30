@@ -44,7 +44,7 @@ if USE_ADDR_FAMILY != "":
     )
 
 OS_TEMPLATE = {
-    "ubuntu-lts": ["jammy", "noble"],
+    "ubuntu-lts": ["jammy", "noble", "resolute"],
     "debian-current": ["bullseye", "bookworm", "trixie"],
     "debian-latest2": ["bookworm", "trixie"],
     "debian-latest": ["trixie"],
