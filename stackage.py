@@ -17,7 +17,7 @@ class StackageSession(object):
     def __init__(self):
         self._base_path = pathlib.Path(os.environ['TUNASYNC_WORKING_DIR'])
 
-    def download(self, dir_, url, sha1=None, force=False):
+    def download(self, dir_, url, sha1=None, sha256=None, force=False):
         dir_path = self._base_path / dir_
         file_path = dir_path / url.split('/')[-1]
         if force and file_path.is_file():
@@ -32,6 +32,8 @@ class StackageSession(object):
             ]
             if sha1:
                 args.append('--checksum=sha-1={}'.format(sha1))
+            elif sha256:
+                args.append('--checksum=sha-256={}'.format(sha256))
             subprocess.run(args, check=True)
             shutil.move('{}.tmp'.format(file_path), file_path)
             print('Downloaded {} to {}'.format(url, file_path), flush=True)
@@ -45,10 +47,27 @@ class StackageSession(object):
         )
         for platform in d['ghc']:
             for ver in d['ghc'][platform]:
+                meta = d['ghc'][platform][ver]
+                checksum_algo = None
+                checksum_value = None
+                if 'sha1' in meta:
+                    checksum_algo = 'sha-1'
+                    checksum_value = meta['sha1']
+                elif 'sha256' in meta:
+                    checksum_algo = 'sha-256'
+                    checksum_value = meta['sha256']
+                else:
+                    print(
+                        'WARNING: no checksum for GHC {}/{} ({}), skipping'
+                        .format(platform, ver, meta.get('url', '?')),
+                        flush=True,
+                    )
+                    continue
                 self.download(
                     'ghc',
-                    d['ghc'][platform][ver]['url'],
-                    d['ghc'][platform][ver]['sha1'],
+                    meta['url'],
+                    sha1=checksum_value if checksum_algo == 'sha-1' else None,
+                    sha256=checksum_value if checksum_algo == 'sha-256' else None,
                 )
                 d['ghc'][platform][ver]['url'] = (
                     '{}/ghc/{}'
