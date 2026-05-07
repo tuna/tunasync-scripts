@@ -19,7 +19,7 @@ WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 SYNC_USER_AGENT = os.getenv("SYNC_USER_AGENT", "Docker-ce Syncing Tool (https://github.com/tuna/tunasync-scripts)/1.0")
 
 # connect and read timeout value
-TIMEOUT_OPTION = (7, 10)
+TIMEOUT_OPTION = (30, 60)
 # user agent
 requests.utils.default_user_agent = lambda: SYNC_USER_AGENT
 # retries
