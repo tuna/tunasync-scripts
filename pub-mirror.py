@@ -32,7 +32,7 @@ REPOS = []
 UA = "tuna-pub-mirror/0.0 (+https://github.com/tuna/tunasync-scripts)"
 
 # connect and read timeout value
-TIMEOUT_OPTION = (7, 10)
+TIMEOUT_OPTION = (30, 60)
 
 # wrap around requests.get to use token if available
 def get_with_token(*args, **kwargs):

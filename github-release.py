@@ -28,7 +28,7 @@ REPOS = []
 UA = "tuna-github-release-mirror/0.0 (+https://github.com/tuna/tunasync-scripts)"
 
 # connect and read timeout value
-TIMEOUT_OPTION = (7, 10)
+TIMEOUT_OPTION = (30, 60)
 
 
 def sizeof_fmt(num: float, suffix: str = "iB") -> str:

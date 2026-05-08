@@ -53,7 +53,7 @@ REPOS = [
 ]
 
 # connect and read timeout value
-TIMEOUT_OPTION = (7, 10)
+TIMEOUT_OPTION = (30, 60)
 total_size = 0
 
 

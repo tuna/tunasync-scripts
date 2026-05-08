@@ -73,7 +73,7 @@ EXCLUDED_PACKAGES = (
 # fmt: on
 
 # connect and read timeout value
-TIMEOUT_OPTION = (7, 10)
+TIMEOUT_OPTION = (30, 60)
 
 # Generate gzip archive for json files, size threshold
 GEN_METADATA_JSON_GZIP_THRESHOLD = 1024 * 1024
