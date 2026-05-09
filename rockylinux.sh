@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# This script should be a cronjob and should be run a few times a day. (example for /etc/crontab: "0  *  *  *  * root /usr/bin/manjaroreposync").
+# However you can also move this script to "/etc/cron.hourly".
+# To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
+
+DESTPATH="/srv/www/rockylinux/"
+RSYNC=/usr/bin/rsync
+LOCKFILE=/tmp/rsync-rocylinux.lock
+UPSTREAM_URL="rsync://msync.rockylinux.org/rocky-linux/"
+
+
+synchronize() {
+	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 --exclude "/*/devel/" \
+		--exclude "/*/*/*/debug" --exclude "/*/*/ppc64le" --exclude "/*/*/s390x" --exclude "/*/*/riscv64" "$UPSTREAM_URL"  "$DESTPATH"
+	ret=$?
+	cd $DESTPATH && chmod a+rx *
+	return $ret
+}
+
+
+
+if [ ! -e "$LOCKFILE" ]
+then
+    echo $$ >"$LOCKFILE"
+    synchronize
+else
+    PID=$(cat "$LOCKFILE")
+    if kill -0 "$PID" >&/dev/null
+    then
+        echo "Rsync - Synchronization still running"
+        exit 15
+    else
+        echo $$ >"$LOCKFILE"
+        echo "Warning: previous synchronization appears not to have finished correctly"
+        synchronize
+    fi
+fi
+
+ret=$?
+
+rm -f "$LOCKFILE"
+
+exit $ret

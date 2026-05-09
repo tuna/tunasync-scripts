@@ -1,0 +1,147 @@
+[
+    {
+        "repo": "YerongAI/Office-Tool",
+        "versions": 3,
+        "tarball": false,
+        "pre_release": false,
+        "flat": false
+    },
+
+    {
+        "repo": "obsproject/obs-studio",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": false,
+        "exclude": [
+            "\\.zip$",
+            "\\.ddeb$",
+            "\\.tar\\.gz$",
+            "\\.tar\\.xz$",
+            "\\.deb$"
+        ]
+    },
+    {
+        "repo": "balena-io/etcher",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": false,
+        "exclude": [
+            "\\.zip$",
+            "\\.json$",
+            "\\.rpm$",
+            "\\.deb$"
+        ]
+    },
+    {
+        "repo": "lxgw/LxgwWenKai",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "lxgw/LxgwWenKai-Screen",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "lxgw/LxgwWenKai-Lite",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "lxgw/LxgwWenkaiGB",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "lxgw/LxgwWenkaiTC",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "atelier-anchor/smiley-sans",
+        "versions": 3,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "microsoft/WSL",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "mofeng-git/One-KVM",
+        "versions": 3,
+        "tarball": false,
+        "pre_release": false,
+        "flat": false
+    },
+    {
+        "repo": "viarotel-org/escrcpy",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true,
+        "exclude": [
+            "\\.blockmap$",
+            "\\.yml$",
+            "\\.zip$"
+        ]
+    },
+    {
+        "repo": "niXman/mingw-builds-binaries",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "msys2/msys2-installer",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true,
+        "exclude": [
+            "\\.sig$",
+            "\\.zst$",
+            "\\.sha256$",
+	    "\\.txt$",
+	    "\\.xz$"
+        ]
+    },
+    {
+        "repo": "LanRhyme/MicYou",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "Alan-CRL/Inkeys",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": true
+    },
+    {
+        "repo": "ClassIsland/ClassIsland",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": false
+    }
+]
