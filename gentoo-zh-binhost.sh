@@ -4,18 +4,14 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/rockylinux/"
+DESTPATH="/srv/www/gentoo-zh/"
 RSYNC=/usr/bin/rsync
-LOCKFILE=/tmp/rsync-rocylinux.lock
-UPSTREAM_URL="rsync://msync.rockylinux.org/rocky-linux/"
+LOCKFILE=/tmp/rsync-gentoo-zh-binhost.lock
+UPSTREAM_URL=rsync://distfiles.gentoocn.org/gentoo-zh/ # See <https://fedoraproject.org/wiki/Infrastructure/Mirroring/Tiering#Tier_1_Mirrors>
 
 
 synchronize() {
-	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --max-delete=1000 --contimeout=60 --exclude "/*/devel/" \
-		--exclude "/*/*/*/debug" --exclude "/*/*/ppc64le" --exclude "/*/*/s390x" --exclude "/*/*/riscv64" "$UPSTREAM_URL"  "$DESTPATH"
-	ret=$?
-	cd $DESTPATH && chmod a+rx *
-	return $ret
+	/usr/bin/rsync -rtlivH --delete-after --delay-updates --safe-links --contimeout=900 "$UPSTREAM_URL"  "$DESTPATH"
 }
 
 
@@ -37,8 +33,4 @@ else
     fi
 fi
 
-ret=$?
-
 rm -f "$LOCKFILE"
-
-exit $ret

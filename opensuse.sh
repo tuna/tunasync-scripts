@@ -6,30 +6,38 @@ set -xe
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
 DESTPATH="/srv/www/opensuse/"
-TMP_DIR="/tank/mirror-data/rsync_tmp/opensuse"
+TMP_DIR="/srv/www/opensuse/rsync_tmp/opensuse"
 # PROXY=/usr/bin/proxychains
 # RSYNC=/usr/bin/rsync
 RSYNC=/home/cqumirror/.local/bin/rsync
 LOCKFILE=/tmp/rsync-opensuse.lock
-# UPSTREAM_URL="rsync://ftp.riken.jp/opensuse/"
-UPSTREAM_URL="rsync://mirrors.ocf.berkeley.edu/opensuse/"
+#UPSTREAM_URL="rsync://ftp.gwdg.de/pub/opensuse/"
+UPSTREAM_URL="rsync://mirrors.ustc.edu.cn/opensuse/"
+#UPSTREAM_URL="rsync://mirrors.ocf.berkeley.edu/opensuse/"
 #UPSTREAM_URL="rsync://mirrors.tuna.tsinghua.edu.cn/opensuse/"
 TRUE=/bin/true
 #VVV="-VVV"
 VVV=""
+V4V6=-4
 
 synchronize() {
 	# create tmp dir
 	mkdir -p $TMP_DIR
 	# run synchronize
-       $PROXY $RSYNC -rtlivHi $VVV  \
+       $PROXY $RSYNC -rtlivHi $VVV $V4V6  \
 	       --stats \
+               --timeout=360 \
+               --partial-dir=.rsync-partial \
 	       --filter 'risk .~tmp~/' \
 	       --temp-dir=$TMP_DIR  \
 	       --delete-after \
 	       --safe-links \
 	       --delay-updates  \
 	       --contimeout=6000000 \
+	       --exclude='/FOSDEM/' \
+	       --exclude='/debug/' \
+	       --exclude='/education/' \
+	       --exclude='/project/' \
 	       --exclude='*-debuginfo-*' \
 	       --exclude='*-debugsource-*' \
 	       --exclude='/history/' \
@@ -72,9 +80,19 @@ synchronize() {
 	       --exclude='/distribution/*/*/product/repo/*/src/' \
 	       --exclude='/distribution/*/*/appliances/*' \
 	       --exclude='/tumbleweed/appliances/*' \
+	       --exclude='ppc64le/' \
+	       --exclude='s390x/' \
+	       --exclude='*ppc64le*.iso' \
+	       --exclude="*s390x*iso" \
 	       --exclude='.~tmp~/'  \
-	       --delete-excluded  "$UPSTREAM_URL"  "$DESTPATH" || $TRUE
+	       --exclude='/discontinued' \
+	       --exclude='/repositories' \
+	       --exclude='/slowroll/next-full' \
+	       --exclude='/slowroll/next' \
+	       "$UPSTREAM_URL"  "$DESTPATH"
+       ret=$?
 	rm -rf $TMP_DIR
+	return $ret
 }
 
 
@@ -82,7 +100,9 @@ if [ ! -e "$LOCKFILE" ]
 then
     echo $$ >"$LOCKFILE"
     synchronize
+    ret=$?
     rm -rf $LOCKFILE
+    exit $ret
 else
     PID=$(cat "$LOCKFILE")
     if kill -0 "$PID" >&/dev/null
@@ -93,7 +113,9 @@ else
         echo $$ >"$LOCKFILE"
         echo "Warning: previous synchronization appears not to have finished correctly"
         synchronize
+	ret=$?
 	rm -rf $LOCKFILE
+	exit $ret
     fi
 fi
 

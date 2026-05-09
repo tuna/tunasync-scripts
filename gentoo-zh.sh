@@ -4,7 +4,7 @@
 # However you can also move this script to "/etc/cron.hourly".
 # To be an official Manjaro Linux mirror and to get access to our rsync server, you have to tell us your static ip of your synchronization server.
 
-DESTPATH="/srv/www/gentoo-zh/"
+DESTPATH="/srv/www/gentoo-zh.git/"
 RSYNC=/usr/bin/rsync
 LOCKFILE=/tmp/rsync-gentoo-zh.lock
 

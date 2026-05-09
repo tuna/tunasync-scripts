@@ -1,0 +1,3 @@
+[submodule "include/tunasync-scripts"]
+	path = include/tunasync-scripts
+	url = https://github.com/tuna/tunasync-scripts.git

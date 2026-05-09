@@ -1,53 +1,36 @@
 #!/bin/bash
-
-set -xe
-
-DESTPATH="/srv/www/homebrew"
-RSYNC="/usr/bin/rsync"
-LOCKFILE=/tmp/rsync-homebrew.lock
-
-REALGIT=/home/cqumirror/.local/bin/git
-
-RETRIES=20
-DELAY=15
-COUNT=1
-
-git-retry() {
-	while [ $COUNT -lt $RETRIES ]; do
-		proxychains $REALGIT $*
-		if [ $? -eq 0 ]; then
-			RETRIES=0
-			break
-		fi
-		let COUNT=$COUNT+1
-		echo "============<"
-		echo "Retry $COUNT"
-		sleep $DELAY
-	done
-}
-
 function repo_init() {
 	UPSTREAM=$1
 	WORKING_DIR=$2
-	git-retry clone --ff-only --mirror $UPSTREAM $WORKING_DIR
+	git clone --mirror $UPSTREAM $WORKING_DIR
 }
 
 function update_homebrew_git() {
-	repo_dir="$1"
+	UPSTREAM="$1"
+	repo_dir="$2"
 	cd $repo_dir
 	echo "==== SYNC $repo_dir START ===="
-	# /usr/bin/timeout -s INT 3600 git-retry remote -v update
-	git-retry remote -v update
-	git-retry repack -a -b -d
+	git remote set-url origin "$UPSTREAM"
+	/usr/bin/timeout -s INT 3600 git remote -v update -p
+	head=$(git remote show origin | awk '/HEAD branch:/ {print $NF}')
+	[[ -n "$head" ]] && echo "ref: refs/heads/$head" > HEAD
+	objs=$(find objects/ -type f | wc -l)
+	[[ "$objs" -gt 8 ]] && git repack -a -b -d
+	sz=$(git count-objects -v|grep -Po '(?<=size-pack: )\d+')
+	total_size=$(($total_size+1024*$sz))
 	echo "==== SYNC $repo_dir DONE ===="
 }
 
-brews=("brew" "homebrew-core" "homebrew-services" "homebrew-cask" "homebrew-cask-versions")
+UPSTREAM_BASE=${TUNASYNC_UPSTREAM_URL:-"https://github.com/Homebrew"}
+brews=("brew" "homebrew-core" "homebrew-cask" "install" "homebrew-command-not-found" "homebrew-services")
+total_size=0
 
 for brew in ${brews[@]}; do
-	if [ ! -d "$DESTPATH/${brew}.git" ]; then
+	if [[ ! -d "$TUNASYNC_WORKING_DIR/${brew}.git" ]]; then
 		echo "Initializing ${brew}.git"
-		repo_init "https://github.com/Homebrew/${brew}.git" "$DESTPATH/${brew}.git"
+		repo_init "${UPSTREAM_BASE}/${brew}.git" "$TUNASYNC_WORKING_DIR/${brew}.git"
 	fi
-	update_homebrew_git "$DESTPATH/${brew}.git"
+	update_homebrew_git "${UPSTREAM_BASE}/${brew}.git" "$TUNASYNC_WORKING_DIR/${brew}.git"
 done
+
+echo "Total size is" $(numfmt --to=iec $total_size)
