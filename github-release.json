@@ -143,5 +143,12 @@
         "tarball": false,
         "pre_release": false,
         "flat": false
+    },
+    {
+        "repo": "arduino/arduino-ide",
+        "versions": 1,
+        "tarball": false,
+        "pre_release": false,
+        "flat": false
     }
 ]
