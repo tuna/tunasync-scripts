@@ -237,7 +237,7 @@ def main():
         # Determine mode: new fields take priority over versions
         use_separate_limits = release_versions is not None or pre_release_versions is not None
         if use_separate_limits:
-            max_release = release_versions if release_versions is not None else 0
+            max_release = release_versions if release_versions is not None else 1
             max_prerelease = pre_release_versions if pre_release_versions is not None else 0
             # When using separate limits, always include pre-releases
             prerelease = True
