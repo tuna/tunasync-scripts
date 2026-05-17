@@ -293,11 +293,16 @@ def main():
                 # Check version limits
                 if use_separate_limits:
                     # Separate limits mode: skip if respective cap is 0 or reached
+                    # -1 means unlimited
                     if is_prerelease:
-                        if max_prerelease == 0 or n_prerelease >= max_prerelease:
+                        if max_prerelease == 0:
+                            continue
+                        if max_prerelease > 0 and n_prerelease >= max_prerelease:
                             continue
                     else:
-                        if max_release == 0 or n_release >= max_release:
+                        if max_release == 0:
+                            continue
+                        if max_release > 0 and n_release >= max_release:
                             continue
                 else:
                     # Legacy mode: single counter against versions
@@ -325,8 +330,8 @@ def main():
 
                 # Check if done
                 if use_separate_limits:
-                    release_done = max_release > 0 and n_release >= max_release
-                    prerelease_done = max_prerelease == 0 or n_prerelease >= max_prerelease
+                    release_done = max_release == 0 or (max_release > 0 and n_release >= max_release)
+                    prerelease_done = max_prerelease == 0 or (max_prerelease > 0 and n_prerelease >= max_prerelease)
                     if release_done and prerelease_done:
                         break
                 else:
