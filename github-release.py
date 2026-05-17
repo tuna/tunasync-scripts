@@ -291,19 +291,15 @@ def main():
                     continue
 
                 # Check version limits
-                if is_prerelease and max_prerelease > 0:
-                    if n_prerelease >= max_prerelease:
+                if is_prerelease:
+                    if max_prerelease == 0:
                         continue
-                elif not is_prerelease and max_release > 0:
-                    if n_release >= max_release:
+                    if max_prerelease > 0 and n_prerelease >= max_prerelease:
                         continue
-                elif max_release <= 0 and max_prerelease <= 0:
-                    pass  # unlimited
                 else:
-                    # Mixed mode: skip if respective limit reached
-                    if is_prerelease and max_prerelease <= 0:
+                    if max_release == 0:
                         continue
-                    if not is_prerelease and max_release <= 0:
+                    if max_release > 0 and n_release >= max_release:
                         continue
 
                 name = ensure_safe_name(release["name"] or release["tag_name"])
