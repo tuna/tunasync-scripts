@@ -225,12 +225,25 @@ def main():
         if isinstance(cfg, str):
             cfg = {"repo": cfg}
         repo = cfg["repo"]
-        versions = cfg.get("versions", 1)  # keep # of latest releases
+        versions = cfg.get("versions", 1)  # keep # of latest releases (mixed)
+        release_versions = cfg.get("release_versions")  # # of stable releases only
+        pre_release_versions = cfg.get("pre_release_versions")  # # of pre-releases only
         flat = cfg.get("flat", False)  # build a folder for each release
         tarball = cfg.get("tarball", False)  # download source tarball
         prerelease = cfg.get("pre_release", False)  # include pre-releases
         perpage = cfg.get("per_page", 0)  # number of releases per page
         exclude_regexes = cfg.get("exclude", [])  # list of file name regexes to exclude
+
+        # Determine mode: new fields take priority over versions
+        use_separate_limits = release_versions is not None or pre_release_versions is not None
+        if use_separate_limits:
+            max_release = release_versions if release_versions is not None else 0
+            max_prerelease = pre_release_versions if pre_release_versions is not None else 0
+            # When using separate limits, always include pre-releases
+            prerelease = True
+        else:
+            max_release = versions
+            max_prerelease = 0
 
         repo_dir = working_dir / Path(repo)
         logger.info(f"syncing {repo} to {repo_dir}")
@@ -267,25 +280,56 @@ def main():
                     break
 
         n_downloaded = 0
+        n_release = 0
+        n_prerelease = 0
         try:
             for release in release_generator():
-                if not release["draft"] and (prerelease or not release["prerelease"]):
-                    name = ensure_safe_name(release["name"] or release["tag_name"])
-                    if len(name) == 0:
-                        logger.error("Unnamed release")
+                if release["draft"]:
+                    continue
+                is_prerelease = release["prerelease"]
+                if is_prerelease and not prerelease:
+                    continue
+
+                # Check version limits
+                if is_prerelease and max_prerelease > 0:
+                    if n_prerelease >= max_prerelease:
                         continue
-                    total_size += process_release(
-                        release,
-                        (repo_dir if flat else repo_dir / name),
-                        tarball,
-                        exclude_regexes,
-                    )
-                    if n_downloaded == 0 and not flat:
-                        # create a symbolic link to the latest release folder
-                        link_latest(name, repo_dir)
-                    n_downloaded += 1
-                    if versions > 0 and n_downloaded >= versions:
-                        break
+                elif not is_prerelease and max_release > 0:
+                    if n_release >= max_release:
+                        continue
+                elif max_release <= 0 and max_prerelease <= 0:
+                    pass  # unlimited
+                else:
+                    # Mixed mode: skip if respective limit reached
+                    if is_prerelease and max_prerelease <= 0:
+                        continue
+                    if not is_prerelease and max_release <= 0:
+                        continue
+
+                name = ensure_safe_name(release["name"] or release["tag_name"])
+                if len(name) == 0:
+                    logger.error("Unnamed release")
+                    continue
+                total_size += process_release(
+                    release,
+                    (repo_dir if flat else repo_dir / name),
+                    tarball,
+                    exclude_regexes,
+                )
+                if n_downloaded == 0 and not flat:
+                    # create a symbolic link to the latest release folder
+                    link_latest(name, repo_dir)
+                n_downloaded += 1
+                if is_prerelease:
+                    n_prerelease += 1
+                else:
+                    n_release += 1
+
+                # Check if both limits are reached
+                release_done = max_release > 0 and n_release >= max_release
+                prerelease_done = (not prerelease) or max_prerelease <= 0 or n_prerelease >= max_prerelease
+                if release_done and prerelease_done:
+                    break
             if n_downloaded == 0:
                 logger.error(f"No release version found for {repo}")
                 continue
