@@ -291,15 +291,17 @@ def main():
                     continue
 
                 # Check version limits
-                if is_prerelease:
-                    if max_prerelease == 0:
-                        continue
-                    if max_prerelease > 0 and n_prerelease >= max_prerelease:
-                        continue
+                if use_separate_limits:
+                    # Separate limits mode: skip if respective cap is 0 or reached
+                    if is_prerelease:
+                        if max_prerelease == 0 or n_prerelease >= max_prerelease:
+                            continue
+                    else:
+                        if max_release == 0 or n_release >= max_release:
+                            continue
                 else:
-                    if max_release == 0:
-                        continue
-                    if max_release > 0 and n_release >= max_release:
+                    # Legacy mode: single counter against versions
+                    if versions > 0 and n_downloaded >= versions:
                         continue
 
                 name = ensure_safe_name(release["name"] or release["tag_name"])
@@ -321,11 +323,15 @@ def main():
                 else:
                     n_release += 1
 
-                # Check if both limits are reached
-                release_done = max_release > 0 and n_release >= max_release
-                prerelease_done = (not prerelease) or max_prerelease <= 0 or n_prerelease >= max_prerelease
-                if release_done and prerelease_done:
-                    break
+                # Check if done
+                if use_separate_limits:
+                    release_done = max_release > 0 and n_release >= max_release
+                    prerelease_done = max_prerelease == 0 or n_prerelease >= max_prerelease
+                    if release_done and prerelease_done:
+                        break
+                else:
+                    if versions > 0 and n_downloaded >= versions:
+                        break
             if n_downloaded == 0:
                 logger.error(f"No release version found for {repo}")
                 continue
