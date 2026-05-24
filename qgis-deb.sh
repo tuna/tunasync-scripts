@@ -7,7 +7,10 @@ apt_sync="${_here}/apt-sync.py"
 
 BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://qgis.org"}"
 WORKDIR="${TUNASYNC_WORKING_DIR}"
-export REPO_SIZE_FILE="/tmp/reposize.$RANDOM"
+
+REPO_SIZE_FILE=$(mktemp -t qgis-deb-reposize.XXXXXX)
+export REPO_SIZE_FILE
+trap 'rm -f "$REPO_SIZE_FILE"' EXIT
 
 DEB_CODENAMES="bullseye,bookworm,trixie,jammy,noble,resolute,plucky,questing,focal,xenial,bionic"
 DEB_ARCHES="amd64,i386"
@@ -34,4 +37,6 @@ echo "ubuntugis-ltr finished"
 ln -sfn debian-ltr "${WORKDIR}/ubuntu-ltr"
 echo "ubuntu-ltr symlink created"
 
-"${_here}/helpers/size-sum.sh" "$REPO_SIZE_FILE" --rm || true
+if ! "${_here}/helpers/size-sum.sh" "$REPO_SIZE_FILE" --rm; then
+    echo "warning: size-sum.sh failed, continuing" >&2
+fi
