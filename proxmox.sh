@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -euo pipefail
 
 # Proxmox is intentionally not handled as a single root-level tsumugu sync.
 #
@@ -33,6 +33,7 @@ WORKDIR=${TUNASYNC_WORKING_DIR:?TUNASYNC_WORKING_DIR is required}
 THREADS=${TUNASYNC_TSUMUGU_THREADS:-1}
 MAXDELETE=${TUNASYNC_TSUMUGU_MAXDELETE:-10000}
 USERAGENT=${TUNASYNC_TSUMUGU_USERAGENT:-"tsumugu/$(tsumugu --version | tail -n1 | cut -d' ' -f2)"}
+export TUNASYNC_TSUMUGU_USERAGENT="$USERAGENT"
 export NO_COLOR=1
 
 mkdir -p "$WORKDIR"
@@ -105,6 +106,7 @@ from pathlib import Path
 # matched their local *.iso payloads. Future reviews can repeat that check.
 socket.setdefaulttimeout(60)
 base = os.environ.get('TUNASYNC_UPSTREAM_URL', 'http://download.proxmox.com/').rstrip('/') + '/iso/'
+allowed_netloc = urllib.parse.urlparse(base).netloc
 work = Path(os.environ['TUNASYNC_WORKING_DIR']) / 'iso'
 work.mkdir(parents=True, exist_ok=True)
 user_agent = os.environ.get('TUNASYNC_TSUMUGU_USERAGENT', 'tsumugu')
@@ -132,7 +134,7 @@ seen = set()
 for href in parser.hrefs:
     url = urllib.parse.urljoin(base, href)
     parsed = urllib.parse.urlparse(url)
-    if parsed.scheme not in ('http', 'https') or parsed.netloc != 'download.proxmox.com':
+    if parsed.scheme not in ('http', 'https') or parsed.netloc != allowed_netloc:
         continue
     if not parsed.path.startswith('/iso/'):
         continue
@@ -173,15 +175,45 @@ for name, url in files:
                 if dt:
                     mtime = dt.timestamp()
     except Exception as e:
-        # A transient HEAD failure for a file we already have should not delete
-        # or re-download the local file. A missing local file plus HEAD failure
-        # is recorded as an error so the job exits non-zero after processing.
-        if target.exists():
-            print(f'proxmox iso: HEAD failed for existing {name}: {e}; keeping local file', flush=True)
+        # Some servers / CDNs reject HEAD with 4xx/405 even when GET works.
+        # Try a Range:bytes=0-0 GET so we still get Content-Range / Last-Modified
+        # and can decide whether the local file is up to date.
+        try:
+            range_req = urllib.request.Request(
+                url,
+                headers={'User-Agent': user_agent, 'Range': 'bytes=0-0'},
+            )
+            with urllib.request.urlopen(range_req, timeout=30) as resp:
+                cr = resp.headers.get('Content-Range', '')
+                if cr.startswith('bytes ') and '/' in cr:
+                    try:
+                        size = int(cr.rsplit('/', 1)[1])
+                    except ValueError:
+                        pass
+                if size < 0:
+                    cl = resp.headers.get('Content-Length')
+                    if cl is not None:
+                        try:
+                            size = int(cl)
+                        except ValueError:
+                            pass
+                lm = resp.headers.get('Last-Modified')
+                if lm:
+                    dt = email.utils.parsedate_to_datetime(lm)
+                    if dt:
+                        mtime = dt.timestamp()
+        except Exception as e2:
+            # A transient HEAD/GET failure for a file we already have should
+            # not delete or re-download the local file. A missing local file
+            # plus failure is recorded as an error so the job exits non-zero.
+            if target.exists():
+                print(f'proxmox iso: HEAD/GET failed for existing {name}: {e}; '
+                      f'keeping local file', flush=True)
+                continue
+            print(f'proxmox iso: HEAD/GET failed for missing {name}: '
+                  f'{e!r} / {e2!r}', file=sys.stderr, flush=True)
+            errors.append(f'{name}: HEAD {e!r} / GET {e2!r}')
             continue
-        print(f'proxmox iso: HEAD failed for missing {name}: {e}', file=sys.stderr, flush=True)
-        errors.append(f'{name}: HEAD {e}')
-        continue
     if target.exists() and size >= 0 and target.stat().st_size == size:
         print(f'proxmox iso: skipping {name}', flush=True)
         if mtime:
