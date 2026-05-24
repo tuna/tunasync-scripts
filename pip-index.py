@@ -146,6 +146,27 @@ for rule in os.environ.get("EXTRA_REWRITES", "").split(","):
 no_nightly = os.environ.get("NO_NIGHTLY", "1") == "1"
 
 sem = asyncio.Semaphore(jobs)
+# Track URLs we have already started processing so links from cross-referenced
+# index pages do not cause duplicate work or infinite recursion.
+visited: set[str] = set()
+
+
+def safe_local_path(base_dir: Path, raw_path: str) -> Path:
+    """Resolve `raw_path` against `base_dir` and reject path traversal.
+
+    URL path components are unquoted and joined to `base_dir`. The resolved
+    path is then required to live below `base_dir` so a hostile upstream
+    cannot escape the mirror via '..' or absolute components.
+    """
+    while raw_path.startswith("/"):
+        raw_path = raw_path[1:]
+    candidate = (base_dir / raw_path).resolve()
+    base_resolved = base_dir.resolve()
+    try:
+        candidate.relative_to(base_resolved)
+    except ValueError as exc:
+        raise ValueError(f"refusing path outside base: {candidate}") from exc
+    return candidate
 
 
 @contextmanager
@@ -182,6 +203,7 @@ async def show_progress(url, start_time, get_downloaded, total):
 
 
 async def get_with_progress(client: aiohttp.ClientSession, url: str) -> bytes:
+    """Fetch `url` fully into memory. Use only for index pages."""
     for attempt in range(3):
         try:
             async with client.get(url, allow_redirects=True) as resp:
@@ -204,12 +226,51 @@ async def get_with_progress(client: aiohttp.ClientSession, url: str) -> bytes:
                     except asyncio.CancelledError:
                         pass
                 return b"".join(chunks)
-        except Exception as e:
+        except Exception:
             if attempt == 2:
-                raise e
+                raise
             logging.warning(f"Failed to download {url}, retrying ({attempt + 1})...")
             await asyncio.sleep(5)
     assert False, "impossible"
+
+
+async def stream_to_file(
+    client: aiohttp.ClientSession, url: str, dest: Path
+) -> None:
+    """Stream `url` to `dest` via a sibling .tmp file. Memory-bounded."""
+    for attempt in range(3):
+        tmp = dest.parent / (dest.name + ".tmp")
+        try:
+            async with client.get(url, allow_redirects=True) as resp:
+                resp.raise_for_status()
+                total = int(resp.headers.get("Content-Length", 0))
+                downloaded = 0
+                progress_task = asyncio.create_task(
+                    show_progress(url, time.monotonic(), lambda: downloaded, total)
+                )
+                try:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    with open(tmp, "wb") as fh:
+                        async for chunk in resp.content.iter_chunked(65536):
+                            downloaded += len(chunk)
+                            await asyncio.to_thread(fh.write, chunk)
+                finally:
+                    progress_task.cancel()
+                    try:
+                        await progress_task
+                    except asyncio.CancelledError:
+                        pass
+            os.replace(tmp, dest)
+            return
+        except Exception:
+            try:
+                tmp.unlink()
+            except FileNotFoundError:
+                pass
+            if attempt == 2:
+                raise
+            logging.warning(f"Failed to download {url}, retrying ({attempt + 1})...")
+            await asyncio.sleep(5)
 
 
 async def get_devpi_projects(
@@ -265,9 +326,14 @@ def rewrite_index(index_resp: str) -> str:
 
 
 async def recursive_download(client: aiohttp.ClientSession, url: str):
-    path = unquote(urlparse(url).path)
-    while path.startswith("/"):
-        path = path[1:]
+    # Skip URLs we already started processing. Index pages frequently link
+    # back into themselves and cross-link wheel artifacts; without this the
+    # crawl could grow exponentially or even loop.
+    if url in visited:
+        return
+    visited.add(url)
+
+    raw_path = unquote(urlparse(url).path)
     if url.endswith("/") or url.endswith(".html"):
         # index.html (current) or torch_stable.html (old)
         async with sem:
@@ -276,9 +342,16 @@ async def recursive_download(client: aiohttp.ClientSession, url: str):
             index_resp = contents.decode("utf-8")
             if url.endswith("/"):
                 filename = "index.html"
+                # Treat the directory portion as the local path so we do not
+                # turn the .html filename into a directory.
+                index_dir = safe_local_path(base, raw_path)
             else:
                 filename = url.split("/")[-1]
                 assert filename.endswith(".html"), f"Unexpected HTML file: {filename}"
+                # `raw_path` already includes the .html filename. Strip it so
+                # `index_dir` is the parent directory.
+                parent = raw_path.rsplit("/", 1)[0] if "/" in raw_path else ""
+                index_dir = safe_local_path(base, parent)
 
         # Derive the upstream base (scheme://netloc) from the current url so
         # absolute-from-root hrefs ("/whl/foo") can be resolved without
@@ -296,32 +369,33 @@ async def recursive_download(client: aiohttp.ClientSession, url: str):
                 suburl = urljoin(upstream_base, suburl)
             else:
                 suburl = urljoin(url, suburl)
+            if suburl in visited:
+                continue
             tasks.append(asyncio.create_task(recursive_download(client, suburl)))
             if suburl.endswith(".whl") and "data-core-metadata" in attr:
-                tasks.append(
-                    asyncio.create_task(
-                        recursive_download(client, suburl + ".metadata")
+                meta_url = suburl + ".metadata"
+                if meta_url not in visited:
+                    tasks.append(
+                        asyncio.create_task(
+                            recursive_download(client, meta_url)
+                        )
                     )
-                )
         if tasks:
             await asyncio.gather(*tasks)
         if not dry_run:
             index_resp = rewrite_index(index_resp)
-            os.makedirs(base / path, exist_ok=True)
-            with overwrite(base / path / filename, "w") as f:
+            index_dir.mkdir(parents=True, exist_ok=True)
+            with overwrite(index_dir / filename, "w") as f:
                 f.write(index_resp)
     else:
-        if (base / path).exists():
+        dest = safe_local_path(base, raw_path)
+        if dest.exists():
             return
         if not dry_run:
-            os.makedirs((base / path).parent, exist_ok=True)
             async with sem:
-                logging.info(f"Downloading {url} to {base / path}")
+                logging.info(f"Downloading {url} to {dest}")
                 try:
-                    with overwrite(base / path, "wb") as f:
-                        contents = await get_with_progress(client, url)
-                        # Large files
-                        await asyncio.to_thread(f.write, contents)
+                    await stream_to_file(client, url, dest)
                 except aiohttp.ClientResponseError as e:
                     # Some urls are blocked by upstream, e.g.,
                     # https://download.pytorch.org/whl/cu128/
@@ -330,7 +404,7 @@ async def recursive_download(client: aiohttp.ClientSession, url: str):
                     if e.status == 403:
                         logging.warning(f"Forbidden: {url}, skipping.")
                     else:
-                        raise e
+                        raise
 
 
 async def expand_devpi_endpoint(
