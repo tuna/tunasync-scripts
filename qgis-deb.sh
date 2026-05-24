@@ -3,7 +3,7 @@ set -e
 set -o pipefail
 
 _here=$(dirname "$(realpath "$0")")
-apt_sync="/home/tunasync-scripts/apt-sync.py"
+apt_sync="${_here}/apt-sync.py"
 
 BASE_URL="${TUNASYNC_UPSTREAM_URL:-"https://qgis.org"}"
 WORKDIR="${TUNASYNC_WORKING_DIR}"
@@ -34,4 +34,4 @@ echo "ubuntugis-ltr finished"
 ln -sfn debian-ltr "${WORKDIR}/ubuntu-ltr"
 echo "ubuntu-ltr symlink created"
 
-"/home/tunasync-scripts/helpers/size-sum.sh" "$REPO_SIZE_FILE" --rm || true
+"${_here}/helpers/size-sum.sh" "$REPO_SIZE_FILE" --rm || true
