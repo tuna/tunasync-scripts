@@ -253,7 +253,7 @@ async def stream_to_file(
                     with open(tmp, "wb") as fh:
                         async for chunk in resp.content.iter_chunked(65536):
                             downloaded += len(chunk)
-                            await asyncio.to_thread(fh.write, chunk)
+                            fh.write(chunk)
                 finally:
                     progress_task.cancel()
                     try:
