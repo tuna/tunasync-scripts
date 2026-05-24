@@ -1,6 +1,9 @@
 #!/bin/bash
 
-set -eu
+set -euo pipefail
+
+_here=$(dirname "$(realpath "$0")")
+mirror_clone="${MIRRORCLONE_BIN:-${_here}/mirror-clone}"
 
 TUNASYNC_MIRRORCLONE_OPTIONS=${TUNASYNC_MIRRORCLONE_OPTIONS:-}
 TUNASYNC_MIRRORCLONE_SOURCE=${TUNASYNC_MIRRORCLONE_SOURCE:-}
@@ -14,7 +17,7 @@ fi
 [ ! -d "${TUNASYNC_WORKING_DIR}" ] && mkdir -p "${TUNASYNC_WORKING_DIR}"
 cd "${TUNASYNC_WORKING_DIR}"
 
-exec /home/mirror-clone \
+exec "$mirror_clone" \
     --target-type file \
     --file-buffer-path "${TUNASYNC_WORKING_DIR}/.tmp" \
     --file-base-path "${TUNASYNC_WORKING_DIR}" \
