@@ -37,6 +37,4 @@ echo "ubuntugis-ltr finished"
 ln -sfn debian-ltr "${WORKDIR}/ubuntu-ltr"
 echo "ubuntu-ltr symlink created"
 
-if ! "${_here}/helpers/size-sum.sh" "$REPO_SIZE_FILE" --rm; then
-    echo "warning: size-sum.sh failed, continuing" >&2
-fi
+"${_here}/helpers/size-sum.sh" "$REPO_SIZE_FILE" --rm
