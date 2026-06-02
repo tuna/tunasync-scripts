@@ -110,7 +110,7 @@ def calc_repo_size(path: Path):
 def check_and_download(url: str, dst_file: Path) -> int:
     try:
         start = time.time()
-        with requests.get(url, stream=True, timeout=(5, 10)) as r:
+        with requests.get(url, stream=True, timeout=(30, 60)) as r:
             r.raise_for_status()
             if "last-modified" in r.headers:
                 remote_ts = parsedate_to_datetime(
@@ -245,7 +245,7 @@ def main():
                     probe_url = (
                         url + ("" if url.endswith("/") else "/") + "repodata/repomd.xml"
                     )
-                    r = requests.head(probe_url, timeout=(7, 7))
+                    r = requests.head(probe_url, timeout=(30, 60))
                     if r.status_code < 400 or r.status_code == 403:
                         yield (name, url)
                     else:

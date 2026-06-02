@@ -91,7 +91,7 @@ def check_and_download(url: str, dst_file: Path, caching=False) -> int:
                 return 0
             download_cache[url] = bytes()
         start = time.time()
-        with requests.get(url, stream=True, timeout=(5, 10)) as r:
+        with requests.get(url, stream=True, timeout=(30, 60)) as r:
             r.raise_for_status()
             if "last-modified" in r.headers:
                 remote_ts = parsedate_to_datetime(
