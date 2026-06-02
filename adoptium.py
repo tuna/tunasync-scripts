@@ -16,7 +16,7 @@ FEATURE_VERSIONS = [8, 11, 17, 21, 25]
 def download_file(url: str, dst_file: Path)->bool:
     try:
         start = time.time()
-        with requests.get(url, stream=True, timeout=(5, 10)) as r:
+        with requests.get(url, stream=True, timeout=(30, 60)) as r:
             r.raise_for_status()
             if 'last-modified' in r.headers:
                 remote_ts = parsedate_to_datetime(
@@ -53,7 +53,7 @@ def check_file(dest_filename: Path, pkg_checksum: str, size: int)->bool:
 
 def download_release(ver: int, jvm_impl: str, alive_files: Set[str]):
     r = requests.get(f"https://api.adoptium.net/v3/assets/latest/{ver}/{jvm_impl}",
-            timeout=(5, 10),
+            timeout=(30, 60),
             headers={ 'User-Agent': 'tunasync-scripts (+https://github.com/tuna/tunasync-scripts)' })
     r.raise_for_status()
     rel_list = r.json()
