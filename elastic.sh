@@ -21,8 +21,8 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 
 for elsver in "${ELASTIC_VERSION[@]}"; do
 	"$apt_sync" --delete "${BASE_URL}/packages/${elsver}/apt" stable main amd64,i386 "${APT_PATH}/${elsver}"
-	
-	(cd ${BASE_PATH}/${elsver}; ln -sfn ../apt/${elsver} apt)
+	mkdir -p "${BASE_PATH}/${elsver}"
+	ln -sfnr "${APT_PATH}/${elsver}" "${BASE_PATH}/${elsver}/apt"
 done
 
 # # ================ YUM/DNF repos ===============================
@@ -31,7 +31,8 @@ components=${components// /,}
 "$yum_sync" "${BASE_URL}/packages/@{comp}/yum" 7 "$components" x86_64 "elastic-@{comp}" "$YUM_PATH"
 
 for elsver in ${ELASTIC_VERSION[@]}; do
-	(cd ${BASE_PATH}/${elsver}; ln -sfn ../yum/elastic-${elsver} yum)
+	mkdir -p "${BASE_PATH}/${elsver}"
+	ln -sfnr "${YUM_PATH}/elastic-${elsver}" "${BASE_PATH}/${elsver}/yum"
 done
 
 "${_here}/helpers/size-sum.sh" $REPO_SIZE_FILE --rm
