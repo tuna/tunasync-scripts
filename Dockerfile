@@ -7,6 +7,7 @@ RUN apt-get update && \
         python3-dev python3-pip python3-pyquery python3-socks python3-requests python3-yaml awscli \
         dnf-plugins-core createrepo-c debmirror \
         libnss-unknown xz-utils patch unzip \
+	python3-tqdm python3-click python3-openssl \
         aria2 ack openssh-client
         # composer php-curl php-zip
 
@@ -18,8 +19,6 @@ RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
 RUN python3 -m pip install \
     # for flutter, needs unpublished version of apitools, see: https://github.com/GoogleCloudPlatform/gsutil/issues/1819
     gsutil https://github.com/google/apitools/archive/refs/tags/v0.5.35.zip \
-    # for shadowmire
-    requests tqdm click \
     --break-system-packages
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && apt-get install -y locales -qq && locale-gen
