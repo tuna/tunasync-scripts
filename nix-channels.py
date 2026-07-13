@@ -36,6 +36,7 @@ PATH_BATCH = int(os.getenv('NIX_MIRROR_PATH_BATCH', 8192))
 THREADS = int(os.getenv('NIX_MIRROR_THREADS', 10))
 DELETE_OLD = os.getenv('NIX_MIRROR_DELETE_OLD', '1') == '1'
 RETAIN_DAYS = float(os.getenv('NIX_MIRROR_RETAIN_DAYS', 30))
+CLONE_SINCE_DAYS = float(os.getenv('NIX_MIRROR_CLONE_SINCE_DAYS', 360))
 
 STORE_DIR = 'store'
 RELEASES_DIR = 'releases'
@@ -44,7 +45,7 @@ RELEASES_DIR = 'releases'
 # be too old and defunct.
 #
 # [1]: https://discourse.nixos.org/t/announcement-moving-nixos-org-to-netlify/6212
-CLONE_SINCE = datetime(2020, 3, 6, tzinfo=pytz.utc)
+CLONE_SINCE = datetime.now() - timedelta(days=CLONE_SINCE_DAYS)
 TIMEOUT = 60
 
 working_dir = Path(WORKING_DIR)
@@ -393,6 +394,10 @@ def garbage_collect():
         assert date_match is not None, f'Release {release!r} has invalid time {date_str!r}'
         date_str = date_match[0]
         released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+
+        # Very old channel version, ignore for GC
+        if released_date < CLONE_SINCE:
+            continue
 
         if released_date >= time_threshold:
             alive.add(release)
