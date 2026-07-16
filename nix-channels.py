@@ -45,7 +45,7 @@ RELEASES_DIR = 'releases'
 # be too old and defunct.
 #
 # [1]: https://discourse.nixos.org/t/announcement-moving-nixos-org-to-netlify/6212
-CLONE_SINCE = datetime.now() - timedelta(days=CLONE_SINCE_DAYS)
+CLONE_SINCE = datetime.now(pytz.utc) - timedelta(days=CLONE_SINCE_DAYS)
 TIMEOUT = 60
 
 working_dir = Path(WORKING_DIR)
@@ -378,7 +378,7 @@ def parse_narinfo(narinfo):
 def garbage_collect():
     logging.info(f'- Collecting garbage')
 
-    time_threshold = datetime.now() - timedelta(days=RETAIN_DAYS)
+    time_threshold = datetime.now(pytz.utc) - timedelta(days=RETAIN_DAYS)
 
     last_updated = {}
     latest = {}
@@ -393,7 +393,7 @@ def garbage_collect():
         date_match = re.match(r'\d+-\d+-\d+ \d+:\d+:\d+', date_str)
         assert date_match is not None, f'Release {release!r} has invalid time {date_str!r}'
         date_str = date_match[0]
-        released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+        released_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
 
         # Very old channel version, ignore for GC
         if released_date < CLONE_SINCE:
