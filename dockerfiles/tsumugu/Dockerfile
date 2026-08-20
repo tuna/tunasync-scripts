@@ -1,8 +1,8 @@
 FROM rust:trixie AS builder
 
-# used to skip caching on new version release
-ADD "https://crates.io/api/v1/crates/tsumugu" "crates_version.json"
-RUN cargo install --bin tsumugu --root /build tsumugu
+ARG CRATE_VERSION
+RUN test -n "$CRATE_VERSION" && \
+    cargo install --locked --bin tsumugu --root /build --version "=$CRATE_VERSION" tsumugu
 
 FROM debian:trixie-slim
 LABEL maintainer="Shengqi Chen <i@harrychen.xyz>"

@@ -1,8 +1,8 @@
 FROM rust:trixie AS builder
 
-# used to skip caching on new version release
-ADD "https://crates.io/api/v1/crates/rustup-mirror" "crates_version.json"
-RUN cargo install --root /build rustup-mirror
+ARG CRATE_VERSION
+RUN test -n "$CRATE_VERSION" && \
+    cargo install --locked --root /build --version "=$CRATE_VERSION" rustup-mirror
 
 FROM debian:trixie-slim
 LABEL maintainer="Jiajie Chen <jiegec@noc.ac.cn>"
