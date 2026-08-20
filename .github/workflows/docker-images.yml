@@ -52,32 +52,19 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       -
-        name: Cache Docker layers
-        uses: actions/cache@v6
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ matrix.os }}-buildx-${{ matrix.image }}-${{ github.sha }}
-          restore-keys: |
-            ${{ matrix.os }}-buildx-${{ matrix.image }}-${{ matrix.os }}-
-            ${{ matrix.os }}-buildx-${{ matrix.image }}-
-      -
-        name: Cache Docker layers
-        uses: actions/cache@v6
-        if: github.event_name == 'pull_request'
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ matrix.os }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-${{ github.sha }}
-          restore-keys: |
-            ${{ matrix.os }}-pr-${{ github.event.pull_request.head.user.login }}-buildx-${{ matrix.image }}-
-            ${{ matrix.os }}-buildx-${{ matrix.image }}-
-            ${{ matrix.os }}-buildx-${{ matrix.image }}-
-      -
-        name: Cache Docker layers
-        if: github.event_name != 'push' && github.event_name != 'pull_request' && github.event_name != 'workflow_dispatch'
-        run: |
-          echo "I do not know how to setup cache"
-          exit -1
+          images: tunathu/${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.image }}
+            org.opencontainers.image.description=Runtime image for the ${{ matrix.image }} mirror job
+            org.opencontainers.image.vendor=Tsinghua University TUNA Association
+          annotations: |
+            org.opencontainers.image.title=${{ matrix.image }}
+            org.opencontainers.image.description=Runtime image for the ${{ matrix.image }} mirror job
+            org.opencontainers.image.vendor=Tsinghua University TUNA Association
       -
         name: Login to DockerHub
         uses: docker/login-action@v4
@@ -94,8 +81,10 @@ jobs:
           file: ${{ steps.docker_file_dir.outputs.docker_file_dir }}/Dockerfile
           push: ${{ github.event_name == 'push' }}
           tags: tunathu/${{ matrix.image }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha,scope=${{ matrix.image }}-${{ runner.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ runner.arch }}
           outputs: ${{ github.event_name == 'push' && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=image' }}
       -
         name: Export digest
@@ -150,9 +139,26 @@ jobs:
         name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
+          created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          source_url="${{ github.server_url }}/${{ github.repository }}"
+          version="${{ steps.docker_tag.outputs.docker_tag }}"
+
           for i in *; do
+            sources=()
+            while IFS= read -r digest; do
+              sources+=("tunathu/$i@sha256:$digest")
+            done < <(find "$i" -maxdepth 1 -type f -printf '%f\n' | sort)
+
             docker buildx imagetools create -t "tunathu/$i:${{ steps.docker_tag.outputs.docker_tag }}" \
-              $(printf "tunathu/$i@sha256:%s " $(ls $i))
+              --annotation "index:org.opencontainers.image.created=$created" \
+              --annotation "index:org.opencontainers.image.description=Runtime image for the $i mirror job" \
+              --annotation "index:org.opencontainers.image.revision=${{ github.sha }}" \
+              --annotation "index:org.opencontainers.image.source=$source_url" \
+              --annotation "index:org.opencontainers.image.title=$i" \
+              --annotation "index:org.opencontainers.image.url=$source_url" \
+              --annotation "index:org.opencontainers.image.vendor=Tsinghua University TUNA Association" \
+              --annotation "index:org.opencontainers.image.version=$version" \
+              "${sources[@]}"
           done
 
       - name: Inspect images
@@ -164,4 +170,15 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             docker buildx imagetools inspect "$DOCKER_IMG" | tee -a $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+            echo '| Platform | Compressed size | Digest |' >> $GITHUB_STEP_SUMMARY
+            echo '| --- | ---: | --- |' >> $GITHUB_STEP_SUMMARY
+
+            index_json="$(docker buildx imagetools inspect "$DOCKER_IMG" --raw)"
+            while IFS=$'\t' read -r platform digest; do
+              manifest_json="$(docker buildx imagetools inspect "tunathu/$i@$digest" --raw)"
+              size_bytes="$(jq '[.layers[]?.size] | add // 0' <<< "$manifest_json")"
+              size="$(numfmt --to=iec-i --suffix=B --format='%.1f' "$size_bytes")"
+              printf '| `%s` | %s | `%s` |\n' "$platform" "$size" "$digest" \
+                >> $GITHUB_STEP_SUMMARY
+            done < <(jq -r '.manifests[] | select(.platform.os != "unknown") | [(.platform.os + "/" + .platform.architecture), .digest] | @tsv' <<< "$index_json")
           done

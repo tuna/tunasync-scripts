@@ -1,28 +1,35 @@
-FROM debian:trixie
+FROM debian:trixie-slim AS python-builder
+
+RUN apt-get update && \
+        apt-get install --no-install-recommends -y \
+        ca-certificates python3-dev python3-venv \
+        libxml2-dev libxslt1-dev zlib1g-dev libssl-dev libffi-dev && \
+        rm -rf /var/lib/apt/lists/*
+
+# Flutter needs the unpublished apitools version; see gsutil issue #1819.
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/python -m pip install --no-cache-dir \
+    gsutil https://github.com/google/apitools/archive/refs/tags/v0.5.35.zip
+
+FROM debian:trixie-slim
 LABEL maintainer="Miao Wang <miao.wang@tuna.tsinghua.edu.cn>"
 
 RUN apt-get update && \
         apt-get install --no-install-recommends -y \
         wget curl rsync lftp git jq \
-        python3-dev python3-pip python3-pyquery python3-socks python3-requests python3-yaml awscli \
+        python3 python3-pyquery python3-socks python3-requests python3-yaml awscli \
         dnf-plugins-core createrepo-c debmirror \
         libnss-unknown xz-utils patch unzip \
 	python3-tqdm python3-click python3-openssl \
-        aria2 ack openssh-client
+        aria2 ack openssh-client ed locales && \
+        rm -rf /var/lib/apt/lists/*
         # composer php-curl php-zip
 
-RUN if [ "$(uname -m)" != "x86_64" -a "$(uname -m)" != "i386" ]; then \
-      apt-get install --no-install-recommends -y libxml2-dev libxslt1-dev zlib1g-dev libssl-dev libffi-dev ;\
-    fi
+COPY --from=python-builder /opt/venv /opt/venv
 
-# RUN pip3 install --upgrade pip
-RUN python3 -m pip install \
-    # for flutter, needs unpublished version of apitools, see: https://github.com/GoogleCloudPlatform/gsutil/issues/1819
-    gsutil https://github.com/google/apitools/archive/refs/tags/v0.5.35.zip \
-    --break-system-packages
-
-RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && apt-get install -y locales -qq && locale-gen
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 HOME=/tmp
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 HOME=/tmp \
+    PATH=/opt/venv/bin:${PATH}
 RUN mkdir -p /home/tunasync-scripts
 CMD ["/bin/bash"]
 
@@ -40,9 +47,6 @@ RUN cd /usr/lib/python3/dist-packages && echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4
 # download and patch aosp-repo
 ADD --chmod=0755 https://storage.googleapis.com/git-repo-downloads/repo /usr/local/bin/aosp-repo
 RUN sed -i 's:^#!/usr/bin/env python$:#!/usr/bin/env python3:' /usr/local/bin/aosp-repo
-
-# install ed for debmirror
-RUN apt-get install --no-install-recommends -y ed
 
 # set rpm db path back to HOME (revert the change since trixie)
 RUN mkdir -p /etc/rpm && echo "%_dbpath		%(bash -c 'echo ~/.rpmdb')" > /etc/rpm/macros
