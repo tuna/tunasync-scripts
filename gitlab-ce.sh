@@ -20,11 +20,11 @@ export REPO_SIZE_FILE=/tmp/reposize.$RANDOM
 "$yum_sync" "${UPSTREAM}/el/@{os_ver}/@{arch}/" @rhel-current "gitlab" x86_64 "el@{os_ver}" "$YUM_PATH"
 echo "YUM finished"
 
-for i in jammy noble; do
+for i in jammy noble resolute; do
     "$apt_sync" --delete "${UPSTREAM}/ubuntu/$i" "$i" main "$DEB_ARCHES" "$UBUNTU_PATH/$i"
 done
 echo "Ubuntu finished"
-for i in bullseye bookworm trixie; do
+for i in bookworm trixie; do
     "$apt_sync" --delete "${UPSTREAM}/debian/$i" "$i" main "$DEB_ARCHES" "$DEBIAN_PATH/$i"
 done
 echo "Debian finished"
