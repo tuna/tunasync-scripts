@@ -8,6 +8,7 @@ Uses the JSON API at https://go.dev/dl/?mode=json for efficient data retrieval.
 import hashlib
 import os
 import queue
+import sys
 import threading
 from pathlib import Path
 
@@ -58,8 +59,7 @@ class GoRelease:
     
     @property
     def relative_path(self):
-        # Structure: go/{version}/{filename}
-        return f"{self.version}/{self.filename}"
+        return self.filename
 
 
 class RemoteSite:
@@ -197,11 +197,12 @@ def requests_download(remote_url: str, dst_file: Path):
         tmpfile.rename(dst_file)
 
 
-def downloading_worker(q):
+def downloading_worker(q, failures):
     """Worker thread for downloading files."""
     while True:
         item = q.get()
         if item is None:
+            q.task_done()
             break
 
         release, dst_file, working_dir = item
@@ -226,6 +227,7 @@ def downloading_worker(q):
                     raise Exception(f"SHA256 mismatch: expected {release.sha256}, got {downloaded_sha256}")
 
         except Exception:
+            failures.put(release.filename)
             import traceback
             traceback.print_exc()
             print(f"Failed to download {release.download_url if item else 'unknown'}", flush=True)
@@ -241,10 +243,13 @@ def downloading_worker(q):
 def create_workers(n):
     """Create worker threads for downloading."""
     task_queue = queue.Queue()
+    failures = queue.Queue()
+    workers = []
     for _ in range(n):
-        t = threading.Thread(target=downloading_worker, args=(task_queue,))
+        t = threading.Thread(target=downloading_worker, args=(task_queue, failures))
         t.start()
-    return task_queue
+        workers.append(t)
+    return task_queue, failures, workers
 
 
 def main():
@@ -261,13 +266,17 @@ def main():
                         help='comma-separated list of OS/arch to exclude')
     parser.add_argument("--sync-all", action='store_true',
                         help='sync all versions from HTML page instead of just JSON versions')
+    parser.add_argument("--layout", choices=("flat", "nested"), default="flat",
+                        help="directory layout: flat (default) or nested version/filename")
     args = parser.parse_args()
+    if args.workers < 1:
+        parser.error("--workers must be at least 1")
     
     if args.working_dir is None:
         raise Exception("Working Directory is None")
     
     working_dir = Path(args.working_dir)
-    task_queue = create_workers(args.workers)
+    download_tasks = []
     
     # Parse include/exclude filters
     include_filter = None
@@ -293,7 +302,10 @@ def main():
             if os_arch in exclude_filter:
                 continue
         
-        dst_file = working_dir / release.relative_path
+        relative_path = Path(release.relative_path)
+        if args.layout == "nested":
+            relative_path = Path(release.version) / relative_path
+        dst_file = working_dir / relative_path
         remote_filelist.append(dst_file.relative_to(working_dir))
         
         if dst_file.is_file():
@@ -304,14 +316,24 @@ def main():
         else:
             dst_file.parent.mkdir(parents=True, exist_ok=True)
         
-        task_queue.put((release, dst_file, working_dir))
+        download_tasks.append((release, dst_file, working_dir))
     
-    # Block until all tasks are done
-    task_queue.join()
-    
-    # Stop workers
-    for _ in range(args.workers):
-        task_queue.put(None)
+    task_queue, failures, workers = create_workers(args.workers)
+    try:
+        for task in download_tasks:
+            task_queue.put(task)
+        # Block until all tasks are done, including failed downloads.
+        task_queue.join()
+    finally:
+        for _ in workers:
+            task_queue.put(None)
+        for worker in workers:
+            worker.join()
+
+    if not failures.empty():
+        print(f"Sync failed: {failures.qsize()} download(s) failed; "
+              "skipping cleanup.", file=sys.stderr, flush=True)
+        return 1
     
     # Find and delete files that no longer exist on remote
     local_filelist = []
@@ -325,10 +347,11 @@ def main():
         old_file.unlink()
     
     print("Sync completed!", flush=True)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
 
 
 # vim: ts=4 sw=4 sts=4 expandtab
