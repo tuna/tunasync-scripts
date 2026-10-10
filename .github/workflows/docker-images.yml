@@ -156,9 +156,6 @@ jobs:
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
-        include:
-          - image: tunasync-scripts
-            dockerfile_dir: .
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -166,10 +163,11 @@ jobs:
         name: Determine dockerfile dir
         id: docker_file_dir
         env:
-          DF: ${{ matrix.dockerfile_dir }}
           IMG: ${{ matrix.image }}
         run: |
-          if [ -z "${DF}" ]; then
+          if [ "${IMG}" = 'tunasync-scripts' ]; then
+            DF="."
+          else
             DF="dockerfiles/${IMG}"
           fi
           echo "docker_file_dir=${DF}" >> $GITHUB_OUTPUT
