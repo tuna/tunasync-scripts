@@ -35,7 +35,13 @@ function git_repack() {
 		total_size=$(($total_size+1024*$size))
 		objs=$(find objects -type f | wc -l)
 		if [[ "$objs" -gt 8 && "$size" -gt "100000" ]]; then
-			git repack -a -b -d
+			# pack.threads defaults to the host CPU count and pack.windowMemory
+			# is unbounded; on large repos that OOMs memory-limited containers
+			# ("pack-objects died of signal 9"). Cap both per thread; sites can
+			# override via env. (pack.deltaCacheSize is already capped by git.)
+			git -c pack.threads="${TUNASYNC_AOSP_PACK_THREADS:-4}" \
+				-c pack.windowMemory="${TUNASYNC_AOSP_PACK_WINDOW_MEMORY:-256m}" \
+				repack -a -b -d
 		fi
 	done < <(find $TUNASYNC_WORKING_DIR -type d -not -path "*/.repo/*" -name "*.git")
 }
