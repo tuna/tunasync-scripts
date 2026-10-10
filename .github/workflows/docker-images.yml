@@ -51,34 +51,24 @@ jobs:
           if [ "$EVENT_NAME" = schedule ]; then
             images="$all_images"
           elif [ "$EVENT_NAME" = workflow_dispatch ]; then
-            requested="$(printf '%s' "${DISPATCH_IMAGES:-all}" | tr -d '[:space:]')"
+            requested="${DISPATCH_IMAGES:-all}"
             if [ "$requested" = all ]; then
               images="$all_images"
             else
-              selected=''
-              IFS=','
-              for image in $requested; do
-                case "$image" in
-                  ftpsync|nix-channels|rubygems-mirror|rustup-mirror|tsumugu|tunasync-scripts)
-                    selected="$selected $image"
-                    ;;
-                  *)
-                    echo "Unknown image: $image" >&2
-                    exit 1
-                    ;;
-                esac
-              done
-              unset IFS
-              images="$(printf '%s\n' $selected | sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')"
+              invalid_imgs="$(printf "%s" "$requested" | jq -Rscr --argjson "allimgs" "$all_images" '[split(",") | .[] | select( . as $img | $allimgs | index($img) == null)] | join (", ")')"
+              if [ -n "$invalid_imgs" ]; then
+                echo "Unknown images: $invalid_imgs" >&2
+                exit 1
+              fi
+              images="$(printf "%s" "$requested" | jq -Rsc --argjson "allimgs" "$all_images"  '[split(",") | .[] | select( . as $img | $allimgs | index($img) != null)]')"
             fi
           else
             if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
               BASE_SHA="$(git rev-parse "$HEAD_SHA^1")"
             fi
-            changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-            selected=''
+            selected=( )
             global_changed=false
-            for path in $changed; do
+            while IFS= read -r path; do
               case "$path" in
                 .github/workflows/docker-images.yml)
                   global_changed=true
@@ -87,20 +77,20 @@ jobs:
                   global_changed=true
                   ;;
                 Dockerfile)
-                  selected="$selected tunasync-scripts"
+                  selected+=("tunasync-scripts")
                   ;;
-                dockerfiles/ftpsync/*) selected="$selected ftpsync" ;;
-                dockerfiles/nix-channels/*) selected="$selected nix-channels" ;;
-                dockerfiles/rubygems-mirror/*) selected="$selected rubygems-mirror" ;;
-                dockerfiles/rustup-mirror/*) selected="$selected rustup-mirror" ;;
-                dockerfiles/tsumugu/*) selected="$selected tsumugu" ;;
+                dockerfiles/ftpsync/*) selected+=("ftpsync") ;;
+                dockerfiles/nix-channels/*) selected+=("nix-channels") ;;
+                dockerfiles/rubygems-mirror/*) selected+=("rubygems-mirror") ;;
+                dockerfiles/rustup-mirror/*) selected+=("rustup-mirror") ;;
+                dockerfiles/tsumugu/*) selected+=("tsumugu") ;;
               esac
-            done
+            done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
             if [ "$global_changed" = true ]; then
               images="$all_images"
             else
               # De-duplicate the image names selected by the changed paths.
-              images="$(printf '%s\n' $selected | sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')"
+              images="$(printf '%s\n' "${selected[@]}" | sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')"
             fi
           fi
 
