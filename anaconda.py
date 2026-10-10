@@ -21,7 +21,7 @@ DEFAULT_CONDA_REPO_BASE = "https://repo.continuum.io"
 DEFAULT_CONDA_CLOUD_BASE = "https://conda.anaconda.org"
 
 CONDA_REPO_BASE_URL = os.getenv("CONDA_REPO_URL", "https://repo.continuum.io")
-CONDA_CLOUD_BASE_URL = os.getenv("CONDA_COULD_URL", "https://conda.anaconda.org")
+CONDA_CLOUD_BASE_URL = os.getenv("CONDA_CLOUD_URL", "https://conda.anaconda.org")
 
 WORKING_DIR = os.getenv("TUNASYNC_WORKING_DIR")
 
