@@ -69,7 +69,7 @@ jobs:
                 esac
               done
               unset IFS
-              images="$(printf '%s\n' $selected | sort -u | jq -Rsc 'split("\\n") | map(select(length > 0))')"
+              images="$(printf '%s\n' $selected | sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')"
             fi
           else
             if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
@@ -100,7 +100,7 @@ jobs:
               images="$all_images"
             else
               # De-duplicate the image names selected by the changed paths.
-              images="$(printf '%s\n' $selected | sort -u | jq -Rsc 'split("\\n") | map(select(length > 0))')"
+              images="$(printf '%s\n' $selected | sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')"
             fi
           fi
 
