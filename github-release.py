@@ -233,6 +233,7 @@ def main():
         prerelease = cfg.get("pre_release", False)  # include pre-releases
         perpage = cfg.get("per_page", 0)  # number of releases per page
         exclude_regexes = cfg.get("exclude", [])  # list of file name regexes to exclude
+        skip_old_pre_release = cfg.get("skip_old_pre_release", False)  # skip pre-releases older than a synced stable release
 
         # Determine mode: new fields take priority over versions
         use_separate_limits = release_versions is not None or pre_release_versions is not None
@@ -282,12 +283,16 @@ def main():
         n_downloaded = 0
         n_release = 0
         n_prerelease = 0
+        seen_stable = False  # whether a stable release has already been synced
         try:
             for release in release_generator():
                 if release["draft"]:
                     continue
                 is_prerelease = release["prerelease"]
                 if is_prerelease and not prerelease:
+                    continue
+                if is_prerelease and skip_old_pre_release and seen_stable:
+                    # a pre-release after a synced stable release never updates anything
                     continue
 
                 # Check version limits
@@ -327,6 +332,7 @@ def main():
                     n_prerelease += 1
                 else:
                     n_release += 1
+                    seen_stable = True
 
                 # Check if done
                 if use_separate_limits:
