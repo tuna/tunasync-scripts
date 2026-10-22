@@ -12,7 +12,7 @@ from pathlib import Path
 
 FORMULAE_BREW_SH_GITHUB_ACTIONS_ARTIFACT_API = os.getenv(
     "TUNASYNC_UPSTREAM_URL",
-    "https://api.github.com/repos/Homebrew/formulae.brew.sh/actions/artifacts?name=github-pages",
+    "https://api.github.com/repos/Homebrew/formulae.brew.sh/actions/artifacts?name=github-pages-1",
 )
 WORKING_DIR = Path(os.getenv("TUNASYNC_WORKING_DIR", "/data"))
 DOWNLOAD_TIMEOUT = int(os.getenv("DOWNLOAD_TIMEOUT", "1800"))
