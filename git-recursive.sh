@@ -66,10 +66,57 @@ function git_sync() {
   update_linux_git "$upstream" "$working_dir"
 }
 
+function resolve_submodule_url() {
+  # Resolves a submodule URL the way git itself does (see gitsubmodules(7)):
+  # a value starting with "./" or "../" is taken relative to the parent
+  # repository's own URL; anything else is returned unchanged.
+  local parent="$1" sub="$2"
+  case "$sub" in
+    ./*|../*) ;;
+    *) printf '%s' "$sub"; return 0 ;;
+  esac
+
+  local prefix="" path="$parent"
+  if [[ "$parent" =~ ^([A-Za-z][A-Za-z0-9+.-]*://[^/]*) ]]; then
+    prefix="${BASH_REMATCH[1]}"
+    path="${parent:${#prefix}}"
+  elif [[ "$parent" != *://* && "$parent" =~ ^([^/]*:) ]]; then
+    prefix="${BASH_REMATCH[1]}"
+    path="${parent:${#prefix}}"
+  fi
+
+  local rest="$sub"
+  while [[ "$rest" == ../* ]]; do
+    if [[ -z "$path" ]]; then
+      echon "Cannot resolve relative submodule url $sub against $parent: climbs above the repository root" >&2
+      return 1
+    fi
+    rest="${rest#../}"
+    [[ "$path" == */ ]] && path="${path%/}"
+    if [[ "$path" == */* ]]; then
+      path="${path%/*}"
+    else
+      path=""
+    fi
+  done
+  [[ "$rest" == ./* ]] && rest="${rest#./}"
+
+  if [[ -z "$path" ]]; then
+    if [[ "$prefix" == *: ]]; then
+      printf '%s%s' "$prefix" "$rest"
+    else
+      printf '%s/%s' "$prefix" "$rest"
+    fi
+  else
+    printf '%s%s/%s' "$prefix" "$path" "$rest"
+  fi
+}
+
 function checkout_repo() {
   local repo_dir="$1"
   local work_tree="$2"
   local commit="$3"
+  local repo_upstream="$4"
 
   if [[ -z "$commit" ]]; then
     commit="HEAD"
@@ -92,6 +139,9 @@ function checkout_repo() {
       local submodule_path=$(git -C "$repo_dir" config --blob "$commit:.gitmodules" --get "$submoudle.path")
       local submodule_url=$(git -C "$repo_dir" config --blob "$commit:.gitmodules" --get "$submoudle.url")
       if [[ -z "$submodule_path" ]] || [[ -z "$submodule_url" ]]; then
+        continue
+      fi
+      if ! submodule_url=$(resolve_submodule_url "$repo_upstream" "$submodule_url"); then
         continue
       fi
       local submodule_path_parent=$(dirname -- "$submodule_path")
@@ -138,7 +188,7 @@ function git_sync_recursive() {
   if [[ ! -z "$RECURSIVE" ]]; then
     working_dir_name=$(basename -- "$working_dir")
     working_dir_name_no_git=${working_dir_name%%.git}
-    checkout_repo "$working_dir" "$TMPDIR/$working_dir_name_no_git" "$commit"
+    checkout_repo "$working_dir" "$TMPDIR/$working_dir_name_no_git" "$commit" "$upstream"
   fi
   depth=$(($depth-1))
 }
