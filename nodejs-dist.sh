@@ -20,7 +20,8 @@ jq -r '
   def line: semver as $v | if $v[0] == 0 then "v0.\($v[1]).x" else "v\($v[0]).x" end;
   def newest: max_by(semver).version;
 
-  newest as $latest
+  map(select(try (semver | true) catch false))
+  | newest as $latest
   | [ {key: "latest", value: $latest},
       {key: "node-latest.tar.gz", value: "latest/node-\($latest).tar.gz"} ]
   + (group_by(line) | map({key: "latest-\(.[0] | line)", value: newest})
