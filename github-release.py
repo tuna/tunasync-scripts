@@ -233,6 +233,21 @@ def main():
         prerelease = cfg.get("pre_release", False)  # include pre-releases
         perpage = cfg.get("per_page", 0)  # number of releases per page
         exclude_regexes = cfg.get("exclude", [])  # list of file name regexes to exclude
+        # target of the LatestRelease symlink:
+        # "any" - the latest synced version (may be a pre-release)
+        # "release" - prefer the latest stable release, fall back to the latest synced version
+        latest_link = cfg.get("latest_link", "any")
+
+        if latest_link not in ("any", "release"):
+            logger.error(
+                f"Invalid latest_link value for {repo}: {latest_link!r} (expected 'any' or 'release')"
+            )
+            # keep this repository's existing files on disk, otherwise the
+            # cleanup step below would treat them as obsolete and remove them
+            for local_file in (working_dir / Path(repo)).glob("**/*"):
+                if local_file.is_file():
+                    remote_filelist.append(local_file.relative_to(working_dir))
+            continue
 
         # Determine mode: new fields take priority over versions
         use_separate_limits = release_versions is not None or pre_release_versions is not None
@@ -282,6 +297,8 @@ def main():
         n_downloaded = 0
         n_release = 0
         n_prerelease = 0
+        first_name = None  # the latest synced version, used as fallback for latest_link
+        linked_latest = False
         try:
             for release in release_generator():
                 if release["draft"]:
@@ -319,9 +336,13 @@ def main():
                     tarball,
                     exclude_regexes,
                 )
-                if n_downloaded == 0 and not flat:
-                    # create a symbolic link to the latest release folder
-                    link_latest(name, repo_dir)
+                if n_downloaded == 0:
+                    first_name = name
+                if not flat and not linked_latest:
+                    if latest_link == "any" or not is_prerelease:
+                        # create a symbolic link to the latest release folder
+                        link_latest(name, repo_dir)
+                        linked_latest = True
                 n_downloaded += 1
                 if is_prerelease:
                     n_prerelease += 1
@@ -340,6 +361,9 @@ def main():
             if n_downloaded == 0:
                 logger.error(f"No release version found for {repo}")
                 continue
+            if latest_link == "release" and not linked_latest and not flat:
+                # no stable release was synced, fall back to the latest version
+                link_latest(first_name, repo_dir)
         except Exception:
             logger.exception(f"Failed to process releases for {repo}")
     else:
