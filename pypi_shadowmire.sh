@@ -13,6 +13,7 @@ TUNASYNC_UPSTREAM=${TUNASYNC_UPSTREAM_URL:-$PYPI_MASTER}
 CONF="/tmp/shadowmire.conf"
 INIT=${INIT:-"0"}
 SHADOWMIRE_UPSTREAM=${SHADOWMIRE_UPSTREAM:-"0"}
+SHADOWMIRE_INDEX_ONLY=${SHADOWMIRE_INDEX_ONLY:-"0"}
 
 REPO="${TUNASYNC_WORKING_DIR}/web"
 
@@ -34,11 +35,18 @@ if [[ $SHADOWMIRE_USE_PYPI_INDEX == "1" ]]; then
     USE_PYPI_INDEX="use_pypi_index = true"
 fi
 
+INDEX_ONLY=""
+if [[ $SHADOWMIRE_INDEX_ONLY == "1" ]]; then
+    INDEX_ONLY="sync_packages = false"
+else
+    INDEX_ONLY="sync_packages = true"
+fi
+
 (
 cat << EOF
 [options]
 repo = "${REPO}"
-sync_packages = true
+${INDEX_ONLY}
 ${DOWNLOAD_MIRROR}
 ${USE_PYPI_INDEX}
 exclude = [
