@@ -18,6 +18,7 @@ RUN apt-get update && \
         apt-get install --no-install-recommends -y \
         wget curl rsync lftp git jq \
         python3 python3-pyquery python3-socks python3-requests python3-yaml awscli \
+        python3-aiohttp \
         dnf-plugins-core createrepo-c debmirror \
         libnss-unknown xz-utils patch unzip \
 	python3-tqdm python3-click python3-openssl \
@@ -32,7 +33,7 @@ ENV LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 HOME=/tmp \
     PATH=/opt/venv/bin:${PATH}
 
 # Keep Debian-provided Python modules visible from the venv used by the image.
-RUN python3 -c 'import click, OpenSSL, requests, socks, tqdm, yaml; from pyquery import PyQuery as pq' && \
+RUN python3 -c 'import aiohttp, click, OpenSSL, requests, socks, tqdm, yaml; from pyquery import PyQuery as pq' && \
     gsutil version -l >/dev/null
 
 RUN mkdir -p /home/tunasync-scripts
